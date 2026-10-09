@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A life in six acts</title>
+  <meta name="description" content="A playful life story told as a game character sheet that fills in as you scroll.">
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <main id="main"></main>
+  <noscript><p style="padding:80px 20px;text-align:center">This story needs JavaScript to draw its scenes.</p></noscript>
+
+  <!-- Motion: GSAP and ScrollTrigger, kept in this folder so the page works offline. -->
+  <script src="vendor/gsap/gsap.min.js"></script>
+  <script src="vendor/gsap/ScrollTrigger.min.js"></script>
+
+  <!-- Art and the story registry. -->
+  <script src="js/pixel.js"></script>
+  <script src="js/story.js"></script>
+
+  <!-- Recipes: one file per act. Edit these to change the story. -->
+  <script src="recipes/site.js"></script>
+  <script src="recipes/act-1-childhood.js"></script>
+  <script src="recipes/act-2-school.js"></script>
+  <script src="recipes/act-3-first-jobs.js"></script>
+  <script src="recipes/act-4-denver.js"></script>
+  <script src="recipes/act-5-year-off.js"></script>
+  <script src="recipes/act-6-now.js"></script>
+
+  <!-- Scenes, the sheet, games, acts and boot. -->
+  <script src="js/scenes.js"></script>
+  <script src="js/sheet.js"></script>
+  <script src="js/look.js"></script>
+  <script src="js/games/sound.js"></script>
+  <script src="js/games/games.js"></script>
+  <script src="js/games/hammer.js"></script>
+  <script src="js/games/bmx.js"></script>
+  <script src="js/belt.js"></script>
+  <script src="js/acts.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
