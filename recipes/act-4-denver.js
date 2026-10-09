@@ -11,7 +11,7 @@ Story.addAct({
   color: { name: 'Pine green', light: '#7fd09c', base: '#3fa66b', shade: '#286f46' },
   theme: 'light',
   scene: 'mountains',
-  hero: { gear: 'beanie', title: 'Project engineer' },
+  hero: { gear: 'beanie', title: 'Project engineer', hair: 'bald', beard: 'goatee' },
   beats: [
     { tag: 'life', text: 'Followed friends to Denver for the mountains: skiing and climbing.', item: 'skis', cue: 'ski' },
     { tag: 'work', text: 'Joined a medical-device company in capital projects and helped build a new plant in Vietnam.', item: 'passport', cue: 'plane' },

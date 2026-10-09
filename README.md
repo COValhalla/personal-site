@@ -27,11 +27,11 @@ Every merge to `main` publishes it there within a minute or two, through GitHub 
 ## What to try
 
 1. Scroll. Each act starts in gray. As it comes into view a chapter card sweeps across, the color comes in and your character walks on.
-2. Keep scrolling. The act holds still and tells its story one moment at a time: each moment types itself out, plays a little scene (a race, a plane to Vietnam, a team walking in) and drops its item, which flies into the inventory belt along the bottom.
-3. After the last moment your character levels up and changes gear, the new skills light up with the skills they grew from, and Open sheet appears. Then the next act scrolls in.
-4. Select any item in the belt or in a moment to read its story card. Open the sheet for your stats, the full inventory and the skill tree.
-5. Play the BMX race in Act I: wait for the gate, hold Pedal (or the right arrow) for speed, and tap Pump (or Space) just before each roller and at the lip of each jump. Beat the three other riders.
-6. Play the hammer throw in Act II: hold to spin (or hold Space). You get one wind and four turns; let go while the hammer glows. Hold on past the fourth turn and it is a foul.
+2. Keep scrolling. The act holds still and tells its story one moment at a time: each moment types itself out, plays a little scene (a race, a plane to Vietnam, a team walking in) and drops its item, which flies into the inventory belt along the bottom. As you scroll your character walks across the scene and the progress rail under it fills ("Moment 2 of 3"), so every bit of scrolling moves something.
+3. After the last moment your character levels up and changes gear, the new skills light up with the skills they grew from, and Open sheet appears. A pulsing Next tag points to the next act.
+4. Select any item in the belt or in a moment to read its story card. Open the sheet for your stats, the full inventory and the map: one road through the six acts, with your character at the furthest stop reached. Select a stop to walk there, read its class and skills, and go to that act.
+5. Play the BMX race in Act I: wait for the gate, hold Pedal (or the right arrow) for speed, and tap Pump (or Space) while your front wheel is over the lit strip before each roller and jump lip: green for a perfect pump, amber for a good one. Each press pulls your front wheel up. Beat the two other riders.
+6. Play the hammer throw in Act II: hold to spin (or hold Space). You get one wind and four turns, and the last two are fast; let go while the hammer glows. A good release on turn 3 or 4 hits with a freeze, a shake and a flash, and a throw of 70 m or more plays a slow-motion throw camera (tap to skip). Hold on past the fourth turn and it is a foul.
 7. Use the chapter buttons (I to VI) to jump to an act, or the quick facts at the end for the short version.
 
 ## Files
@@ -45,7 +45,8 @@ Every merge to `main` publishes it there within a minute or two, through GitHub 
 | `js/scenes.js` | One pixel scene per act, with its animations (cues). |
 | `js/acts.js` | Builds each act and tells its story in steps as you scroll. |
 | `js/belt.js` | The inventory belt and experience bar along the bottom. |
-| `js/sheet.js` | The character sheet, skill tree and story cards. |
+| `js/sheet.js` | The character sheet and story cards. |
+| `js/map.js` | The world map on the sheet. |
 | `js/look.js` | The draft look picker on the sheet. |
 | `js/games/` | The hammer throw, the BMX race and their sounds. |
 | `js/story.js` | Collects the recipes and checks them for mistakes. |
@@ -64,8 +65,8 @@ Each act is one file in `recipes/`. The fields:
 | `color` | `name` plus `light`, `base` and `shade` colors, and an optional `accent` for the scene |
 | `theme` | `light`, or `dark` for a dark act screen |
 | `scene` | Which scene in `js/scenes.js` to draw |
-| `hero` | `gear` from `js/pixel.js` and the class `title` shown on level up |
-| `beats` | The moments of the act, in order. Each has a `tag` (`life` or `work`) and `text`, and optionally the `item` it gives (an item id from this act) and a scene `cue` to play |
+| `hero` | `gear` from `js/pixel.js`, the class `title` shown on level up, and the `hair` and `beard` the hero has in this act |
+| `beats` | The moments of the act, in order. Each has a `tag` (`life` or `work`) and `text`, and optionally the `item` it gives (an item id from this act), a scene `cue` to play and a `look` (`hair`, `beard`) that changes the hero at that moment |
 | `unlock` | `banner` (such as Level 2), `say` (the line beside it) and an optional `pop` (the word over the hero, Level up! by default) |
 | `items` | Two or three items: `id`, `name`, `sprite`, `tag`, `line`, `adds` (stats), `photo` (a path or `null`) and an optional `game` |
 | `skills` | Two or three skills: `id`, `name`, `parents` (ids from this or an earlier act) and `line` |
@@ -74,7 +75,7 @@ Each act is one file in `recipes/`. The fields:
 
 To add a photo, put the file in a `photos/` folder next to `index.html` and set the item's `photo` to `'photos/hammer.jpg'`.
 
-`recipes/site.js` holds the name, the tagline, the stats and `look`: the hero's skin, hair color, hair style, beard and glasses, so the character can look like you. The easiest way to choose: open the sheet, open "Make the character look like you", try the options, and copy the line it shows into `recipes/site.js`. The picker only shows while `draft` is `true`.
+`recipes/site.js` holds the name, the tagline, the stats and `look`: the hero's skin, hair and streak colors, eye color, and today's hair style and beard, drawn from Joe's photos, which are not part of this repository. Each act's `hero` sets the hair and beard for that part of the story: short hair as a kid, bald with a goatee from college to Denver, then the beard and the bun grow through the year off. To try other colors: open the sheet, open "Make the character look like you", try the options, and copy the line it shows into `recipes/site.js`. The picker only shows while `draft` is `true`.
 
 If a recipe has a mistake, such as a skill growing from one that does not exist or a moment giving an item from another act, the page lists it near the top and in the browser console.
 
@@ -86,7 +87,7 @@ Ask an AI coding agent for one act at a time. A prompt that works:
 
 ## Tests
 
-The smoke test opens the page in Google Chrome and does what a reader does: it scrolls through every act step by step, opens the sheet, reads a story card, throws the hammer (a fair throw, a fifth-turn foul and a foul in the wind) and races the BMX track with a bot that pumps the rollers, with motion on, with motion off and on a phone-sized screen.
+The smoke test opens the page in Google Chrome and does what a reader does: it scrolls through every act step by step, opens the sheet, reads a story card, checks that scrolling walks the hero and fills the progress rail, walks the map, throws the hammer (a centered fourth-turn release with its hit and throw camera, a skipped camera, a fifth-turn foul and a foul in the wind), checks every pump call and the wheel lift, and races the BMX track with a bot that pumps the rollers, with motion on, with motion off and on a phone-sized screen.
 
 ```sh
 npm install

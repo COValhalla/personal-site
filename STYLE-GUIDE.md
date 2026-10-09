@@ -10,7 +10,8 @@ This guide keeps every act, sprite and animation looking like it came from the s
 | Hero sprite | 16 × 24 | 1 scene pixel per sprite pixel; 4× on the sheet |
 | Act scene | 160 × 72, ground at y = 64 | As big as fits the screen above the skills row |
 | Hammer throw field | 200 × 150, with a 64 × 64 close-up of the circle | Scaled to fit the game window |
-| BMX race | 240 × 120, ground at y = 100 | Scaled to fit the game window |
+| BMX race | 200 × 100, ground at y = 84, lanes 5 pixels apart | Scaled to fit the game window |
+| World map | 320 × 120, a stop per act | The width of the sheet |
 | BMX rider | drawn on a 32 × 32 canvas, then turned with the slope | 1 game pixel per sprite pixel |
 | Pixel text | 3 × 5 per letter, 1 pixel apart | `Pixel.text` draws digits, capital letters and `- ! ? : / + $` |
 
@@ -46,19 +47,19 @@ The same sprite drawn in a different act takes that act's colors automatically.
 
 The hero is `HERO_BASE` in `js/pixel.js` with one gear overlay per act in `HERO_GEAR`. An overlay row replaces the base pixel wherever it has a character other than `.`. The shirt uses the act's colors, so it changes color by itself.
 
-- Keep the face rows (6 to 9) unchanged so the hero stays recognizable.
-- Gear so far: `helmet` (Act I), `headband` (II), `hardhat` with a reflective vest stripe (III), `beanie` (IV), `headphones` (V), `cap` with a badge (VI).
+- The base is drawn from Joe's photos: blue eyes (`e`), a wide smile, and hair with lighter streaks (`H`). Keep the face rows (6 to 9) unchanged so the hero stays recognizable.
+- Gear so far: `helmet` (Act I), `headband` (II), `hardhat` with a reflective vest stripe (III), `beanie` (IV), `headphones` around the bun (V), `badge` on the shirt with no hat (VI). A `cap` is there too.
 
-The likeness comes from `look` in `recipes/site.js`, so the hero can look like Joe without touching a sprite:
+The colors come from `look` in `recipes/site.js`, and each act's `hero` in its recipe picks the hair and beard for that part of the story:
 
 | Field | Values |
 | --- | --- |
-| `skin`, `skinShade`, `hair` | Any color, used for `s`, `S` and `h` |
-| `hairStyle` | `short`, `buzz`, `swoop` or `long` (overlays in `HAIR`) |
-| `beard` | `none`, `stubble` or `full` |
+| `skin`, `skinShade`, `hair`, `hairLight`, `eyes` | Any color, used for `s`, `S`, `h`, `H` and `e` |
+| `hairStyle` (today), or `hair` in an act | `short`, `bald` or `bun` (overlays in `HAIR`) |
+| `beard` | `none`, `goatee`, `stubble`, `short`, `full` or `long` (overlays in `BEARD`) |
 | `glasses` | `true` or `false` |
 
-Hair is drawn under the gear; the beard and glasses are drawn over it, so a hat never hides the face. While the draft flag is on, the character sheet has a picker that tries these live and prints the `look` line (`js/look.js`). Other people in scenes (the business, the team) are the same base in other shirts, hair and skin.
+The story so far: short hair in Act I, bald with a goatee in II to IV, and in V the beard grows moment by moment (a moment's `look`) into the long beard and top bun of V and VI. Hair is drawn under the gear, and under a hat a bun tucks in as short hair; the beard and glasses are drawn over it, so a hat never hides the face. While the draft flag is on, the character sheet has a picker that tries today's look live and prints the `look` line (`js/look.js`). Other people in scenes (the business, the team) are `PERSON_BASE`, a plain face, in other shirts, hair and skin.
 
 ## Act colors
 
@@ -103,8 +104,8 @@ A scene lives in `js/scenes.js` and has four parts:
 Every act fills one screen. It tells its story in steps, and each step plays once; scrolling back never replays it.
 
 1. **Chapter.** When the act's top is a little past the middle of the screen, a chapter card sweeps across the scene, the title slides in, the color comes in and the hero walks on in the last act's gear.
-2. **Moments.** At the top of the screen the act holds still (it is pinned). Every further 42% of a screen of scrolling tells the next moment: it types itself out, plays its scene cue, and its item pops out above the hero and flies into the inventory belt.
-3. **Level up.** After the last moment the hero jumps, changes gear and bursts in the act's color; then the new skills light one by one, each with the skills it grew from; then Open sheet appears. The act holds still for 70% of a screen more so the skills are seen.
+2. **Moments.** At the top of the screen the act holds still (it is pinned). Every further 22% of a screen of scrolling tells the next moment: it types itself out, plays its scene cue, and its item pops out above the hero and flies into the inventory belt. In between, the scroll itself moves things: the hero walks 34 scene pixels across the scene to `heroX`, and the progress rail under the scene fills, with a node per moment and one for the level-up ("Moment 2 of 3").
+3. **Level up.** After the last moment the hero jumps, changes gear and bursts in the act's color; then the new skills light one by one, each with the skills it grew from; then Open sheet appears. The act holds still for 30% of a screen more, and a pulsing Next tag points to the next act.
 
 | Step | Starts at | Length | Ease |
 | --- | --- | --- | --- |
@@ -119,7 +120,7 @@ Every act fills one screen. It tells its story in steps, and each step plays onc
 | Open sheet appears | after the last skill, plus 0.25 s | 0.3 s | `back.out(2)` |
 
 - Steps queue up. If you scroll faster than they play, the waiting ones play three times faster, and leaving an act finishes it quickly.
-- The timings live in `BEATS`, `STEP_SCROLL` and `LEVEL_HOLD` in `js/acts.js`. Change them there, not per act.
+- The timings live in `BEATS`, `STEP_SCROLL`, `LEVEL_HOLD` and `WALK` in `js/acts.js`. Change them there, not per act.
 - An item a moment does not give arrives with the level-up.
 - The hero idles with a 1-pixel bob, two frames, 1.4 s per cycle, and walks with the same bob, faster.
 - With motion turned off, every act shows already told and unlocked, and the games stay playable.
@@ -135,6 +136,8 @@ Along the bottom of a laptop screen sits the belt: one slot per item, grouped by
 - Drawn on a small canvas in the act's colors, scaled up with pixels kept sharp.
 - At most two controls, each with a button and a key. The hammer is one: hold to spin (Space). The BMX race is two: Pedal (hold, or the right arrow) and Pump (tap, or Space).
 - A game should be able to go wrong. The hammer fouls after a fifth turn, a release in the wind or away from the glow; a BMX rider can case a jump, overshoot it or come up short and crash.
+- Show the timing a game judges. The BMX pump strip draws the real windows from `WINDOWS` in `js/games/bmx.js`: green for perfect, amber for good. The calls are Perfect pump, Good - a bit early, Good - a bit late, Too early and No pump. A press pulls the front wheel up 22 degrees around the rear wheel (`LIFT`).
+- The hammer's turns run at 4.4, 5.2, 7.2 and 9.2 radians a second (`TURN_SPEED`), and the glow widens on a fast turn so it never lasts under 0.1 s (`MIN_WINDOW`). A fair release on turn 3 or 4 freezes for 0.08 s (0.11 s for a perfect one), then shakes and flashes; a throw of `CAMERA_FROM_M` (70 m) or more plays the side-on throw camera at a dusk stadium.
 - Each game puts its live state on its stage element (`stage.bmx`, `stage.hammer`) for tests and playtesting, and the BMX physics is exported as `Games.get('bmx').sim` so it can be tuned without drawing.
 - Register with `Games.register(name, { title, help, mount })` in `js/games/`; `mount` returns a function that stops the game.
 

@@ -9,6 +9,7 @@
  *   1  act color, light      2  act color, base      3  act color, shade
  *   w  white                 m  metal, light         n  metal, dark
  *   s  skin                  S  skin shade           h  hair
+ *   H  hair, lighter streak  e  eyes
  *   k  trousers              K  trousers, light
  *
  * The act colors come from the act's recipe, so the same sprite drawn in Act II
@@ -22,9 +23,11 @@
     w: '#f6f4ef',
     m: '#c3c6cc',
     n: '#7d808a',
-    s: '#f0c29a',
-    S: '#c98f66',
-    h: '#5a3b22',
+    s: '#f4c7a6',
+    S: '#d9937a',
+    h: '#8c4527',
+    H: '#c0703c',
+    e: '#2c5a8c',
     k: '#3a3744',
     K: '#4d4958',
   };
@@ -359,8 +362,38 @@
     '................',
   ];
 
-  // The hero is 16 x 24. Gear overlays replace pixels of the base; '.' keeps the base.
+  // The hero is 16 x 24, drawn from Joe's photos: blue eyes (e), a wide smile,
+  // and hair with lighter streaks (H). Overlays replace pixels of the base; '.'
+  // keeps the base, and a missing row (null) keeps the whole row.
   const HERO_BASE = [
+    '................',
+    '................',
+    '.....oooooo.....',
+    '....ohhHhhho....',
+    '...ohHhhhhHho...',
+    '...ohssssssho...',
+    '...osssssssso...',
+    '...ossessesso...',
+    '...osssSSssso...',
+    '....oswwwwso....',
+    '...o22211222o...',
+    '..o3222222223o..',
+    '..o2o222222o2o..',
+    '..o2o222222o2o..',
+    '..o2o222222o2o..',
+    '..oso333333oso..',
+    '...ooKkkkkKoo...',
+    '....oKkkkkKo....',
+    '....okkookko....',
+    '....okkookko....',
+    '....okkookko....',
+    '...oooo..oooo...',
+    '................',
+    '................',
+  ];
+
+  // Everyone else in the scenes: the same build with a plain face, in their own shirt and hair.
+  const PERSON_BASE = [
     '................',
     '................',
     '.....oooooo.....',
@@ -397,27 +430,15 @@
       '...o22222223o...',
       '..oooooooooooo..',
     ],
-    headband: [
-      '................',
-      '................',
-      '................',
-      '................',
-      '...o22222222o...',
-    ],
+    headband: [null, null, null, null, '...o22222222o...'],
     hardhat: [
-      '................',
+      null,
       '......oooo......',
       '....oo1222oo....',
       '...o11222222o...',
       '..o2222222222o..',
       '..oooooooooooo..',
-      '................',
-      '................',
-      '................',
-      '................',
-      '................',
-      '................',
-      '................',
+      null, null, null, null, null, null, null, null,
       '..o2owwwwwwo2o..',
     ],
     beanie: [
@@ -428,16 +449,16 @@
       '...o22222222o...',
       '...o33333333o...',
     ],
+    // Over-ear headphones, the band riding in front of a bun.
     headphones: [
-      '................',
-      '.....oooooo.....',
-      '....o222222o....',
-      '...o2hhhhhh2o...',
-      '..o2hhhhhhhh2o..',
-      '..o2hssssshh2o..',
-      '.o22ssssssss22o.',
-      '.o33ssossoss33o.',
-      '.ooosssSSsssooo.',
+      null,
+      null,
+      '....oo2222oo....',
+      '...o2......2o...',
+      '..o2o......o2o..',
+      '..o22o....o22o..',
+      '..o33o....o33o..',
+      '...oo......oo...',
     ],
     cap: [
       '................',
@@ -446,45 +467,69 @@
       '...o12222222o...',
       '...o33333333o...',
       '..oooooooooo....',
-      '................',
-      '................',
-      '................',
-      '................',
-      '................',
-      '................',
-      '................',
+      null, null, null, null, null, null, null,
       '..o2o22ww22o2o..',
       '..o2o22ww22o2o..',
     ],
+    // No hat: a lanyard and a badge on the shirt.
+    badge: [null, null, null, null, null, null, null, null, null, null, null, null, null,
+      '..o2o222222owo..',
+      '..o2o2222221o2..',
+    ],
   };
+  // Hats cover the head, so long hair tucks under them.
+  const HATS = ['helmet', 'hardhat', 'beanie', 'cap'];
 
-
-  // How the hero looks. Hair styles replace rows of the head; face features
-  // (beard, glasses) are drawn over any gear so the likeness stays.
+  // Hair styles replace rows of the head. Beards are drawn over any gear.
   const HAIR = {
     short: [],
-    buzz: [null, null, null, null, null, '...osssssssso...'],
-    swoop: [null, null, '....oooooooo....', '...ohhhhhhhho...', '..ohhhhhhhhhho..', '...ohhhhsssho...'],
-    long: [null, null, null, null, null, null, '..ohssssssssho..', '..ohssossossho..', '..ohsssSSsssho..', '..ohhsssssshho..'],
+    bald: [null, null, '.....oooooo.....', '....osswssso....', '...osssssssso...', '...osssssssso...'],
+    bun: [
+      '......oooo......',
+      '.....ohHhho.....',
+      '.....oohhoo.....',
+      '....ohHhhHho....',
+      '...ohhHhhHhho...',
+      '...ohssssssho...',
+    ],
   };
-  const FACE = {
-    beard: {
-      none: [],
-      stubble: [null, null, null, null, null, null, null, null, '....sSsSSsSs....', '.....SSSSSS.....'],
-      full: [null, null, null, null, null, null, null, null, '....shhSShhs....', '.....hhhhhh.....'],
-    },
-    glasses: [null, null, null, null, null, null, null, '....snonnons....'],
+  const BEARD = {
+    none: [],
+    goatee: [null, null, null, null, null, null, null, null, null, '....ohwwwwho....', '...o222hh222o...'],
+    stubble: [null, null, null, null, null, null, null, null, '...osSsSSsSso...', '....oSwwwwSo....'],
+    short: [null, null, null, null, null, null, null, null, '...ohhsSSshho...', '...ohhwwwwhho...', '...o2ohhhho2o...'],
+    full: [null, null, null, null, null, null, null, null,
+      '...ohhsSSshho...',
+      '...ohHwwwwHho...',
+      '...ohhhhhhhho...',
+      '..o3ohhHhhho3o..',
+      '..o2o2ohho2o2o..',
+      '..o2o22oo22o2o..',
+    ],
+    long: [null, null, null, null, null, null, null, null,
+      '...ohhsSSshho...',
+      '...ohHwwwwHho...',
+      '...ohhhhhhhho...',
+      '..o3ohhHhhho3o..',
+      '..o2oohhhHoo2o..',
+      '..o2o2ohho2o2o..',
+      '..o2o22oo22o2o..',
+    ],
   };
-  let look = { hairStyle: 'short', beard: 'none', glasses: false };
+  const GLASSES = [null, null, null, null, null, null, null, '...osnennenso...'];
+  let look = { hairStyle: 'bun', beard: 'long', glasses: false };
 
+  // The look: colors for skin, hair and eyes, and the hair and beard of today.
+  // Acts can give the hero another hair style and beard for that part of the story.
   function setLook(next) {
-    look = Object.assign({ hairStyle: 'short', beard: 'none', glasses: false }, next || {});
+    look = Object.assign({ hairStyle: 'bun', beard: 'long', glasses: false }, next || {});
     if (look.skin) NEUTRALS.s = look.skin;
     if (look.skinShade) NEUTRALS.S = look.skinShade;
     if (look.hair) NEUTRALS.h = look.hair;
+    NEUTRALS.H = look.hairLight || NEUTRALS.h;
+    if (look.eyes) NEUTRALS.e = look.eyes;
     cache.clear();
   }
-
   // Tiny 3 x 5 digits for game canvases.
   const DIGITS = {
     0: ['111', '101', '101', '101', '111'],
@@ -572,11 +617,15 @@
     return el;
   }
 
-  function heroGrid(gear) {
-    let grid = overlay(HERO_BASE, HAIR[look.hairStyle] || []);
+  // style picks the hair and beard ({ hair, beard }); without it, today's look.
+  function heroGrid(gear, style) {
+    const st = style || {};
+    let hair = st.hair || look.hairStyle;
+    if (HATS.includes(gear) && hair !== 'bald') hair = 'short';
+    let grid = overlay(HERO_BASE, HAIR[hair] || []);
     grid = overlay(grid, HERO_GEAR[gear] || []);
-    grid = overlay(grid, FACE.beard[look.beard] || []);
-    if (look.glasses) grid = overlay(grid, FACE.glasses);
+    grid = overlay(grid, BEARD[st.beard || look.beard] || []);
+    if (look.glasses) grid = overlay(grid, GLASSES);
     return grid;
   }
 
@@ -599,10 +648,10 @@
   const text = digits;
 
   window.Pixel = {
-    NEUTRALS, ITEMS, HERO_BASE, HERO_GEAR, HAIR, GRAY,
+    NEUTRALS, ITEMS, HERO_BASE, PERSON_BASE, HERO_GEAR, HAIR, BEARD, GRAY,
     colorFor, overlay, paint, toURL, img, heroGrid, digits, text, setLook,
     item: (name, ramp, scale, alt) => img(ITEMS[name] || MISSING, ramp, scale, alt),
-    hero: (gear, ramp, scale, alt) => img(heroGrid(gear), ramp, scale, alt),
-    heroURL: (gear, ramp) => toURL(heroGrid(gear), ramp),
+    hero: (gear, ramp, scale, alt, style) => img(heroGrid(gear, style), ramp, scale, alt),
+    heroURL: (gear, ramp, style) => toURL(heroGrid(gear, style), ramp),
   };
 })();

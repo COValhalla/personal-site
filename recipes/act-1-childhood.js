@@ -12,7 +12,8 @@ Story.addAct({
   color: { name: 'Sunny orange', light: '#ffc46b', base: '#ff8a1f', shade: '#c25a0a', accent: '#3fa9f5' },
   theme: 'light',
   scene: 'bmx-track',
-  hero: { gear: 'helmet', title: 'BMX kid' },
+  // The hero's hair and beard for this act (styles in js/pixel.js: HAIR and BEARD).
+  hero: { gear: 'helmet', title: 'BMX kid', hair: 'short', beard: 'none' },
   // Each moment can give one of this act's items (item) and play a scene animation (cue).
   beats: [
     { tag: 'life', text: 'Raced BMX most weekends: gate drops, rollers and scraped knees.', item: 'bmx-bike', cue: 'race' },

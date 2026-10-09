@@ -12,7 +12,8 @@ Story.addAct({
   color: { name: 'Track red', light: '#f08a75', base: '#e0533d', shade: '#a3352a', accent: '#24366b' },
   theme: 'light',
   scene: 'track',
-  hero: { gear: 'headband', title: 'Hammer thrower' },
+  // Bald with a goatee in college.
+  hero: { gear: 'headband', title: 'Hammer thrower', hair: 'bald', beard: 'goatee' },
   beats: [
     { tag: 'life', text: 'Threw the hammer for high school and college track and field.', item: 'hammer', cue: 'throw' },
     { tag: 'work', text: 'Studied chemical engineering.', item: 'flask', cue: 'study' },
