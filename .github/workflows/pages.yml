@@ -1,0 +1,46 @@
+# Publishes the site to GitHub Pages at https://covalhalla.github.io/personal-site/
+# Every merge to main goes live. A pull request only packages the site, as a check.
+# The site has no build step, so the published files are the committed files as they are.
+name: Publish to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # Publish again by hand from the Actions tab.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Package the site
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: .
+
+  publish:
+    if: github.ref == 'refs/heads/main'
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # One publish at a time. A newer merge waits for the running one instead of cutting it off.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

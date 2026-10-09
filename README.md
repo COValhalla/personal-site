@@ -18,6 +18,12 @@ open index.html
 
 It runs straight from the file. No server, no build step and no internet connection.
 
+## See it live
+
+The site is public at **https://covalhalla.github.io/personal-site/**.
+
+Every merge to `main` publishes it there within a minute or two, through GitHub Pages. The workflow in `.github/workflows/pages.yml` does it: it puts the committed files online as they are, because there is nothing to build. On a pull request the same workflow only packages the site, as a check, and publishes nothing. To publish again without a change, run "Publish to GitHub Pages" from the repository's Actions tab.
+
 ## What to try
 
 1. Scroll. Each act starts in gray. As it comes into view a chapter card sweeps across, the color comes in and your character walks on.
