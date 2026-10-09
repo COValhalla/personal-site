@@ -27,8 +27,15 @@
   };
   // How far to scroll for each step, as a share of the screen height, and how
   // much more the act holds still after its level-up so the new skills are seen.
-  const STEP_SCROLL = 0.22;
-  const LEVEL_HOLD = 0.3;
+  const STEP_SCROLL = 0.6;
+  const LEVEL_HOLD = 0.7;
+  // Playback speed for moments scrolled past, and for finishing an act you are leaving.
+  const CATCH_UP = 1.5;
+  const LEAVE_SPEED = 3;
+  // After scrolling stops, the page glides to a whole moment once this many seconds pass.
+  const SETTLE_DELAY = 0.16;
+  // A nudge this far (in moments) past a stop counts as going on to the next one.
+  const SETTLE_BIAS = 0.3;
   // How far the hero walks across the scene while the story is told, in scene pixels.
   const WALK = 34;
 
@@ -402,6 +409,11 @@
     }
   }
 
+  function speedFor(p) {
+    if (p.leaving) return LEAVE_SPEED;
+    return p.target - p.played > 1 ? CATCH_UP : 1;
+  }
+
   function advance(p, target, instant) {
     p.target = Math.max(p.target, Math.min(target, p.steps.length));
     if (instant || reduced() || !window.gsap) {
@@ -415,14 +427,14 @@
       return;
     }
     if (p.running) {
-      p.running.timeScale(p.target - p.played > 1 ? 3 : 1);
+      p.running.timeScale(speedFor(p));
       return;
     }
     if (p.played >= p.target) return;
     const k = p.played;
     const tl = play(p, k);
     p.running = tl;
-    tl.timeScale(p.target - p.played > 1 ? 3 : 1);
+    tl.timeScale(speedFor(p));
     tl.eventCallback('onComplete', () => {
       p.running = null;
       p.played = k + 1;
@@ -467,20 +479,30 @@
       // Then the act holds still while scrolling steps through its story.
       const storySteps = p.steps.length - 1;
       const stepPart = (STEP_SCROLL * storySteps) / (STEP_SCROLL * storySteps + LEVEL_HOLD);
+      // Stops sit just past each moment's start, so onUpdate has already counted that moment as told.
+      const stops = Array.from({ length: storySteps }, (_, k) => (stepPart * k * 1.001) / storySteps).concat(1);
+      const bias = (SETTLE_BIAS * stepPart) / storySteps;
+      let heading = 1;
+      const toStop = raw => {
+        const aim = raw + heading * bias;
+        return stops.reduce((best, s) => (Math.abs(s - aim) < Math.abs(best - aim) ? s : best), stops[0]);
+      };
       ScrollTrigger.create({
         trigger: p.section,
         start: 'top top',
         end: () => '+=' + Math.round(window.innerHeight * (STEP_SCROLL * storySteps + LEVEL_HOLD)),
         pin: p.screen,
         anticipatePin: 1,
+        snap: { snapTo: toStop, directional: false, delay: SETTLE_DELAY, duration: { min: 0.18, max: 0.45 }, ease: 'power3.out' },
         onUpdate: self => {
+          heading = self.direction;
           const u = Math.min(1, self.progress / stepPart);
           advance(p, 1 + Math.min(storySteps, Math.floor(u * storySteps * 0.999) + 1));
           // The walk and the rail reach the end as the level-up starts.
           scrub(p, Math.min(1, (u * storySteps) / (storySteps - 1)));
         },
-        // Moving on before the story is told plays the rest quickly.
-        onLeave: () => { advance(p, p.steps.length); if (p.running) p.running.timeScale(3); },
+        // Moving on before the story is told finishes the act at the leave speed.
+        onLeave: () => { p.leaving = true; advance(p, p.steps.length); },
       });
     });
     let queued = false;

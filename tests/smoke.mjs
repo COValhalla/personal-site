@@ -56,14 +56,14 @@ async function desktop(browser) {
     await page.waitForFunction(i => Acts.sections[i].played >= 2, n, { timeout: 6000 });
     const first = await page.$$eval(`#${id} .beat:not(.is-locked)`, b => b.length);
     check(first === 1, `Act ${n + 1} tells its first moment before the rest`);
-    check((end - start) <= 900 * (0.22 * (act.beats + 1) + 0.3) + 2, `Act ${n + 1} holds still for ${((end - start) / 900).toFixed(2)} screens, 0.22 a moment plus 0.3`);
+    check((end - start) <= 900 * (0.6 * (act.beats + 1) + 0.7) + 2, `Act ${n + 1} holds still for ${((end - start) / 900).toFixed(2)} screens, 0.6 a moment plus 0.7`);
     const heroAt = () => page.$eval(`#${id} .scene-hero`, h => parseFloat(h.style.left));
     const startX = await heroAt();
-    // Scroll on through the story, one step at a time.
-    const steps = act.beats + 1;
-    for (let k = 1; k <= steps; k++) {
-      await scrollTo(page, start + ((end - start) * k) / steps - 4);
-      await page.waitForTimeout(120);
+    // Scroll on through the story, one moment's room at a time: each stop is a whole moment.
+    const room = 900 * 0.6;
+    for (let k = 1; k <= act.beats; k++) {
+      await scrollTo(page, start + room * k + 2);
+      await page.waitForTimeout(700);
       if (k === 1) {
         // Between moments the scroll still moves things: the hero walks and the rail fills.
         const mid = await page.$eval(`#${id}`, s => ({ fill: s.querySelector('.rail-fill').style.transform, label: s.querySelector('.rail-label').textContent }));
@@ -71,6 +71,7 @@ async function desktop(browser) {
         check(/^Moment 2 of \d$/.test(mid.label), `Act ${n + 1}: the rail says ${mid.label}`);
       }
     }
+    await scrollTo(page, end - 4);
     await page.waitForFunction(i => Story.state.unlocked.has(i), n, { timeout: 15000 });
     await page.waitForSelector(`#${id} .act-screen.is-ready`, { timeout: 8000 });
     await page.waitForTimeout(900);
@@ -254,6 +255,48 @@ async function bmx(page) {
   check(calls.lift.join(',') === '11,22,10,0', `a press lifts the front wheel up to 22 degrees and back down (${calls.lift.join(', ')})`);
 }
 
+async function pacing(browser) {
+  console.log('\nLaptop, the pace of the scroll');
+  const { context, page, errors } = await open(browser, { viewport: { width: 1440, height: 900 } });
+  const { start } = (await pins(page))[0];
+  const room = 900 * 0.6;
+  await scrollTo(page, start - 450);
+  await page.waitForFunction(() => Acts.sections[0].played >= 1, null, { timeout: 5000 });
+  // A small nudge past a moment settles back; a bigger one glides on to the next.
+  const settledAfter = async nudge => {
+    await scrollTo(page, start + room);
+    await page.waitForTimeout(100);
+    await page.evaluate(v => window.scrollBy({ top: v, behavior: 'instant' }), nudge);
+    await page.waitForTimeout(900);
+    return (await page.evaluate(() => window.scrollY)) - (start + room);
+  };
+  const back = await settledAfter(40);
+  check(Math.abs(back) < 3, `a 40 px nudge past a moment settles back onto it (${back}px)`);
+  check(Math.abs((await settledAfter(120)) - room) < 3, 'a 120 px nudge glides on to the next moment');
+  // A flick of about 1,150 px ends on a whole moment, and moments scrolled past play at most 1.5x.
+  await scrollTo(page, start);
+  await page.waitForTimeout(100);
+  await page.evaluate(() => {
+    window.__peak = 0;
+    window.__watch = true;
+    const tick = () => {
+      const r = Acts.sections[0].running;
+      if (r) window.__peak = Math.max(window.__peak, r.timeScale());
+      if (window.__watch) requestAnimationFrame(tick);
+    };
+    tick();
+    window.scrollBy({ top: 1150, behavior: 'instant' });
+    setTimeout(() => { window.__watch = false; }, 1500);
+  });
+  await page.waitForTimeout(1200);
+  const moments = (await page.evaluate(() => window.scrollY) - start) / room;
+  check(Math.abs(moments - Math.round(moments)) < 0.01, `a 1,150 px flick ends on a whole moment (${moments.toFixed(2)} moments in)`);
+  const peak = await page.evaluate(() => window.__peak);
+  check(peak <= 1.5 + 1e-6, `moments scrolled past play at most 1.5x (peak ${peak.toFixed(2)}x)`);
+  check(errors.length === 0, 'no console errors or warnings');
+  await context.close();
+}
+
 async function reducedMotion(browser) {
   console.log('\nLaptop, motion turned off');
   const { context, page, errors } = await open(browser, { viewport: { width: 1280, height: 860 }, reducedMotion: 'reduce' });
@@ -316,6 +359,7 @@ async function phone(browser) {
 const browser = await chromium.launch({ ...launch, headless: true });
 try {
   await desktop(browser);
+  await pacing(browser);
   await reducedMotion(browser);
   await mapPartway(browser);
   await phone(browser);
