@@ -1,0 +1,14 @@
+# Installed by `npm install` for the smoke test
+node_modules/
+
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Logs and local secrets
+*.log
+.env
+.env.*

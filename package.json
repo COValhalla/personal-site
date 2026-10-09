@@ -1,0 +1,12 @@
+{
+  "name": "life-in-six-acts",
+  "private": true,
+  "description": "Proof of concept: a playful life story told as a game character sheet.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/smoke.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "1.63.0"
+  }
+}
