@@ -12,12 +12,13 @@ Story.addAct({
   color: { name: 'Amber', light: '#f5cf66', base: '#e5ac1f', shade: '#a57712' },
   theme: 'light',
   scene: 'library',
-  hero: { gear: 'headphones', title: 'Bootcamper' },
+  // The beard and the long hair came with the year off: they grow moment by moment (look).
+  hero: { gear: 'headphones', title: 'Bootcamper', hair: 'bun', beard: 'long' },
   beats: [
-    { tag: 'life', text: 'Took a year off work, and it was a fun one.', cue: 'fun' },
-    { tag: 'work', text: 'Spent long days at the library, studying.', item: 'library-books', cue: 'study' },
-    { tag: 'work', text: 'Went through a software bootcamp and turned years of side scripts into a craft.', item: 'laptop', cue: 'code' },
-    { tag: 'work', text: 'Learned to explain every bug out loud.', item: 'rubber-duck', cue: 'duck' },
+    { tag: 'life', text: 'Took a year off work, and it was a fun one.', cue: 'fun', look: { hair: 'short', beard: 'stubble' } },
+    { tag: 'work', text: 'Spent long days at the library, studying.', item: 'library-books', cue: 'study', look: { beard: 'short' } },
+    { tag: 'work', text: 'Went through a software bootcamp and turned years of side scripts into a craft.', item: 'laptop', cue: 'code', look: { beard: 'full' } },
+    { tag: 'work', text: 'Learned to explain every bug out loud.', item: 'rubber-duck', cue: 'duck', look: { hair: 'bun', beard: 'long' } },
   ],
   unlock: { banner: 'Level 5', say: 'Turning point: Bootcamper', pop: 'Turning point!' },
   items: [

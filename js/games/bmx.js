@@ -1,5 +1,6 @@
 /*
- * BMX race, Act I. Side view of a Saturday track, against three other riders.
+ * BMX race, Act I. Side view of a Saturday track, against two other riders,
+ * each in their own lane.
  *
  * Everyone starts on the raised start hill behind the gate. The cadence plays
  * ("Riders ready, watch the gate"), the lights run red, yellow, yellow, green
@@ -9,7 +10,10 @@
  * Two controls:
  *   Pedal (hold, or the right arrow): speed on the flats. It does nothing in the rollers.
  *   Pump  (tap, or Space): lift the front wheel just before a roller to pump it
- *         for speed, or pop off the lip of a jump to fly further.
+ *         for speed, or pop off the lip of a jump to fly further. A lit strip on
+ *         the dirt before each roller and lip shows when: press while your front
+ *         wheel is over the green part for a perfect pump, the amber part for a
+ *         good one. A press after a roller's strip counts toward the next roller.
  * Land a jump on its downslope to keep your speed. Come up short and you crash.
  */
 (function () {
@@ -32,6 +36,23 @@
   const START_X = 50;
   const GATE_X = 60;
   const WHEEL = 6; // front wheel is this far ahead of the rider's x
+  const LANE_GAP = 5; // pixels between lanes, back to front
+  // On a press the front wheel pulls up around the rear wheel: up, held, then down.
+  const LIFT = { degrees: 22, up: 0.07, hold: 0.2, down: 0.38 };
+  // Where the front wheel should be when you press, relative to a roller's start or a lip.
+  const WINDOWS = {
+    roller: { perfect: [-14, 5], good: [-26, 12] },
+    lip: { perfect: [-16, 2], good: [-30, 6] },
+  };
+
+  // How far the front wheel is lifted, in radians, t seconds after a press.
+  function liftAngle(t) {
+    const a = (LIFT.degrees * Math.PI) / 180;
+    if (t < 0 || t >= LIFT.down) return 0;
+    if (t < LIFT.up) return (a * t) / LIFT.up;
+    if (t < LIFT.hold) return a;
+    return a * (1 - (t - LIFT.hold) / (LIFT.down - LIFT.hold));
+  }
 
   // ---------- The track ----------
 
@@ -103,7 +124,7 @@
   function newRider(lane, track) {
     return {
       lane, x: START_X, h: track.heightAt(START_X), v: 0, vx: 0, vy: 0, air: false,
-      pitch: 0, lift: 0, crouch: 0, crank: 0, crashT: 0, stall: 0, done: false, time: 0,
+      pitch: 0, lift: 9, crouch: 0, crank: 0, crashT: 0, stall: 0, done: false, time: 0,
       press: null, used: new Set(), stats: { perfect: 0, good: 0, miss: 0, clean: 0, crashes: 0 },
     };
   }
@@ -127,7 +148,7 @@
       return null;
     }
     if (r.stall > 0) { r.stall -= dt; return null; }
-    r.lift = Math.max(0, r.lift - dt);
+    r.lift += dt;
     r.crouch = Math.max(0, r.crouch - dt * 3);
     if (!r.air) {
       const s = track.slopeAt(r.x);
@@ -140,12 +161,21 @@
       r.crank += (pedaling ? r.v / 6 : 0) * dt;
       const nx = r.x + r.v * c * dt;
       // Rollers: judged as the rider passes each crest.
+      // A press after a roller's window is left for the next roller.
       for (const f of track.features) {
         if (f.kind === 'roller' && r.x < f.crest && nx >= f.crest && !r.used.has(f)) {
           r.used.add(f);
-          if (takePress(r, f.x0 - 14, f.x0 + 5)) { r.v += PUMP.perfect; r.stats.perfect += 1; r.crouch = 1; event = 'perfect'; }
-          else if (takePress(r, f.x0 - 26, f.x0 + 12)) { r.v += PUMP.good; r.stats.good += 1; r.crouch = 0.7; event = 'good'; }
-          else { r.v = Math.max(MIN_V, r.v + PUMP.miss); r.stats.miss += 1; event = 'bump'; }
+          const w = WINDOWS.roller;
+          const pr = r.press && !r.press.used ? r.press : null;
+          if (takePress(r, f.x0 + w.perfect[0], f.x0 + w.perfect[1])) { r.v += PUMP.perfect; r.stats.perfect += 1; r.crouch = 1; event = 'perfect'; }
+          else if (takePress(r, f.x0 + w.good[0], f.x0 + w.good[1])) {
+            r.v += PUMP.good; r.stats.good += 1; r.crouch = 0.7;
+            event = pr.x < f.x0 + w.perfect[0] ? 'good-early' : 'good-late';
+          } else {
+            r.v = Math.max(MIN_V, r.v + PUMP.miss);
+            r.stats.miss += 1;
+            if (pr && pr.x < f.x0 + w.good[0]) { pr.used = true; event = 'early'; } else event = 'bump';
+          }
         }
       }
       // Lips: the rider takes off, with a pop if Pump came just before.
@@ -154,8 +184,9 @@
           const ang = Math.atan(track.slopeAt(f.x - 1.5));
           r.vx = r.v * Math.cos(ang);
           r.vy = r.v * Math.sin(ang);
-          if (takePress(r, f.x - 16, f.x + 2)) { r.vy += POP.perfect; event = 'pop'; }
-          else if (takePress(r, f.x - 30, f.x + 6)) { r.vy += POP.good; event = 'pop-good'; }
+          const w = WINDOWS.lip;
+          if (takePress(r, f.x + w.perfect[0], f.x + w.perfect[1])) { r.vy += POP.perfect; event = 'pop'; }
+          else if (takePress(r, f.x + w.good[0], f.x + w.good[1])) { r.vy += POP.good; event = 'pop-good'; }
           r.air = true;
           r.jump = f;
           r.x = f.x;
@@ -231,11 +262,10 @@
       { jersey: ramp.base, light: ramp.light, frame: ramp.shade, plate: '1' },
       { jersey: '#e0533d', light: '#f08a75', frame: '#a3352a', plate: '7' },
       { jersey: '#3b7dd8', light: '#7fb0ee', frame: '#24539c', plate: '3' },
-      { jersey: '#3fa66b', light: '#7fd09c', frame: '#286f46', plate: '9' },
     ];
-    // Three rivals: a fast one, a steady one and a beginner. cap is how hard they pedal,
+    // Two rivals: a fast one and a steady one. cap is how hard they pedal,
     // spread how far their pumps miss by, pop how often they pop a lip.
-    const RIVALS = [{ cap: 0.92, spread: 25, pop: 0.75 }, { cap: 0.87, spread: 38, pop: 0.5 }, { cap: 0.8, spread: 64, pop: 0.2 }];
+    const RIVALS = [{ cap: 0.92, spread: 25, pop: 0.75 }, { cap: 0.86, spread: 44, pop: 0.45 }];
 
     const s = {};
     const input = { pedal: false };
@@ -247,7 +277,7 @@
 
     function reset() {
       Object.assign(s, {
-        t: 0, clock: 0, riders: [0, 1, 2, 3].map(l => newRider(l, track)),
+        t: 0, clock: 0, riders: [0, 1, 2].map(l => newRider(l, track)),
         gate: 0, gateFall: 0, cue: 0, dropAt: 0, call: '', callT: 0, light: 0, cam: START_CAM, place: 0, early: false,
         reaction: null, results: null, dust: [], shake: 0,
       });
@@ -389,9 +419,10 @@
       sdot(N.n, cx - Math.round(Math.cos(spin) * 2), cy - Math.round(Math.sin(spin) * 2));
     }
 
-    function paintRider(r, look, dim) {
+    // A rider further back is a little darker: about 8% for each lane.
+    function paintRider(r, look, lane) {
       sctx.clearRect(0, 0, 32, 32);
-      const tone = c => (dim ? Scenes.mix(c, '#b9b3c4', 0.35) : c);
+      const tone = c => (lane ? Scenes.mix(c, '#000000', 0.08 * lane) : c);
       const spin = r.x / 4;
       const low = Math.round((r.air ? 2 : 0) + r.crouch * 2);
       // Bike: wheels, frame, fork, bars and the number plate.
@@ -457,16 +488,44 @@
       }));
     }
 
+    // The player's rider gets a 1-pixel light outline, drawn from a white copy of the sprite.
+    const glow = document.createElement('canvas');
+    glow.width = 32;
+    glow.height = 32;
+    const gctx = glow.getContext('2d');
+    function outline() {
+      gctx.clearRect(0, 0, 32, 32);
+      gctx.globalCompositeOperation = 'source-over';
+      gctx.drawImage(spr, 0, 0);
+      gctx.globalCompositeOperation = 'source-in';
+      gctx.fillStyle = '#fffbe8';
+      gctx.fillRect(0, 0, 32, 32);
+    }
+
     function drawRider(r, look, isPlayer) {
       const sx = Math.round(r.x - s.cam);
       if (sx < -24 || sx > W + 24) return;
-      const sy = Math.round(BASE - r.h - r.lane * 3);
-      let pitch = r.pitch - r.lift * 0.9;
+      const laneY = r.lane * LANE_GAP;
+      const sy = Math.round(BASE - r.h - laneY);
+      // A shadow on the rider's own lane, which stays on the dirt during a jump.
+      const gy = Math.round(groundY(r.x) - laneY);
+      const spread = r.air ? Math.max(3, 7 - Math.round((r.h - track.heightAt(r.x)) / 6)) : 8;
+      rect('rgba(70,40,20,0.35)', sx - spread, gy - 1, spread * 2, 2);
+      let pitch = r.pitch;
       if (r.crashT > 0) pitch = -((1.1 - r.crashT) * 7);
-      paintRider(r, look, !isPlayer);
+      // A press pulls the front wheel up around the rear wheel.
+      const lift = r.crashT > 0 ? 0 : liftAngle(r.lift);
+      paintRider(r, look, r.lane);
       ctx.save();
       ctx.translate(sx, sy);
       ctx.rotate(-pitch);
+      ctx.translate(-6, 0);
+      ctx.rotate(-lift);
+      ctx.translate(6, 0);
+      if (isPlayer) {
+        outline();
+        [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(([dx, dy]) => ctx.drawImage(glow, -OX + dx, -OY + dy));
+      }
       ctx.drawImage(spr, -OX, -OY);
       ctx.restore();
       // A marker over the player.
@@ -474,6 +533,35 @@
         const my = sy - 30;
         rect(N.w, sx - 2, my, 5, 1); rect(N.w, sx - 1, my + 1, 3, 1); dot(N.w, sx, my + 2);
       }
+    }
+
+    // The pump strip: on the player's lane, before each roller and lip still ahead,
+    // green where a press is perfect and amber where it is good. It brightens
+    // while the front wheel is over it.
+    function drawStrips() {
+      if (s.phase !== 'riding' && s.phase !== 'cadence' && s.phase !== 'ready') return;
+      const r = s.player;
+      const wheel = r.x + WHEEL;
+      // The next roller or lip is lit; the one after it shows faintly, so you can see it coming.
+      const ahead = track.features.filter(f => {
+        const at = f.kind === 'roller' ? f.x0 : f.x;
+        return at + WINDOWS[f.kind].good[1] >= wheel - 4 && !(f.kind === 'roller' && r.used.has(f));
+      }).slice(0, 2);
+      ahead.reverse().forEach((f, k) => {
+        const faint = ahead.length === 2 && k === 0;
+        const at = f.kind === 'roller' ? f.x0 : f.x;
+        const w = WINDOWS[f.kind];
+        const over = !faint && wheel >= at + w.perfect[0] && wheel <= at + w.perfect[1];
+        for (let wx = Math.ceil(at + w.good[0]); wx <= at + w.good[1]; wx++) {
+          const x = wx - s.cam;
+          if (x < 0 || x >= W) continue;
+          const y = Math.round(groundY(wx));
+          const perfect = wx >= at + w.perfect[0] && wx <= at + w.perfect[1];
+          const c = perfect ? (over ? '#e8ffd0' : '#5ac43a') : '#ffcf4a';
+          rect(faint ? Scenes.mix(c, '#c98a55', 0.55) : c, x, y - 2, 1, 2);
+          if (perfect && !faint) dot(over ? '#ffffff' : '#9be36c', x, y - 3);
+        }
+      });
     }
 
     function drawHud() {
@@ -545,6 +633,7 @@
       ctx.save();
       if (s.shake > 0) ctx.translate(Math.round((rand() - 0.5) * 3), Math.round((rand() - 0.5) * 3));
       drawWorld();
+      drawStrips();
       drawDust();
       // Back lanes first so the player rides in front.
       [...s.riders].sort((a, b) => b.lane - a.lane).forEach(r => drawRider(r, JERSEYS[r.lane], r === s.player));
@@ -570,7 +659,7 @@
       if (s.phase === 'riding') {
         const r = s.player;
         r.press = { x: r.x + WHEEL, used: false };
-        if (!r.air) r.lift = 0.3;
+        if (!r.air) r.lift = 0;
       }
     }
 
@@ -604,7 +693,7 @@
       if (r.plan && !r.plan.done && r.x + WHEEL >= r.plan.at) {
         r.plan.done = true;
         r.press = { x: r.x + WHEEL, used: false };
-        if (!r.air) r.lift = 0.3;
+        if (!r.air) r.lift = 0;
       }
       return { pedal: r.v < PEDAL_MAX * r.ai.cap };
     }
@@ -629,15 +718,16 @@
 
     // What an event feels like: a sound, dust and a little shake.
     function feel(r, e) {
-      const sound = { perfect: ['pump', true], good: ['pump', false], bump: ['bump'], pop: ['pop'], 'pop-good': ['pop'], clean: ['land'], rough: ['land'], cased: ['bump'], flat: ['land'], crash: ['crash'] }[e];
+      const sound = { perfect: ['pump', true], 'good-early': ['pump', false], 'good-late': ['pump', false], early: ['bump'], bump: ['bump'], pop: ['pop'], 'pop-good': ['pop'], clean: ['land'], rough: ['land'], cased: ['bump'], flat: ['land'], crash: ['crash'] }[e];
       if (sound) Sound.play(sound[0], sound[1]);
-      const puffs = { clean: 6, rough: 8, cased: 10, flat: 10, crash: 16, bump: 4, perfect: 3, good: 2 }[e] || 0;
+      const puffs = { clean: 6, rough: 8, cased: 10, flat: 10, crash: 16, bump: 4, early: 4, perfect: 3, 'good-early': 2, 'good-late': 2 }[e] || 0;
       for (let i = 0; i < puffs; i++) s.dust.push({ x: r.x - 4 + rand() * 10, y: r.h, vx: -20 - rand() * 30, vy: 10 + rand() * 25, life: 0.5 + rand() * 0.3 });
       if (e === 'crash' || e === 'cased' || e === 'flat') s.shake = e === 'crash' ? 0.35 : 0.2;
     }
 
     const CALLS = {
-      perfect: ['PERFECT PUMP', '#9be36c'], good: ['GOOD PUMP', '#ffd56b'], bump: ['BUMPED IT', '#f08a75'],
+      perfect: ['PERFECT PUMP', '#9be36c'], 'good-early': ['GOOD - A BIT EARLY', '#ffd56b'], 'good-late': ['GOOD - A BIT LATE', '#ffd56b'],
+      early: ['TOO EARLY', '#f08a75'], bump: ['NO PUMP', '#f08a75'],
       pop: ['BIG POP', '#9be36c'], 'pop-good': ['POP', '#ffd56b'], clean: ['CLEAN', '#9be36c'],
       cased: ['CASED IT', '#f08a75'], rough: ['SKETCHY', '#ffd56b'], flat: ['TOO FAR: FLAT', '#f08a75'], crash: ['CAME UP SHORT', '#f08a75'],
     };
@@ -748,6 +838,6 @@
     help: 'Hold Pedal for speed. Tap Pump just before each roller to pump it, and at the lip of a jump to pop. Land on the downslope.',
     mount,
     // The physics, without drawing, for tests.
-    sim: { buildTrack, newRider, step },
+    sim: { buildTrack, newRider, step, liftAngle, WINDOWS, LANE_GAP },
   });
 })();

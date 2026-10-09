@@ -1,18 +1,20 @@
 /*
  * A look picker for the draft: try hair, skin, beard and glasses on the hero,
  * see it everywhere at once, then copy the line into recipes/site.js.
+ * The hair style and beard here are today's; each act's recipe sets its own.
  * It only shows while Story.config.draft is true.
  */
 (function () {
   'use strict';
 
   const { el } = Sheet;
-  const SKIN = [['#f6d3b3', '#d9a982'], ['#f0c29a', '#c98f66'], ['#d9a066', '#b07a45'], ['#a86b42', '#7f4e2e'], ['#6f4529', '#4f2f1b']];
-  const HAIR = [['Black', '#2b1d14'], ['Brown', '#5a3b22'], ['Light brown', '#8a5a2b'], ['Blond', '#d8a548'], ['Red', '#a3462a'], ['Gray', '#7d808a']];
-  const STYLES = [['short', 'Short'], ['buzz', 'Buzz cut'], ['swoop', 'Swept'], ['long', 'Long']];
-  const BEARDS = [['none', 'None'], ['stubble', 'Stubble'], ['full', 'Full beard']];
+  const SKIN = [['#f4c7a6', '#d9937a'], ['#f0c29a', '#c98f66'], ['#d9a066', '#b07a45'], ['#a86b42', '#7f4e2e'], ['#6f4529', '#4f2f1b']];
+  // Hair colors, each with the lighter color of its streaks.
+  const HAIR = [['Auburn', '#8c4527', '#c0703c'], ['Black', '#2b1d14', '#4a3426'], ['Brown', '#5a3b22', '#7d5634'], ['Blond', '#d8a548', '#f0cc7a'], ['Red', '#a3462a', '#cf6a43'], ['Gray', '#7d808a', '#a9acb5']];
+  const STYLES = [['bun', 'Top bun'], ['short', 'Short'], ['bald', 'Bald']];
+  const BEARDS = [['long', 'Long beard'], ['full', 'Full beard'], ['short', 'Short beard'], ['goatee', 'Goatee'], ['stubble', 'Stubble'], ['none', 'None']];
 
-  const current = () => Object.assign({ skin: SKIN[1][0], skinShade: SKIN[1][1], hair: HAIR[1][1], hairStyle: 'short', beard: 'none', glasses: false }, Story.config.look || {});
+  const current = () => Object.assign({ skin: SKIN[0][0], skinShade: SKIN[0][1], hair: HAIR[0][1], hairLight: HAIR[0][2], eyes: '#2c5a8c', hairStyle: 'bun', beard: 'long', glasses: false }, Story.config.look || {});
 
   function apply(look) {
     Story.config.look = look;
@@ -20,7 +22,7 @@
     Story.emit('look', look);
   }
 
-  const line = look => `look: { skin: '${look.skin}', skinShade: '${look.skinShade}', hair: '${look.hair}', hairStyle: '${look.hairStyle}', beard: '${look.beard}', glasses: ${look.glasses} },`;
+  const line = look => `look: { skin: '${look.skin}', skinShade: '${look.skinShade}', hair: '${look.hair}', hairLight: '${look.hairLight}', eyes: '${look.eyes}', hairStyle: '${look.hairStyle}', beard: '${look.beard}', glasses: ${look.glasses} },`;
 
   function swatches(name, items, value, onPick) {
     return el('div', { class: 'look-swatches', role: 'radiogroup', 'aria-label': name },
@@ -58,7 +60,7 @@
         el('div', { class: 'look-field' }, el('span', { text: 'Skin' }),
           swatches('Skin', SKIN.map(([c, sh], k) => [`Skin ${k + 1}`, c, sh]), look.skin, (c, sh) => set({ skin: c, skinShade: sh }))),
         el('div', { class: 'look-field' }, el('span', { text: 'Hair color' }),
-          swatches('Hair color', HAIR.map(([label, c]) => [label, c]), look.hair, c => set({ hair: c }))),
+          swatches('Hair color', HAIR.map(([label, c, light]) => [label, c, light]), look.hair, (c, light) => set({ hair: c, hairLight: light }))),
         select('Hair', STYLES, look.hairStyle, 'hairStyle'),
         select('Beard', BEARDS, look.beard, 'beard'),
         el('label', { class: 'look-field look-check' }, glasses, el('span', { text: 'Glasses' })));

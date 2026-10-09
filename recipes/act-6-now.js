@@ -12,7 +12,8 @@ Story.addAct({
   color: { name: 'Purple', light: '#b69af0', base: '#8a63d2', shade: '#5d3f9a' },
   theme: 'light',
   scene: 'studio',
-  hero: { gear: 'cap', title: 'Senior product manager' },
+  // No hat now, so the bun shows; a badge on the shirt.
+  hero: { gear: 'badge', title: 'Senior product manager', hair: 'bun', beard: 'long' },
   beats: [
     { tag: 'work', text: 'Product engineer: sat with the business to learn what it really needed.', item: 'two-hats', cue: 'listen' },
     { tag: 'work', text: 'Then built it myself: decide, build, ship, and go round again.', item: 'compass', cue: 'loop' },

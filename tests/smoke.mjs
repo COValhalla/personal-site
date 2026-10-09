@@ -56,11 +56,20 @@ async function desktop(browser) {
     await page.waitForFunction(i => Acts.sections[i].played >= 2, n, { timeout: 6000 });
     const first = await page.$$eval(`#${id} .beat:not(.is-locked)`, b => b.length);
     check(first === 1, `Act ${n + 1} tells its first moment before the rest`);
+    check((end - start) <= 900 * (0.22 * (act.beats + 1) + 0.3) + 2, `Act ${n + 1} holds still for ${((end - start) / 900).toFixed(2)} screens, 0.22 a moment plus 0.3`);
+    const heroAt = () => page.$eval(`#${id} .scene-hero`, h => parseFloat(h.style.left));
+    const startX = await heroAt();
     // Scroll on through the story, one step at a time.
     const steps = act.beats + 1;
     for (let k = 1; k <= steps; k++) {
       await scrollTo(page, start + ((end - start) * k) / steps - 4);
       await page.waitForTimeout(120);
+      if (k === 1) {
+        // Between moments the scroll still moves things: the hero walks and the rail fills.
+        const mid = await page.$eval(`#${id}`, s => ({ fill: s.querySelector('.rail-fill').style.transform, label: s.querySelector('.rail-label').textContent }));
+        check((await heroAt()) > startX && mid.fill !== 'scaleX(0)', `Act ${n + 1}: scrolling walks the hero and fills the progress rail`);
+        check(/^Moment 2 of \d$/.test(mid.label), `Act ${n + 1}: the rail says ${mid.label}`);
+      }
     }
     await page.waitForFunction(i => Story.state.unlocked.has(i), n, { timeout: 15000 });
     await page.waitForSelector(`#${id} .act-screen.is-ready`, { timeout: 8000 });
@@ -81,6 +90,8 @@ async function desktop(browser) {
     check(done.beatsShown === act.beats && done.beatsInView, `Act ${n + 1} shows all ${act.beats} life and work moments without scrolling`);
     check(done.inBelt, `Act ${n + 1} drops its items into the inventory belt`);
     check(!done.gray.includes('grayscale(1)'), `Act ${n + 1} has its color`);
+    const next = await page.$eval(`#${id} .act-next`, a => ({ text: a.textContent.trim(), shown: getComputedStyle(a).visibility === 'visible' }));
+    check(next.shown && next.text.startsWith(n < 5 ? `Next: Act ${['II', 'III', 'IV', 'V', 'VI'][n]}` : 'Next: quick facts'), `Act ${n + 1} ends with a Next tag (${next.text})`);
   }
   check(await page.textContent('.hud-count') === `${items}/${items}`, `the sheet holds all ${items} items`);
 
@@ -102,19 +113,29 @@ async function desktop(browser) {
   check(['Hammer', 'Act II', 'life', 'Four turns', 'What it added', 'Grit', 'Photo goes here', 'Play hammer throw'].every(t => card.includes(t)),
     'the hammer story card shows name, act, tag, line, what it added, photo slot and Play');
   await page.keyboard.press('Escape');
-  await page.click('#tab-tree');
-  const skills = await page.evaluate(() => Story.skills().length);
-  check(await page.$$eval('#sheet .tree .node', n => n.length) === skills, `Skill tree tab shows ${skills} skills`);
-  check(!(await page.$eval('#sheet .tree', t => t.textContent.includes('???'))), 'every skill is named once its act is unlocked');
-  await page.click('#sheet [data-skill="product"]');
-  check((await page.textContent('#sheet .tree-info')).includes('Grew from Throwing, Capital projects, Mountains, Debugging'), 'Product shows the branches it ties together');
+  await page.click('#tab-map');
+  check(await page.$$eval('#sheet .map-stop', n => n.length) === 6 && await page.$eval('#sheet .map-canvas', c => c.getBoundingClientRect().width > 300), 'the Map tab shows the map with six stops');
+  await page.waitForFunction(() => document.querySelector('#sheet .map').dataset.at === '5.00', null, { timeout: 2000 });
+  check(true, 'the hero stands at the furthest stop reached');
+  await page.click('#sheet [data-stop="1"]');
+  check((await page.textContent('#sheet .map-info')).includes('Hammer thrower. Skills: Throwing, Chemistry.'), 'a stop shows its class and skills');
+  await page.waitForTimeout(400);
+  const walking = Number(await page.$eval('#sheet .map', m => m.dataset.at));
+  check(walking < 5 && walking > 1, `the hero walks the road toward the selected stop (at ${walking})`);
+  await page.waitForFunction(() => document.querySelector('#sheet .map').dataset.at === '1.00', null, { timeout: 8000 });
+  check(true, 'the hero reaches the selected stop');
+  await page.click('#sheet .map-go');
+  await page.waitForTimeout(400);
+  check(!(await page.$('#sheet[open]')) && await page.$eval('#act-school', s => Math.abs(s.getBoundingClientRect().top) < 4), 'Go to Act II closes the sheet at Act II');
+  await page.evaluate(() => Sheet.open({ tab: 'items' }));
+  await page.waitForSelector('#sheet[open]');
   // The draft look picker changes the character everywhere and gives the line to keep.
   const before = await page.$eval('.intro-hero img', i => i.src);
   await page.click('#sheet .look-picker summary');
-  await page.selectOption('#sheet .look-field select >> nth=0', 'long');
+  await page.selectOption('#sheet .look-field select >> nth=0', 'short');
   await page.click('#sheet .look-check input');
   const after = await page.$eval('.intro-hero img', i => i.src);
-  check(after !== before && (await page.textContent('#sheet .look-line')).includes("hairStyle: 'long'") && (await page.textContent('#sheet .look-line')).includes('glasses: true'),
+  check(after !== before && (await page.textContent('#sheet .look-line')).includes("hairStyle: 'short'") && (await page.textContent('#sheet .look-line')).includes('glasses: true'),
     'the look picker restyles the character and shows the line to keep');
   await page.keyboard.press('Escape');
 
@@ -130,14 +151,23 @@ async function hammer(page) {
   await page.waitForSelector('#game[open]');
   const ready = () => page.waitForFunction(s => document.querySelector(s).dataset.state === 'ready', st, { timeout: 8000 });
   const landed = () => page.waitForFunction(s => ['landed', 'done'].includes(document.querySelector(s).dataset.state), st, { timeout: 9000 });
-  // A full throw: hold through four turns and let go while it glows.
+  // The last two turns are faster, and the glow still lasts at least 0.1 s.
+  const window4 = await page.$eval(st, s => { const h = s.hammer; h.s.omega = 9.2; const w = (2 * h.zone()) / 9.2; h.s.omega = 0; return w; });
+  check(window4 >= 0.0999, `the glow lasts ${window4.toFixed(3)} s on the fastest turn`);
+  // A full throw: hold through four turns and let go in the middle of the glow.
   await ready();
   await page.keyboard.down('Space');
-  await page.waitForFunction(s => { const d = document.querySelector(s).dataset; return d.turn === '4' && d.zone === 'yes'; }, st, { polling: 'raf', timeout: 12000 });
+  await page.waitForFunction(s => { const h = document.querySelector(s).hammer; return h.s.turn === 4 && Math.abs(Math.atan2(Math.sin(h.s.theta), Math.cos(h.s.theta))) < 0.08; }, st, { polling: 'raf', timeout: 12000 });
+  const turnSpeed = await page.$eval(st, s => s.hammer.s.omega);
   await page.keyboard.up('Space');
-  await page.waitForFunction(s => document.querySelector(s).dataset.last, st, { timeout: 6000 });
+  check(turnSpeed > 8.5, `the fourth turn spins fast (${turnSpeed.toFixed(2)} radians a second)`);
+  check(await page.$eval(st, s => s.dataset.hit) === 'perfect', 'a centered release on the fourth turn hits: a freeze, a shake and a flash');
+  await page.waitForFunction(s => document.querySelector(s).dataset.camera === 'on', st, { timeout: 2000 });
+  check(true, 'a big throw cuts to the throw camera');
+  await page.waitForFunction(s => document.querySelector(s).dataset.last, st, { timeout: 8000 });
   const mark = await page.$eval(st, s => s.dataset.last);
-  check(/^\d+\.\d\d$/.test(mark) && Number(mark) > 60, `a release in the glow on the fourth turn lands in the sector (${mark} m)`);
+  check(/^\d+\.\d\d$/.test(mark) && Number(mark) > 76 && Number(mark) <= 79, `the camera lands it back on the mark, and a clean fourth turn still reaches the best mark (${mark} m)`);
+  check(await page.$eval(st, s => s.dataset.camera) === 'done', 'the camera cuts back to the field');
   // Holding on: the turns stop at four and it is a foul.
   await ready();
   await page.keyboard.down('Space');
@@ -170,6 +200,7 @@ async function bmx(page) {
   await page.keyboard.press('Space');
   check(await page.$eval(st, s => s.dataset.state) === 'cadence', 'pressing Pump starts the gate cadence');
   check(await page.$eval(st, s => s.bmx.s.player.h > 30), 'the riders start on the raised start hill');
+  check(await page.$eval(st, s => s.bmx.s.riders.map(r => r.lane * Games.get('bmx').sim.LANE_GAP).join(',')) === '0,5,10', 'you race two rivals, in lanes 5 pixels apart');
   await page.waitForFunction(s => document.querySelector(s).dataset.state === 'riding', st, { timeout: 8000 });
   check(await page.$eval(st, s => s.bmx.s.gate === 1), 'the gate drops and the race starts');
   // A bot rider: hold Pedal, and tap Pump just before each roller and each lip.
@@ -191,8 +222,36 @@ async function bmx(page) {
   check(true, 'timed pumps in the roller section count as perfect pumps');
   await page.waitForFunction(s => document.querySelector(s).dataset.state === 'finished', st, { timeout: 30000 });
   const place = await page.$eval(st, s => Number(s.dataset.place));
-  check(place >= 1 && place <= 4, `the race finishes with a place (${place})`);
+  check(place >= 1 && place <= 3, `the race finishes with a place (${place})`);
   await page.click('#game .game-skip');
+  // The pump rules, without drawing: the call for a press at each spot before a roller.
+  const calls = await page.evaluate(() => {
+    const { buildTrack, newRider, step, liftAngle } = Games.get('bmx').sim;
+    const track = buildTrack();
+    const rollers = track.features.filter(f => f.kind === 'roller');
+    const f = rollers[0];
+    const ride = pressAt => {
+      const r = newRider(0, track);
+      r.x = f.x0 - 60; r.h = track.heightAt(r.x); r.v = 60;
+      const events = [];
+      let pressed = false;
+      for (let i = 0; i < 4000 && events.length < 2 && r.x < f.x1 + 60; i++) {
+        if (!pressed && r.x + 6 >= pressAt) { r.press = { x: r.x + 6, used: false }; pressed = true; }
+        const e = step(r, track, { pedal: false }, 0.004);
+        if (e) events.push(e);
+      }
+      return events.join(' then ');
+    };
+    return {
+      perfect: ride(f.x0 - 4), early: ride(f.x0 - 20), late: ride(f.x0 + 8), tooEarly: ride(f.x0 - 40), none: ride(Infinity),
+      carried: ride(f.x0 + 14),
+      lift: [0.035, 0.1, 0.3, 0.4].map(t => Math.round(liftAngle(t) * 180 / Math.PI)),
+    };
+  });
+  check(calls.perfect.startsWith('perfect') && calls.early.startsWith('good-early') && calls.late.startsWith('good-late') && calls.tooEarly.startsWith('early') && calls.none.startsWith('bump'),
+    `each press gets its call: ${calls.perfect}, ${calls.early}, ${calls.late}, ${calls.tooEarly}, ${calls.none}`);
+  check(calls.carried === 'bump then perfect', `a press after a roller's strip counts toward the next roller (${calls.carried})`);
+  check(calls.lift.join(',') === '11,22,10,0', `a press lifts the front wheel up to 22 degrees and back down (${calls.lift.join(', ')})`);
 }
 
 async function reducedMotion(browser) {
@@ -206,7 +265,30 @@ async function reducedMotion(browser) {
   await page.keyboard.down('Space');
   await page.waitForTimeout(600);
   check(['wind', 'turns'].includes(await page.$eval('#game .game-stage', s => s.dataset.state)), 'the hammer throw is still playable');
+  await page.waitForFunction(() => { const h = document.querySelector('#game .game-stage').hammer; return h.s.turn === 4 && Math.abs(Math.atan2(Math.sin(h.s.theta), Math.cos(h.s.theta))) < 0.08; }, null, { polling: 'raf', timeout: 12000 });
   await page.keyboard.up('Space');
+  await page.waitForFunction(() => document.querySelector('#game .game-stage').dataset.camera === 'on', null, { timeout: 2000 });
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Space');
+  await page.waitForFunction(() => document.querySelector('#game .game-stage').dataset.last, null, { timeout: 1000 });
+  check(true, 'a tap skips the throw camera straight to the mark');
+  check(errors.length === 0, 'no console errors or warnings');
+  await context.close();
+}
+
+async function mapPartway(browser) {
+  console.log('\nThe map, partway through');
+  const { context, page, errors } = await open(browser, { viewport: { width: 1280, height: 860 } });
+  await page.evaluate(() => [0, 1, 2].forEach(i => Acts.unlock(i)));
+  await page.evaluate(() => Sheet.open({ tab: 'map' }));
+  await page.waitForSelector('#sheet[open]');
+  await page.waitForFunction(() => document.querySelector('#sheet .map').dataset.at === '2.00', null, { timeout: 2000 });
+  check(true, 'the hero waits at Act III, the furthest stop reached');
+  await page.click('#sheet [data-stop="4"]');
+  check((await page.textContent('#sheet .map-info')).includes('Not reached yet'), 'a stop not reached yet says so');
+  // The year off grows the beard moment by moment.
+  const looks = await page.evaluate(() => Story.acts[4].beats.map(b => b.look && b.look.beard).join(','));
+  check(looks === 'stubble,short,full,long', `the beard grows through the year off (${looks})`);
   check(errors.length === 0, 'no console errors or warnings');
   await context.close();
 }
@@ -235,6 +317,7 @@ const browser = await chromium.launch({ ...launch, headless: true });
 try {
   await desktop(browser);
   await reducedMotion(browser);
+  await mapPartway(browser);
   await phone(browser);
 } finally {
   await browser.close();

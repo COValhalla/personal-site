@@ -30,7 +30,7 @@
     const top = Math.max(-1, ...unlocked);
     const act = Story.acts[top];
     const avatar = document.querySelector('.hud-avatar');
-    avatar.replaceChildren(Pixel.hero(act ? act.hero.gear : 'none', act ? act.color : Pixel.GRAY, 1, ''));
+    avatar.replaceChildren(Pixel.hero(act ? act.hero.gear : 'none', act ? act.color : Pixel.GRAY, 1, '', act && Acts.styleOf(act)));
     document.querySelector('.hud-lv').textContent = `Level ${unlocked.size}`;
     document.querySelector('.hud-class').textContent = act ? ` · ${act.hero.title}` : '';
     const owned = Story.state.owned;
@@ -83,7 +83,7 @@
   function boot() {
     Pixel.setLook(Story.config && Story.config.look);
     const problems = Story.validate({
-      scenes: Scenes.names, cues: Scenes.cuesOf, gear: Object.keys(Pixel.HERO_GEAR), sprites: Object.keys(Pixel.ITEMS), games: Games.names(),
+      scenes: Scenes.names, cues: Scenes.cuesOf, gear: Object.keys(Pixel.HERO_GEAR), hair: Object.keys(Pixel.HAIR), beards: Object.keys(Pixel.BEARD), sprites: Object.keys(Pixel.ITEMS), games: Games.names(),
     });
     const main = document.querySelector('main');
     document.body.prepend(hud());

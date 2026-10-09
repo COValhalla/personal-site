@@ -98,7 +98,7 @@
     { h: '#7d808a', s: '#e8b48c', S: '#c08a62' },
   ];
   function person(ctx, x, feetY, ramp, k, flip) {
-    Pixel.paint(ctx, Pixel.HERO_BASE, ramp, x, feetY - 22, 1, flip, PERSON_LOOKS[k % PERSON_LOOKS.length]);
+    Pixel.paint(ctx, Pixel.PERSON_BASE, ramp, x, feetY - 22, 1, flip, PERSON_LOOKS[k % PERSON_LOOKS.length]);
   }
 
   // Tiny BMX rider, 9 x 8, for scenes. Rider in the given jersey color.

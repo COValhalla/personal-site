@@ -2,10 +2,16 @@
  * Hammer throw, Act II. Top-down view of the throwing circle and the sector.
  *
  * Hold to start: one wind over the head, then the turns. Every turn is faster
- * than the last, and the hammer glows as it passes the front of the circle.
- * Let go while it glows to throw. You get four turns at most: hold on past the
- * fourth and you spin out of the circle. Let go during the wind, or away from
- * the glow, and it is a foul. Three attempts; your best fair mark counts.
+ * than the last, and the last two are much faster. The hammer glows as it
+ * passes the front of the circle. Let go while it glows to throw. You get four
+ * turns at most: hold on past the fourth and you spin out of the circle. Let go
+ * during the wind, or away from the glow, and it is a foul. Three attempts;
+ * your best fair mark counts.
+ *
+ * A fair release on turn 3 or 4 hits: the picture freezes for a moment, shakes
+ * and flashes, and a phone buzzes where it can. A throw of CAMERA_FROM_M or more
+ * cuts to a side-on camera in slow motion that follows the hammer out, then
+ * cuts back to the mark. A tap skips it.
  */
 (function () {
   'use strict';
@@ -19,10 +25,39 @@
   const ORBIT = 9;
   const TURNS = 4;
   const WIND_SPEED = 3.6; // radians per second
-  const TURN_SPEED = [4.4, 5.2, 6.0, 6.8];
+  const TURN_SPEED = [4.4, 5.2, 7.2, 9.2];
+  // The glow is never shorter than this, however fast the hammer goes.
+  const MIN_WINDOW = 0.1; // seconds
   const ATTEMPTS = 3;
-  const BEST_M = 78;
+  const BEST_M = 78; // a centered release on a clean fourth turn
+  // The hit on a good release: a freeze, then a shake and a flash.
+  const FREEZE = { fair: 0.08, perfect: 0.11 };
+  const CAMERA_FROM_M = 70;
+  // The camera runs slow at first, then follows the hammer at full speed.
+  const CAM = { slow: 0.3, slowFor: 0.55, flight: 2.0, after: 0.9, pxPerM: 3 };
   const TAU = Math.PI * 2;
+
+  // The speed a clean fourth turn actually reaches at the middle of the glow:
+  // the spin eases toward each turn's pace, so it never quite gets to 9.2.
+  // Distance scales to this, so a centered turn-4 release makes BEST_M.
+  const REACH = (function () {
+    let theta = Math.PI;
+    let omega = 2;
+    let spun = 0;
+    let turn = 0;
+    const dt = 1 / 120;
+    for (let i = 0; i < 6000; i++) {
+      const target = turn === 0 ? WIND_SPEED : TURN_SPEED[turn - 1];
+      omega += (target - omega) * Math.min(1, dt * 4);
+      const before = Math.atan2(Math.sin(theta), Math.cos(theta));
+      theta -= omega * dt;
+      spun += omega * dt;
+      const after = Math.atan2(Math.sin(theta), Math.cos(theta));
+      if (turn === TURNS && before >= 0 && after < 0) return omega;
+      if (spun >= TAU) { spun -= TAU; turn += 1; }
+    }
+    return TURN_SPEED[TURNS - 1];
+  })();
 
   function mount(stage, ramp) {
     const canvas = Sheet.el('canvas', { class: 'game-canvas px', width: W, height: H, role: 'img', 'aria-label': 'Hammer throw field seen from above' });
@@ -36,7 +71,7 @@
 
     const ctx = canvas.getContext('2d');
     const N = Pixel.NEUTRALS;
-    const s = { phase: 'ready', attempt: 1, best: null, marks: [], results: [] };
+    const s = { phase: 'ready', attempt: 1, best: null, marks: [], results: [], t: 0, freeze: 0, shake: 0, flash: 0 };
     let raf = 0;
     let last = performance.now();
     let holding = false;
@@ -44,7 +79,7 @@
     function setPhase(phase) { s.phase = phase; stage.dataset.state = phase; }
 
     function resetThrow() {
-      Object.assign(s, { theta: Math.PI, omega: 0, spun: 0, turn: 0, trail: [], flight: null, flag: null });
+      Object.assign(s, { theta: Math.PI, omega: 0, spun: 0, turn: 0, trail: [], flight: null, flag: null, cam: null });
       stage.dataset.turn = '0';
       setPhase('ready');
     }
@@ -76,7 +111,10 @@
 
     // How far off straight up the sector the hammer would fly if let go at angle theta.
     const offAxis = theta => Math.atan2(Math.sin(theta), Math.cos(theta));
-    const glowing = () => s.phase === 'turns' && Math.abs(offAxis(s.theta)) <= SECTOR;
+    // Half the glow, in radians: the sector, or wider on a fast turn so it lasts MIN_WINDOW.
+    const zone = () => Math.max(SECTOR, (s.omega * MIN_WINDOW) / 2);
+    const glowing = () => s.phase === 'turns' && Math.abs(offAxis(s.theta)) <= zone();
+    const fast = () => s.phase === 'turns' && s.turn >= 3;
 
     // ---------- Drawing ----------
 
@@ -109,8 +147,9 @@
       const theta = s.theta;
       // The glow zone on the orbit, lit while turning.
       if (spinning || s.phase === 'ready') {
+        const half = s.phase === 'turns' ? zone() : SECTOR;
         for (let a = -Math.PI; a < Math.PI; a += 0.12) {
-          const inZ = Math.abs(a) <= SECTOR;
+          const inZ = Math.abs(a) <= half;
           px(C.x + Math.cos(a) * ORBIT, C.y + Math.sin(a) * ORBIT, inZ ? (s.phase === 'turns' ? ramp.light : '#6f8a76') : '#3e5a47');
         }
       }
@@ -172,8 +211,9 @@
       for (let a = 0; a < TAU; a += 0.06) px(cx + Math.cos(a) * 10, cy + Math.sin(a) * 10, '#f6f4ef');
       // The glow zone on the hammer's path, and the sector lines leaving it.
       const lit = s.phase === 'turns';
+      const half = lit ? zone() : SECTOR;
       for (let a = -Math.PI; a < Math.PI; a += 0.03) {
-        const inZ = Math.abs(a) <= SECTOR;
+        const inZ = Math.abs(a) <= half;
         if (!inZ && Math.floor(a * 30) % 3) continue;
         px(cx + Math.cos(a) * R, cy + Math.sin(a) * R, inZ ? (lit ? ramp.light : '#6f8a76') : '#3e5a47');
         if (inZ && lit) px(cx + Math.cos(a) * (R + 1), cy + Math.sin(a) * (R + 1), ramp.base);
@@ -186,6 +226,15 @@
         disc(cx + Math.cos(a) * R, cy + Math.sin(a) * R, 1, ramp.light);
       });
       ctx.globalAlpha = 1;
+      // Speed lines around the circle on the fast turns.
+      if (fast()) {
+        const r = Scenes.rng(Math.floor(s.t * 24));
+        for (let k = 0; k < 6; k++) {
+          const a = r() * TAU;
+          const r0 = R + 4 + r() * 6;
+          for (let j = 0; j < 4; j++) px(cx + Math.cos(a - j * 0.06) * r0, cy + Math.sin(a - j * 0.06) * r0, '#ffffff');
+        }
+      }
       const hx = cx + Math.cos(theta) * 4;
       const hy = cy + Math.sin(theta) * 4;
       const holdingHammer = s.phase !== 'flying' && s.phase !== 'landed' && s.phase !== 'done';
@@ -213,8 +262,10 @@
       for (let k = 0; k < TURNS; k++) {
         const on = s.turn > k;
         const now = s.phase === 'turns' && s.turn === k + 1;
+        // The light for a fast turn blinks.
+        const blink = now && s.turn >= 3 && Math.floor(s.t * 10) % 2;
         rect(N.o, 22 + k * 7, 3, 6, 7);
-        rect(now ? ramp.light : on ? ramp.base : '#3e5a47', 23 + k * 7, 4, 4, 5);
+        rect(now ? (blink ? N.w : ramp.light) : on ? ramp.base : '#3e5a47', 23 + k * 7, 4, 4, 5);
       }
       say(`ATTEMPT ${s.attempt}/${ATTEMPTS}`, W - 66, 4, '#a9bfae');
       if (s.phase === 'ready' && !s.banner) {
@@ -235,13 +286,27 @@
     }
 
     function render() {
-      ctx.clearRect(0, 0, W, H);
-      drawField();
-      drawThrower();
-      if (s.flight) drawFlight(s.flight);
-      drawOfficial();
-      drawCloseUp();
-      drawHud();
+      ctx.save();
+      if (s.shake > 0 && s.freeze <= 0) ctx.translate(Math.round((Math.random() - 0.5) * 4), Math.round((Math.random() - 0.5) * 4));
+      ctx.clearRect(-4, -4, W + 8, H + 8);
+      if (s.phase === 'camera' && s.freeze <= 0) {
+        drawCamera();
+      } else {
+        drawField();
+        drawThrower();
+        if (s.flight && s.phase !== 'camera') drawFlight(s.flight);
+        drawOfficial();
+        drawCloseUp();
+        drawHud();
+      }
+      ctx.restore();
+      // The flash: white over everything, with a ring out from the circle.
+      if (s.flash > 0 && s.freeze <= 0) {
+        const k = 1 - s.flash / 0.25;
+        ctx.fillStyle = `rgba(255,255,255,${(0.7 * (1 - k)).toFixed(2)})`;
+        ctx.fillRect(0, 0, W, H);
+        if (s.phase !== 'camera') for (let a = 0; a < TAU; a += 0.04) px(C.x + Math.cos(a) * (10 + k * 40), C.y + Math.sin(a) * (10 + k * 40), '#ffffff');
+      }
     }
 
     // ---------- The throw ----------
@@ -274,23 +339,156 @@
       if (s.phase === 'wind') { foul('Foul: you let go during the wind, and the hammer went into the cage.', 'TOO EARLY'); return; }
       if (s.phase !== 'turns') return;
       const off = offAxis(s.theta);
-      if (Math.abs(off) > SECTOR + LINE) {
+      if (Math.abs(off) > zone() + LINE) {
         const sub = Math.abs(off) > Math.PI / 2 ? 'INTO THE CAGE' : 'OUTSIDE THE SECTOR';
         foul(`Foul: let go while the hammer glows. Turn ${s.turn} of ${TURNS}.`, sub);
         return;
       }
       const clamped = Math.max(-SECTOR, Math.min(SECTOR, off));
-      const speed = s.omega / TURN_SPEED[TURNS - 1];
-      const meters = BEST_M * speed * speed * (1 - 0.15 * (clamped / SECTOR) ** 2);
+      const speed = s.omega / REACH;
+      const centered = Math.min(1, Math.abs(off) / zone());
+      const meters = Math.min(BEST_M + 1, BEST_M * speed * speed * (1 - 0.15 * centered ** 2));
       const bx = C.x + Math.cos(s.theta) * ORBIT;
       const by = C.y + Math.sin(s.theta) * ORBIT;
       const dist = meters * PX_PER_M;
       // It flies the way the hammer was moving: off straight up by the release angle.
       const dir = { x: Math.sin(clamped), y: -Math.cos(clamped) };
       s.flight = { x0: bx, y0: by, x1: C.x + dir.x * dist, y1: C.y + dir.y * dist, t: 0, dur: 0.5 + meters / 90, peak: 4 + meters / 6, meters, turn: s.turn };
-      setPhase('flying');
       Sound.play('release');
       msg.textContent = `Released on turn ${s.turn}.`;
+      // A fair release on a fast turn hits: freeze, then shake and flash, and buzz a phone.
+      const perfect = s.turn === TURNS && Math.abs(off) <= zone() / 2;
+      if (s.turn >= 3) {
+        s.freeze = perfect ? FREEZE.perfect : FREEZE.fair;
+        // With motion turned off, the hit is the freeze and the buzz only.
+        const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        s.shake = still ? 0 : 0.3;
+        s.flash = still ? 0 : 0.25;
+        try { if (navigator.vibrate) navigator.vibrate(perfect ? 45 : 25); } catch (e) { /* not allowed here */ }
+        if (perfect) banner('PERFECT', '#9be36c', 'RELEASE', 0.9);
+      }
+      stage.dataset.hit = s.turn >= 3 ? (perfect ? 'perfect' : 'fair') : 'none';
+      if (meters >= CAMERA_FROM_M) {
+        s.cam = { real: 0, u: 0, landed: -1, dirt: [] };
+        stage.dataset.camera = 'on';
+        setPhase('camera');
+        msg.textContent = `Released on turn ${s.turn}. Tap to skip the throw camera.`;
+      } else {
+        setPhase('flying');
+      }
+    }
+
+    // The throw camera ends: cut back to the top-down field, the hammer landing on its mark.
+    function endCamera() {
+      if (s.phase !== 'camera') return;
+      s.cam = null;
+      stage.dataset.camera = 'done';
+      s.flight.t = s.flight.dur;
+      setPhase('flying');
+    }
+
+    // ---------- The throw camera: side-on, at a dusk stadium ----------
+
+    const SKY = ['#2b2f5e', '#3d3f74', '#5a4a82', '#7c5487', '#a35f86', '#c86f7f', '#e2857c', '#f2a07a'];
+    const crowd = (function () { const r = Scenes.rng(31); return Array.from({ length: 300 }, () => Math.floor(r() * 7)); })();
+
+    function drawCamera() {
+      const c = s.cam;
+      const f = s.flight;
+      const P = CAM.pxPerM;
+      const p = Math.min(1, c.u / CAM.flight);
+      const xm = f.meters * p;
+      const GROUND_Y = 118;
+      const hy = GROUND_Y - 14 + 14 * p - 4 * 46 * p * (1 - p);
+      // The camera keeps the hammer a third of the way in, and starts on the thrower.
+      const camX = Math.max(-40, xm * P - 66);
+      for (let k = 0; k < SKY.length; k++) rect(SKY[k], 0, k * 10, W, 10);
+      rect('#f2a07a', 0, 80, W, 4);
+      // Light poles every 30 m, moving a little slower than the field.
+      for (let m = 0; m <= 120; m += 30) {
+        const x = Math.round(m * P * 1.1 - camX * 0.9);
+        if (x < -4 || x > W + 4) continue;
+        rect('#3a3744', x, 22, 1, 62);
+        rect('#fff3c4', x - 3, 20, 7, 2);
+      }
+      // Stands with the crowd, then the field.
+      rect('#2a2733', 0, 84, W, 10);
+      for (let x = 0; x < W; x++) {
+        const wx = Math.floor(x + camX * 0.8);
+        const k = crowd[((wx % 300) + 300) % 300];
+        if (k < 5) rect(['#e0533d', '#f6f4ef', '#ffd56b', '#7fb0ee', '#f0c29a'][k], x, 86 + (wx % 4 === 0 ? 0 : 3), 1, 2);
+      }
+      rect('#f6f4ef', 0, 94, W, 1);
+      for (let x = 0; x < W; x++) {
+        const wx = Math.floor(x + camX);
+        rect(Math.floor(wx / 12) % 2 ? '#3f8a4f' : '#378046', x, 95, 1, H - 95);
+      }
+      // Ticks every 10 m and boards every 20 m.
+      for (let m = 10; m <= 90; m += 10) {
+        const x = Math.round(m * P - camX);
+        if (x < -10 || x > W + 10) continue;
+        rect(N.w, x, GROUND_Y - 4, 1, 5);
+        if (m % 20 === 0) {
+          rect('#1d1b22', x - 7, 126, 15, 9);
+          Pixel.text(ctx, String(m), x - 3, 128, '#ffd56b', 1);
+        }
+      }
+      // The thrower, in Act II's look, at the front of the circle.
+      const tx = Math.round(-camX - 8);
+      if (tx > -20) {
+        const act = Story.acts.find(a => a.game === 'hammer') || Story.acts[0];
+        Pixel.paint(ctx, Pixel.heroGrid(act.hero.gear, Acts.styleOf(act)), ramp, tx, GROUND_Y - 22, 1, false);
+      }
+      // The hammer and its wire, with a dotted trail.
+      const bx = Math.round(xm * P - camX);
+      for (let k = 1; k < 10; k++) {
+        const q = Math.max(0, p - k * 0.02);
+        const tx2 = f.meters * q * P - camX;
+        const ty2 = GROUND_Y - 14 + 14 * q - 4 * 46 * q * (1 - q);
+        if (k % 2) px(tx2, ty2, 'rgba(255,255,255,0.7)');
+      }
+      if (c.landed < 0) {
+        line(bx, hy, bx - 3, hy - 2, '#c3c6cc');
+        rect('#1d1b22', bx - 3, hy - 3, 2, 2);
+        disc(bx, hy, 2, N.o);
+        disc(bx, hy, 1, ramp.base);
+        px(bx - 1, hy - 1, N.w);
+      } else {
+        disc(bx, GROUND_Y, 2, '#2a2420');
+      }
+      c.dirt.forEach(d => px(d.x - camX, d.y, d.life > 0.3 ? '#b9a98a' : '#8a7a5c'));
+      // The live distance, and what the camera is doing.
+      const shown = c.landed >= 0 ? `${fmt(f.meters)} M` : `${xm.toFixed(1)} M`;
+      rect('rgba(20,26,22,0.85)', 3, 3, shown.length * 8 + 4, 14);
+      say(shown, 5, 5, '#ffd56b', 2);
+      const tag = c.real < CAM.slowFor ? 'SLOW-MO' : 'THROW CAM';
+      say(tag, W - tag.length * 4 - 3, 5, N.w);
+      if (c.landed >= 0) {
+        const big = `${fmt(f.meters)} M`;
+        rect('rgba(20,26,22,0.85)', W / 2 - big.length * 6 - 4, 44, big.length * 12 + 6, 22);
+        sayCenter(big, 48, '#ffd56b', 3);
+      } else {
+        say('TAP TO SKIP', W - 47, 140, 'rgba(255,255,255,0.75)');
+      }
+    }
+
+    function stepCamera(dt) {
+      const c = s.cam;
+      c.real += dt;
+      c.u += dt * (c.real < CAM.slowFor ? CAM.slow : 1);
+      c.dirt.forEach(d => { d.life -= dt; d.x += d.vx * dt; d.y += d.vy * dt; d.vy += 90 * dt; });
+      c.dirt = c.dirt.filter(d => d.life > 0 && d.y < 118);
+      if (c.landed < 0 && c.u >= CAM.flight) {
+        c.landed = 0;
+        Sound.play('thud');
+        s.shake = 0.2;
+        const x = s.flight.meters * CAM.pxPerM;
+        for (let k = 0; k < 18; k++) c.dirt.push({ x, y: 117, vx: (Math.random() - 0.3) * 60, vy: -30 - Math.random() * 50, life: 0.5 + Math.random() * 0.4 });
+      }
+      if (c.landed >= 0) {
+        c.landed += dt;
+        if (c.landed >= CAM.after) endCamera();
+      }
     }
 
     function record(meters) {
@@ -339,6 +537,22 @@
     function tick(now) {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
+      s.t += dt;
+      // The freeze holds the picture still.
+      if (s.freeze > 0) {
+        s.freeze -= dt;
+        render();
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+      s.shake = Math.max(0, s.shake - dt);
+      s.flash = Math.max(0, s.flash - dt);
+      if (s.phase === 'camera') {
+        stepCamera(dt);
+        render();
+        raf = requestAnimationFrame(tick);
+        return;
+      }
       s.bannerT = Math.max(0, s.bannerT - dt);
       if (s.phase === 'wind' || s.phase === 'turns') {
         // Speed climbs smoothly toward this stage's pace.
@@ -348,7 +562,8 @@
         s.theta -= step;
         s.spun += step;
         s.trail.push([C.x + Math.cos(s.theta) * ORBIT, C.y + Math.sin(s.theta) * ORBIT]);
-        if (s.trail.length > 10) s.trail.shift();
+        // A longer trail on the fast turns.
+        if (s.trail.length > (s.turn >= 3 ? s.turn * 6 : 10)) s.trail.shift();
         if (s.phase === 'wind' && s.spun >= TAU) {
           s.spun -= TAU;
           s.turn = 1;
@@ -384,7 +599,12 @@
 
     // ---------- Controls ----------
 
-    const down = e => { e.preventDefault(); holding = true; start(); };
+    const down = e => {
+      e.preventDefault();
+      if (s.phase === 'camera') { endCamera(); return; }
+      holding = true;
+      start();
+    };
     const up = e => { e.preventDefault(); if (!holding) return; holding = false; release(); };
     [canvas, hold].forEach(target => {
       target.addEventListener('pointerdown', down);
@@ -397,7 +617,10 @@
     const keydown = e => {
       if (!KEYS.includes(e.key) || again.contains(document.activeElement) && !again.hidden) return;
       e.preventDefault();
-      if (!e.repeat) { holding = true; start(); }
+      if (e.repeat) return;
+      if (s.phase === 'camera') { endCamera(); return; }
+      holding = true;
+      start();
     };
     const keyup = e => {
       if (!KEYS.includes(e.key) || !holding) return;
@@ -419,7 +642,7 @@
     });
 
     // For tests and playtesting.
-    stage.hammer = { s, start, release };
+    stage.hammer = { s, start, release, REACH, zone };
 
     resetThrow();
     hold.focus();
@@ -433,7 +656,7 @@
 
   Games.register('hammer', {
     title: 'Hammer throw',
-    help: 'Hold to wind up and spin. You get four turns, each faster than the last. Let go while the hammer glows to land it in the sector. Hold past the fourth turn and it is a foul.',
+    help: 'Hold to wind up and spin. You get four turns, and the last two are fast. Let go while the hammer glows to land it in the sector. Hold past the fourth turn and it is a foul. A big throw plays the throw camera; tap to skip it.',
     mount,
   });
 })();

@@ -8,6 +8,10 @@
  * inventory belt. The last step levels the hero up and lights the new skills.
  * Each step plays once; scrolling back never replays it.
  *
+ * While the act is pinned, every bit of scrolling moves something: the hero
+ * walks across the scene and the progress rail under it fills, both in step
+ * with the scroll. When the act is done a Next tag points on.
+ *
  * Step timing lives in BEATS so every act keeps the same rhythm; see STYLE-GUIDE.md.
  */
 (function () {
@@ -23,8 +27,10 @@
   };
   // How far to scroll for each step, as a share of the screen height, and how
   // much more the act holds still after its level-up so the new skills are seen.
-  const STEP_SCROLL = 0.42;
-  const LEVEL_HOLD = 0.7;
+  const STEP_SCROLL = 0.22;
+  const LEVEL_HOLD = 0.3;
+  // How far the hero walks across the scene while the story is told, in scene pixels.
+  const WALK = 34;
 
   const sections = [];
   const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -33,15 +39,35 @@
     return i > 0 ? Story.acts[i - 1] : null;
   }
 
+  // The hair and beard an act gives the hero (see hero in the recipes).
+  const styleOf = act => ({ hair: act.hero.hair, beard: act.hero.beard });
+
+  // The hero before this act's level-up, in the look the story has reached.
+  function heroBefore(p) {
+    const prev = previous(p.i);
+    return Pixel.heroURL(prev ? prev.hero.gear : 'none', prev ? prev.color : Pixel.GRAY, p.style);
+  }
+
+  // A moment can change the hero's hair or beard (look in the recipe).
+  function restyle(p, beat) {
+    if (!beat.look) return;
+    p.style = Object.assign({}, p.style, beat.look);
+    if (!p.section.classList.contains('is-unlocked')) p.hero.src = heroBefore(p);
+  }
+
   function build(act, i) {
     const prev = previous(i);
     const scene = Scenes.get(act.scene);
     const canvas = el('canvas', { class: 'px scene-canvas', width: Scenes.W, height: Scenes.H });
     const stage = Scenes.mount(act.scene, canvas, act.color, Story.acts);
     stage.render();
-    const hero = Pixel.hero(prev ? prev.hero.gear : 'none', prev ? prev.color : Pixel.GRAY, 1, '');
+    // Until the level-up the hero keeps the last act's gear, hair and beard.
+    const style = styleOf(prev || act);
+    const hero = Pixel.hero(prev ? prev.hero.gear : 'none', prev ? prev.color : Pixel.GRAY, 1, '', style);
     hero.className = 'px scene-hero';
     const heroLeft = (scene.heroX / Scenes.W) * 100;
+    // The hero walks from walkFrom to heroX as the story is told.
+    const walkFrom = Math.max(2, scene.heroX - WALK);
     hero.style.left = heroLeft + '%';
     hero.style.top = ((Scenes.GROUND - 22) / Scenes.H) * 100 + '%';
     const label = el('p', { class: 'scene-levelup', 'aria-hidden': 'true', text: act.unlock.pop || 'Level up!' });
@@ -56,6 +82,12 @@
       el('b', { class: 'chapter-title', text: act.title }));
     const sceneEl = el('div', { class: 'scene', role: 'img', 'aria-label': `Act ${act.numeral} scene: your character in ${act.title.toLowerCase()}.` },
       canvas, flash, hero, el('div', { class: 'scene-burst', 'aria-hidden': 'true' }), label, pop, chapter);
+    // The progress rail: a node per moment and one for the level-up, filled as you scroll.
+    const beatCount = Story.beatsOf(act).length;
+    const railFill = el('i', { class: 'rail-fill' });
+    const railNodes = Array.from({ length: beatCount + 1 }, (_, k) => el('b', { class: 'rail-node', style: `left:${(k / beatCount) * 100}%` }));
+    const railLabel = el('span', { class: 'rail-label', text: `Moment 1 of ${beatCount}` });
+    const rail = el('div', { class: 'act-rail', 'aria-hidden': 'true' }, el('div', { class: 'rail-track' }, railFill, railNodes), railLabel);
 
     const beats = Story.beatsOf(act).map((beat, k) => el('li', { class: 'beat is-locked', 'data-beat': String(k) },
       el('span', { class: 'tag tag--' + beat.tag, text: beat.tag }),
@@ -96,12 +128,14 @@
       el('p', { class: 'act-years', text: act.years }));
 
     const hint = el('p', { class: 'act-hint', 'aria-hidden': 'true' }, 'Scroll to continue the story ', el('span', { class: 'act-hint-arrow', text: '▼' }));
+    const after = Story.acts[i + 1];
+    const next = el('a', { class: 'act-next', href: after ? `#act-${after.id}` : '#facts' }, after ? `Next: Act ${after.numeral} ` : 'Next: quick facts ', el('span', { 'aria-hidden': 'true', text: '▼' }));
     const screen = el('div', { class: `act-screen act--${act.theme || 'light'}`, style: colorVars(act) + (act.color.accent ? `;--ca:${act.color.accent}` : '') },
       head,
       el('div', { class: 'act-stage' },
-        el('div', { class: 'act-left' }, el('div', { class: 'scene-box' }, sceneEl), foot),
+        el('div', { class: 'act-left' }, el('div', { class: 'scene-box' }, sceneEl, rail), foot),
         story),
-      hint);
+      hint, next);
     const section = el('section', { class: 'act is-locked', id: `act-${act.id}`, 'data-act': String(i), 'aria-labelledby': `title-${act.id}` }, screen);
 
     // On a laptop the hero turns to face the pointer.
@@ -113,9 +147,42 @@
     }
 
     const steps = [{ kind: 'intro' }, ...Story.beatsOf(act).map((beat, k) => ({ kind: 'beat', beat, k })), { kind: 'level' }];
-    const parts = { act, i, section, screen, head, hero, heroLeft, label, pop, flash, chapter, sceneEl, stage, beats, skillCards, story, actions, hint, steps, played: 0, target: 0, running: null };
+    const parts = { act, i, style, section, screen, head, hero, heroLeft, walkFrom, heroX: scene.heroX, label, pop, flash, chapter, sceneEl, stage, beats, skillCards, story, actions, hint, rail, railFill, railNodes, railLabel, steps, played: 0, target: 0, running: null, walkOn: 1, fill: 1, heroAt: scene.heroX };
     sections.push(parts);
     return section;
+  }
+
+  // ---------- The hero's walk and the progress rail, in step with the scroll ----------
+
+  // Where the hero stands: walked on by the intro (walkOn), then across the scene by the scroll (fill).
+  function place(p) {
+    const along = p.walkFrom + (p.heroX - p.walkFrom) * p.fill;
+    const x = Math.round(-16 + (along + 16) * p.walkOn);
+    if (x === p.heroAt) return;
+    p.hero.classList.toggle('is-flipped', x < p.heroAt);
+    p.heroAt = x;
+    p.hero.style.left = (x / Scenes.W) * 100 + '%';
+  }
+
+  function railNote(p) {
+    const beats = p.steps.length - 2;
+    p.railFill.style.transform = `scaleX(${p.fill})`;
+    p.railNodes.forEach((node, k) => node.classList.toggle('is-on', p.fill * beats >= k - 0.001));
+    const done = p.played >= p.steps.length;
+    p.railLabel.textContent = done ? `Level ${p.i + 1} · ${p.act.hero.title}` : `Moment ${Math.min(beats, Math.max(1, p.target - 1))} of ${beats}`;
+    p.screen.classList.toggle('is-done', done);
+  }
+
+  // Scrolling while pinned: fill is how far through the moments the scroll has come, 0 to 1.
+  function scrub(p, fill) {
+    if (fill === p.fill) return;
+    p.fill = fill;
+    place(p);
+    railNote(p);
+    if (p.walkOn < 1) return;
+    p.hero.classList.add('is-walking');
+    clearTimeout(p.walkTimer);
+    p.walkTimer = setTimeout(() => p.hero.classList.remove('is-walking'), 180);
   }
 
   // ---------- Steps, played with motion ----------
@@ -128,7 +195,7 @@
     tl.fromTo(chapter.children, { x: -30, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, stagger: 0.08, ease: 'power2.out' }, BEATS.chapterIn + 0.15);
     tl.fromTo(head.children, { x: -56, opacity: 0.2 }, { x: 0, opacity: 1, duration: 0.5, stagger: 0.08, ease: 'power3.out' }, BEATS.chapterIn);
     tl.fromTo(screen, { '--gray': 1 }, { '--gray': 0, duration: 0.9, ease: 'power1.inOut' }, BEATS.color);
-    tl.fromTo(hero, { left: '-12%' }, { left: p.heroLeft + '%', duration: 0.8, ease: 'steps(10)' }, BEATS.walk);
+    tl.fromTo(p, { walkOn: 0 }, { walkOn: 1, duration: 0.8, ease: 'steps(10)', onUpdate: () => place(p) }, BEATS.walk);
     tl.call(() => hero.classList.add('is-walking'), null, BEATS.walk);
     tl.call(() => hero.classList.remove('is-walking'), null, BEATS.walk + 0.8);
     tl.to(chapter, { xPercent: 100, duration: 0.35, ease: 'power2.in' }, BEATS.chapterOut);
@@ -159,6 +226,7 @@
     const img = p.pop.querySelector('img');
     const tl = gsap.timeline();
     tl.call(() => {
+      p.pop.style.left = ((p.heroAt + 8) / Scenes.W) * 100 + '%';
       img.src = Pixel.item(item.sprite, act.color, 1, '').src;
       p.pop.querySelector('.scene-pop-name').textContent = '+ ' + item.name;
     });
@@ -197,6 +265,10 @@
     tl.add(typeOut(text), 0.1);
     const cue = step.beat.cue && p.stage.cue(step.beat.cue);
     if (cue) tl.add(cue, 0);
+    if (step.beat.look) {
+      tl.call(() => restyle(p, step.beat), null, 0.3);
+      tl.fromTo(p.flash, { opacity: 0.3 }, { opacity: 0, duration: 0.35 }, 0.3);
+    }
     if (step.beat.give) {
       tl.add(popItem(p, step.beat.give), BEATS.itemPop);
       if (chip) tl.fromTo(chip, { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(2.5)', onStart: () => chip.classList.add('is-on') }, BEATS.itemFly + 0.6);
@@ -245,7 +317,7 @@
     const tl = gsap.timeline();
     tl.to(hero, { yPercent: -40, duration: 0.25, ease: 'power2.out' }, BEATS.jump);
     tl.call(() => {
-      hero.src = Pixel.heroURL(act.hero.gear, act.color);
+      hero.src = Pixel.heroURL(act.hero.gear, act.color, styleOf(act));
       p.section.classList.add('is-unlocked');
       pill.textContent = act.unlock.banner;
       Story.state.unlocked.add(i);
@@ -302,10 +374,11 @@
       const chip = li.querySelector('.beat-item');
       if (chip) chip.classList.add('is-on');
       if (step.beat.cue) p.stage.settle(step.beat.cue);
+      restyle(p, step.beat);
       if (step.beat.give) { own(step.beat.give.id); if (window.Belt) Belt.fill(step.beat.give.id); }
       return;
     }
-    hero.src = Pixel.heroURL(act.hero.gear, act.color);
+    hero.src = Pixel.heroURL(act.hero.gear, act.color, styleOf(act));
     section.classList.add('is-unlocked');
     story.querySelector('.unlock-pill').textContent = act.unlock.banner;
     Story.leftoverItems(act).forEach(item => { own(item.id); if (window.Belt) Belt.fill(item.id); });
@@ -322,6 +395,7 @@
   function progressNote(p) {
     const left = p.steps.length - p.played;
     p.hint.classList.toggle('is-done', left <= 0);
+    railNote(p);
     if (window.Belt) {
       const done = Story.state.unlocked.size;
       Belt.xp(done, p.played >= p.steps.length ? 0 : p.played / p.steps.length);
@@ -382,6 +456,9 @@
     }));
     sections.forEach(p => seen.observe(p.screen));
     sections.forEach(p => {
+      p.fill = 0;
+      place(p);
+      railNote(p);
       // The chapter card plays as the act scrolls into view.
       ScrollTrigger.create({
         trigger: p.section, start: 'top 55%', once: true,
@@ -399,6 +476,8 @@
         onUpdate: self => {
           const u = Math.min(1, self.progress / stepPart);
           advance(p, 1 + Math.min(storySteps, Math.floor(u * storySteps * 0.999) + 1));
+          // The walk and the rail reach the end as the level-up starts.
+          scrub(p, Math.min(1, (u * storySteps) / (storySteps - 1)));
         },
         // Moving on before the story is told plays the rest quickly.
         onLeave: () => { advance(p, p.steps.length); if (p.running) p.running.timeScale(3); },
@@ -417,11 +496,10 @@
   // Redraw every hero, after the look changes.
   function refreshHeroes() {
     sections.forEach(p => {
-      const prev = previous(p.i);
       const done = p.section.classList.contains('is-unlocked');
-      p.hero.src = done ? Pixel.heroURL(p.act.hero.gear, p.act.color) : Pixel.heroURL(prev ? prev.hero.gear : 'none', prev ? prev.color : Pixel.GRAY);
+      p.hero.src = done ? Pixel.heroURL(p.act.hero.gear, p.act.color, styleOf(p.act)) : heroBefore(p);
     });
   }
 
-  window.Acts = { BEATS, STEP_SCROLL, LEVEL_HOLD, sections, build, unlock, advance, watch, refreshHeroes };
+  window.Acts = { styleOf, BEATS, STEP_SCROLL, LEVEL_HOLD, sections, build, unlock, advance, watch, refreshHeroes };
 })();

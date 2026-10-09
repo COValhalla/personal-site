@@ -25,7 +25,7 @@
       el('div', { class: 'belt-row' },
         el('span', { class: 'belt-label', text: 'Inventory' }),
         el('div', { class: 'belt-slots' }, groups),
-        el('button', { class: 'belt-skills', onclick: () => Sheet.open({ tab: 'tree' }) },
+        el('button', { class: 'belt-skills', onclick: () => Sheet.open({ tab: 'map' }) },
           el('span', { class: 'belt-skills-label', text: 'Skills' }),
           el('b', { class: 'belt-skills-count', text: `0/${Story.skills().length}` }))));
     return belt;

@@ -41,6 +41,11 @@
         need(act.color && act.color.light && act.color.base && act.color.shade, `${where} needs color.light, color.base and color.shade.`);
         need(known.scenes.includes(act.scene), `${where} uses scene "${act.scene}", which scenes.js does not draw.`);
         need(known.gear.includes(act.hero && act.hero.gear), `${where} uses hero gear "${act.hero && act.hero.gear}", which pixel.js does not have.`);
+        const looks = [act.hero || {}, ...(act.beats || []).map(b => b.look).filter(Boolean)];
+        looks.forEach(l => {
+          if (l.hair && known.hair) need(known.hair.includes(l.hair), `${where} uses hair "${l.hair}", which pixel.js does not have.`);
+          if (l.beard && known.beards) need(known.beards.includes(l.beard), `${where} uses beard "${l.beard}", which pixel.js does not have.`);
+        });
         (act.items || []).forEach(item => {
           need(!seen.has(item.id), `${where}: item id "${item.id}" is used twice.`);
           seen.add(item.id);
