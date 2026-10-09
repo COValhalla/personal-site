@@ -104,8 +104,8 @@ A scene lives in `js/scenes.js` and has four parts:
 Every act fills one screen. It tells its story in steps, and each step plays once; scrolling back never replays it.
 
 1. **Chapter.** When the act's top is a little past the middle of the screen, a chapter card sweeps across the scene, the title slides in, the color comes in and the hero walks on in the last act's gear.
-2. **Moments.** At the top of the screen the act holds still (it is pinned). Every further 22% of a screen of scrolling tells the next moment: it types itself out, plays its scene cue, and its item pops out above the hero and flies into the inventory belt. In between, the scroll itself moves things: the hero walks 34 scene pixels across the scene to `heroX`, and the progress rail under the scene fills, with a node per moment and one for the level-up ("Moment 2 of 3").
-3. **Level up.** After the last moment the hero jumps, changes gear and bursts in the act's color; then the new skills light one by one, each with the skills it grew from; then Open sheet appears. The act holds still for 30% of a screen more, and a pulsing Next tag points to the next act.
+2. **Moments.** At the top of the screen the act holds still (it is pinned). Every further 60% of a screen of scrolling tells the next moment, and each moment has its own stop: when scrolling pauses between stops the page glides to the nearest one (after 0.16 s; a nudge of about 30% of a moment past a stop goes on to the next). A moment: it types itself out, plays its scene cue, and its item pops out above the hero and flies into the inventory belt. In between, the scroll itself moves things: the hero walks 34 scene pixels across the scene to `heroX`, and the progress rail under the scene fills, with a node per moment and one for the level-up ("Moment 2 of 3").
+3. **Level up.** After the last moment the hero jumps, changes gear and bursts in the act's color; then the new skills light one by one, each with the skills it grew from; then Open sheet appears. The act holds still for 70% of a screen more, and a pulsing Next tag points to the next act.
 
 | Step | Starts at | Length | Ease |
 | --- | --- | --- | --- |
@@ -119,8 +119,8 @@ Every act fills one screen. It tells its story in steps, and each step plays onc
 | Skills light | 0.75 s, then 0.28 s apart | 0.35 s each | `back.out(2.5)` |
 | Open sheet appears | after the last skill, plus 0.25 s | 0.3 s | `back.out(2)` |
 
-- Steps queue up. If you scroll faster than they play, the waiting ones play three times faster, and leaving an act finishes it quickly.
-- The timings live in `BEATS`, `STEP_SCROLL`, `LEVEL_HOLD` and `WALK` in `js/acts.js`. Change them there, not per act.
+- Steps queue up. If you scroll past moments faster than they play, the waiting ones play at 1.5x (`CATCH_UP`), and leaving an act finishes it at 3x (`LEAVE_SPEED`).
+- The timings live in `BEATS`, `STEP_SCROLL`, `LEVEL_HOLD`, `CATCH_UP`, `LEAVE_SPEED`, `SETTLE_DELAY`, `SETTLE_BIAS` and `WALK` in `js/acts.js`. Change them there, not per act.
 - An item a moment does not give arrives with the level-up.
 - The hero idles with a 1-pixel bob, two frames, 1.4 s per cycle, and walks with the same bob, faster.
 - With motion turned off, every act shows already told and unlocked, and the games stay playable.
