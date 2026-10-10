@@ -4,8 +4,12 @@
 Story.site({
   name: 'Joe',
   tagline: 'A life in six acts. Scroll down and watch the character sheet fill in.',
-  // When true, item cards say their one-liners are draft words.
-  draft: true,
+  // Say hello links. A blank address leaves its link out.
+  contact: {
+    linkedin: '',
+    email: '',
+    github: 'https://github.com/COValhalla',
+  },
   // How the pixel hero looks, drawn from Joe's photos: skin, hair with
   // lighter streaks, blue eyes, and today's top bun and long beard. Each act's
   // recipe sets the hair and beard for that part of the story.

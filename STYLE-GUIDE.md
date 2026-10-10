@@ -59,7 +59,7 @@ The colors come from `look` in `recipes/site.js`, and each act's `hero` in its r
 | `beard` | `none`, `goatee`, `stubble`, `short`, `full` or `long` (overlays in `BEARD`) |
 | `glasses` | `true` or `false` |
 
-The story so far: short hair in Act I, bald with a goatee in II to IV, and in V the beard grows moment by moment (a moment's `look`) into the long beard and top bun of V and VI. Hair is drawn under the gear, and under a hat a bun tucks in as short hair; the beard and glasses are drawn over it, so a hat never hides the face. While the draft flag is on, the character sheet has a picker that tries today's look live and prints the `look` line (`js/look.js`). Other people in scenes (the business, the team) are `PERSON_BASE`, a plain face, in other shirts, hair and skin.
+The story so far: short hair in Act I, bald with a goatee in II to IV, and in V the beard grows moment by moment (a moment's `look`) into the long beard and top bun of V and VI. Hair is drawn under the gear, and under a hat a bun tucks in as short hair; the beard and glasses are drawn over it, so a hat never hides the face. Other people in scenes (the business, the team) are `PERSON_BASE`, a plain face, in other shirts, hair and skin.
 
 ## Act colors
 

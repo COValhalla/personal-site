@@ -136,7 +136,7 @@
 
     const hint = el('p', { class: 'act-hint', 'aria-hidden': 'true' }, 'Scroll to continue the story ', el('span', { class: 'act-hint-arrow', text: '▼' }));
     const after = Story.acts[i + 1];
-    const next = el('a', { class: 'act-next', href: after ? `#act-${after.id}` : '#facts' }, after ? `Next: Act ${after.numeral} ` : 'Next: quick facts ', el('span', { 'aria-hidden': 'true', text: '▼' }));
+    const next = el('a', { class: 'act-next', href: after ? `#act-${after.id}` : '#facts' }, after ? `Next: Act ${after.numeral} ` : 'Next: the short version ', el('span', { 'aria-hidden': 'true', text: '▼' }));
     const screen = el('div', { class: `act-screen act--${act.theme || 'light'}`, style: colorVars(act) + (act.color.accent ? `;--ca:${act.color.accent}` : '') },
       head,
       el('div', { class: 'act-stage' },
@@ -515,13 +515,5 @@
     catchUp();
   }
 
-  // Redraw every hero, after the look changes.
-  function refreshHeroes() {
-    sections.forEach(p => {
-      const done = p.section.classList.contains('is-unlocked');
-      p.hero.src = done ? Pixel.heroURL(p.act.hero.gear, p.act.color, styleOf(p.act)) : heroBefore(p);
-    });
-  }
-
-  window.Acts = { styleOf, BEATS, STEP_SCROLL, LEVEL_HOLD, sections, build, unlock, advance, watch, refreshHeroes };
+  window.Acts = { styleOf, BEATS, STEP_SCROLL, LEVEL_HOLD, sections, build, unlock, advance, watch };
 })();
