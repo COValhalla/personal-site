@@ -96,7 +96,8 @@ A scene lives in `js/scenes.js` and has four parts:
 - Use `Scenes.rng(seed)` for crowds, stars and code lines, so a scene looks the same every time.
 - A moment in a recipe names a cue (`cue: 'plane'`). Played to its end, a cue must leave the scene in its final state: with motion turned off the page jumps every cue to its end.
 - Move things in whole pixels or GSAP `steps()` eases, so motion stays chunky like the art.
-- Cues so far: Act I `race`, `shop`, `night`; II `throw`, `study`, `texas`; III `measure`, `plant`, `road`; IV `ski`, `plane`, `line`; V `fun`, `study`, `code`, `duck`; VI `listen`, `loop`, `team`, `shine`.
+- Cues so far: Act I `race`, `shop`, `night`, and `equip` (the level-up, on the character screen); II `throw`, `study`, `texas`; III `measure`, `plant`, `road`; IV `ski`, `plane`, `line`; V `fun`, `study`, `code`, `duck`; VI `listen`, `loop`, `team`, `shine`.
+- An act can have `stages`: one scene per moment, then one for the level-up (Act I has four: the track, the shop, the bedroom and the character screen). Moment 1 plays in stage 1, moment 2 in stage 2, and so on; a moment's cue must belong to its own stage. Going from one stage to the next, the hero walks to the door it leaves by, the camera dives through it, and the next scene zooms in. A dive takes about 1.5 seconds. Acts without `stages` keep one scene.
 - The scene only draws while its act is on screen.
 
 ## The story steps
@@ -104,7 +105,7 @@ A scene lives in `js/scenes.js` and has four parts:
 Every act fills one screen. It tells its story in steps, and each step plays once; scrolling back never replays it.
 
 1. **Chapter.** When the act's top is a little past the middle of the screen, a chapter card sweeps across the scene, the title slides in, the color comes in and the hero walks on in the last act's gear.
-2. **Moments.** At the top of the screen the act holds still (it is pinned). Every further 60% of a screen of scrolling tells the next moment, and each moment has its own stop: when scrolling pauses between stops the page glides to the nearest one (after 0.16 s; a nudge of about 30% of a moment past a stop goes on to the next). A moment: it types itself out, plays its scene cue, and its item pops out above the hero and flies into the inventory belt. In between, the scroll itself moves things: the hero walks 34 scene pixels across the scene to `heroX`, and the progress rail under the scene fills, with a node per moment and one for the level-up ("Moment 2 of 3").
+2. **Moments.** At the top of the screen the act holds still (it is pinned). Every further 60% of a screen of scrolling tells the next moment, and each moment has its own stop: when scrolling pauses between stops the page glides to the nearest one (after 0.16 s; a nudge of about 30% of a moment past a stop goes on to the next). A moment: it types itself out, plays its scene cue, and its item pops out above the hero and flies into the inventory belt. In between, the scroll itself moves things: the hero walks 34 scene pixels across the scene to `heroX` (in an act with `stages`, across each scene), and the progress rail under the scene fills, with a node per moment and one for the level-up ("Moment 2 of 3").
 3. **Level up.** After the last moment the hero jumps, changes gear and bursts in the act's color; then the new skills light one by one, each with the skills it grew from; then Open sheet appears. The act holds still for 70% of a screen more, and a pulsing Next tag points to the next act.
 
 | Step | Starts at | Length | Ease |

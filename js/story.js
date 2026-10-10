@@ -40,6 +40,11 @@
         need(act.title, `${where} has no title.`);
         need(act.color && act.color.light && act.color.base && act.color.shade, `${where} needs color.light, color.base and color.shade.`);
         need(known.scenes.includes(act.scene), `${where} uses scene "${act.scene}", which scenes.js does not draw.`);
+        const stageNames = act.stages || [act.scene];
+        if (act.stages) {
+          need(act.stages.length === (act.beats || []).length + 1, `${where} needs ${(act.beats || []).length + 1} stages: one for each moment, then one for the level-up.`);
+          act.stages.forEach(name => need(known.scenes.includes(name), `${where} uses stage scene "${name}", which scenes.js does not draw.`));
+        }
         need(known.gear.includes(act.hero && act.hero.gear), `${where} uses hero gear "${act.hero && act.hero.gear}", which pixel.js does not have.`);
         const looks = [act.hero || {}, ...(act.beats || []).map(b => b.look).filter(Boolean)];
         looks.forEach(l => {
@@ -63,9 +68,12 @@
             need(!given.has(beat.item), `${where}: item "${beat.item}" is given by two moments.`);
             given.add(beat.item);
           }
-          if (beat.cue && known.cues) need(known.cues(act.scene).includes(beat.cue), `${where}, moment ${k + 1}: scene "${act.scene}" has no animation called "${beat.cue}".`);
+          if (beat.cue && known.cues) need(known.cues(stageNames[k] || act.scene).includes(beat.cue), `${where}, moment ${k + 1}: scene "${stageNames[k] || act.scene}" has no animation called "${beat.cue}".`);
         });
-        (act.skills || []).forEach(skill => skillAct.set(skill.id, i));
+        (act.skills || []).forEach(skill => {
+          skillAct.set(skill.id, i);
+          if (skill.moment !== undefined) need(Number.isInteger(skill.moment) && skill.moment >= 1 && skill.moment <= (act.beats || []).length, `${where}: skill "${skill.id}" lights after moment ${skill.moment}, which is not one of this act's moments.`);
+        });
       });
       story.acts.forEach((act, i) => (act.skills || []).forEach(skill => (skill.parents || []).forEach(parent => {
         need(skillAct.has(parent), `Skill "${skill.id}" grows from "${parent}", which no act defines.`);

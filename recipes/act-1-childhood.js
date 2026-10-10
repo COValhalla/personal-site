@@ -12,6 +12,8 @@ Story.addAct({
   color: { name: 'Sunny orange', light: '#ffc46b', base: '#ff8a1f', shade: '#c25a0a', accent: '#3fa9f5' },
   theme: 'light',
   scene: 'bmx-track',
+  // One scene per moment, then the level-up: the camera dives through a door into each next place.
+  stages: ['bmx-track', 'bmx-shop', 'bmx-night', 'bmx-sheet'],
   // The hero's hair and beard for this act (styles in js/pixel.js: HAIR and BEARD).
   hero: { gear: 'helmet', title: 'BMX kid', hair: 'short', beard: 'none' },
   // Each moment can give one of this act's items (item) and play a scene animation (cue).
@@ -37,8 +39,8 @@ Story.addAct({
     },
   ],
   skills: [
-    { id: 'riding', name: 'Riding', parents: [], line: 'Balance, speed and getting back on.' },
-    { id: 'fixing', name: 'Fixing', parents: [], line: 'Taking things apart and putting them back better.' },
+    { id: 'riding', name: 'Riding', parents: [], moment: 1, line: 'Balance, speed and getting back on.' },
+    { id: 'fixing', name: 'Fixing', parents: [], moment: 2, line: 'Taking things apart and putting them back better.' },
   ],
   game: 'bmx',
   photos: [],
