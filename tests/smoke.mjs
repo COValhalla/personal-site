@@ -135,7 +135,7 @@ async function desktop(browser) {
   await page.waitForSelector('#card[open]');
   check(await page.$('#card .card-photo') === null, 'a story card with no photo shows no photo box');
   await page.keyboard.press('Escape');
-  check(await page.$eval('#say-hello .hello-links', ul => [...ul.querySelectorAll('a')].map(a => a.textContent).join()) === 'GitHub', 'Say hello lists the links from the recipe');
+  check(await page.$eval('#say-hello .hello-links', ul => [...ul.querySelectorAll('a')].map(a => `${a.textContent} ${a.getAttribute('href')}`).join()) === 'LinkedIn https://www.linkedin.com/in/josephvellella/,Email mailto:connect-with-joe.next036@passmail.net,GitHub https://github.com/COValhalla', 'Say hello lists the links from the recipe');
   check(await page.getAttribute('.hud-hello', 'href') === '#say-hello' && await page.title() === 'Joe Vellella · A life in six acts', 'the top bar links to Say hello and the tab says the full name');
   check(await page.textContent('.site-foot') === 'Joe Vellella', 'the footer says the full name');
   await page.keyboard.press('Escape');
