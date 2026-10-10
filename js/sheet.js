@@ -43,7 +43,6 @@
             el('h2', { class: 'sheet-name', id: 'sheet-name', text: Story.config.name }),
             el('p', { class: 'sheet-class' }),
             el('div', { class: 'sheet-strip', 'aria-hidden': 'true' }, Story.acts.map(() => el('i'))))),
-        Story.config.draft && window.Look ? Look.panel() : null,
         el('div', { class: 'tabs', role: 'tablist', 'aria-label': 'Sheet sections' },
           el('button', { class: 'tab', role: 'tab', id: 'tab-items', 'aria-controls': 'panel-items', onclick: () => show('items'), onkeydown: tabKeys }, 'Items'),
           el('button', { class: 'tab', role: 'tab', id: 'tab-map', 'aria-controls': 'panel-map', onclick: () => show('map'), onkeydown: tabKeys }, 'Map')),
@@ -167,14 +166,11 @@
         el('h3', { class: 'card-name', id: 'card-name', text: item.name }),
         el('p', { class: 'card-meta' }, `Act ${act.numeral} · ${act.title}`, el('span', { class: 'tag tag--' + item.tag, text: item.tag })),
         el('blockquote', { class: 'card-line', text: `“${item.line}”` }),
-        Story.config.draft ? el('p', { class: 'card-draft', text: 'Draft words. Your own line goes here.' }) : null,
         el('div', { class: 'card-section' },
           el('p', { class: 'panel-label', text: 'What it added' }),
           el('ul', { class: 'card-adds' }, Object.keys(item.adds || {}).map(k => el('li', { text: '+ ' + statName(k) }))))),
-      el('figure', { class: 'card-photo' },
-        item.photo
-          ? el('img', { src: item.photo, alt: item.name, style: 'width:auto;max-width:100%;height:auto;max-height:260px;opacity:1' })
-          : [Pixel.item('camera', Pixel.GRAY, 3, ''), el('figcaption', { text: 'Photo goes here. Add one to this item in its recipe.' })]),
+      item.photo ? el('figure', { class: 'card-photo' },
+        el('img', { src: item.photo, alt: item.name, style: 'width:auto;max-width:100%;height:auto;max-height:260px;opacity:1' })) : null,
       el('footer', { class: 'card-actions' },
         game ? el('button', { class: 'btn btn--accent', onclick: () => Games.open(item.game) }, '▶ Play ' + game.title.toLowerCase()) : null,
         el('button', { class: 'btn btn--ghost', onclick: () => card.close() }, 'Close'))));

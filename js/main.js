@@ -17,6 +17,9 @@
         el('span', {}, el('span', { class: 'hud-name', text: Story.config.name }),
           el('span', { class: 'hud-level' }, el('span', { class: 'hud-lv', text: 'Level 0' }), el('span', { class: 'hud-class' })))),
       el('nav', { class: 'hud-acts', 'aria-label': 'Chapters' }, pips),
+      el('a', { class: 'btn hud-hello', href: '#say-hello', 'aria-label': 'Say hello' },
+        el('span', { class: 'hud-label', text: 'Say hello' }),
+        el('span', { class: 'hud-at', 'aria-hidden': 'true', text: '@' })),
       el('button', { class: 'btn hud-sheet', onclick: () => Sheet.open({ tab: 'items' }) },
         el('span', { class: 'hud-label', text: 'Sheet' }),
         el('span', { class: 'hud-count', text: `0/${Story.items().length}` }),
@@ -55,7 +58,23 @@
         el('div', { class: 'intro-hero' }, Pixel.hero('none', Pixel.GRAY, 6, `${Story.config.name}, before the story starts`)),
         el('div', { class: 'intro-ground' }),
         el('p', { class: 'intro-hint', text: 'Scroll to start ▼' }),
-        el('p', { class: 'intro-note' }, 'Draft proof of concept: every word is a placeholder. ', el('a', { href: '#facts', text: 'Short on time? Read the quick facts.' }))));
+        el('p', { class: 'intro-note' },
+          el('a', { href: '#facts', text: 'Short on time? Read the short version.' }), ' · ',
+          el('a', { href: '#say-hello', text: 'Say hello' }))));
+  }
+
+  function sayHello() {
+    const { linkedin, email, github } = Story.config.contact;
+    const links = [
+      linkedin && ['LinkedIn', linkedin],
+      email && ['Email', `mailto:${email}`],
+      github && ['GitHub', github],
+    ].filter(Boolean);
+    return el('section', { class: 'finale hello', id: 'say-hello', 'aria-labelledby': 'hello-title' },
+      el('div', { class: 'finale-inner' },
+        el('h2', { id: 'hello-title', text: 'Say hello' }),
+        el('ul', { class: 'hello-links' }, links.map(([label, href]) => el('li', {},
+          el('a', { class: 'btn', href, text: label, ...(href.startsWith('http') ? { target: '_blank', rel: 'noopener' } : {}) }))))));
   }
 
   function finale() {
@@ -66,7 +85,7 @@
         el('div', { class: 'finale-strip', 'aria-hidden': 'true' }, Story.acts.map(act => el('i', { style: `background:${act.color.base}` }))),
         el('p', {}, `Every act added a color, new items and new skills. There is room to grow.`),
         el('button', { class: 'btn', onclick: () => Sheet.open({ tab: 'items' }) }, 'Open the full sheet ▸'),
-        el('h3', { style: 'margin-top:40px;font-family:var(--mono)', text: 'Quick facts' }),
+        el('h3', { style: 'margin-top:40px;font-family:var(--mono)', text: 'The short version' }),
         el('p', { class: 'facts-note', text: 'The whole story in six lines, for anyone in a hurry.' }),
         el('ol', { class: 'facts' }, Story.acts.map(act => el('li', {},
           el('b', { text: `Act ${act.numeral} · ${act.title}` }), ` (${act.years}): ${act.summary}`)))));
@@ -94,13 +113,8 @@
         el('h2', { text: 'A recipe needs fixing' }), el('ul', {}, problems.map(p => el('li', { text: p }))))));
     }
     Story.acts.forEach((act, i) => main.append(Acts.build(act, i)));
-    main.append(finale());
+    main.append(finale(), sayHello());
     ['unlock', 'item', 'skill', 'seen'].forEach(event => Story.on(event, updateHud));
-    Story.on('look', () => {
-      document.querySelector('.intro-hero').replaceChildren(Pixel.hero('none', Pixel.GRAY, 6, `${Story.config.name}, before the story starts`));
-      Acts.refreshHeroes();
-      updateHud();
-    });
     updateHud();
     if (window.gsap && window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
     Acts.watch();

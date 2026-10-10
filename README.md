@@ -32,7 +32,7 @@ Every merge to `main` publishes it there within a minute or two, through GitHub 
 4. Select any item in the belt or in a moment to read its story card. Open the sheet for your stats, the full inventory and the map: one road through the six acts, with your character at the furthest stop reached. Select a stop to walk there, read its class and skills, and go to that act.
 5. Play the BMX race in Act I: wait for the gate, hold Pedal (or the right arrow) for speed, and tap Pump (or Space) while your front wheel is over the lit strip before each roller and jump lip: green for a perfect pump, amber for a good one. Each press pulls your front wheel up. Beat the two other riders.
 6. Play the hammer throw in Act II: hold to spin (or hold Space). You get one wind and four turns, and the last two are fast; let go while the hammer glows. A good release on turn 3 or 4 hits with a freeze, a shake and a flash, and a throw of 70 m or more plays a slow-motion throw camera (tap to skip). Hold on past the fourth turn and it is a foul.
-7. Use the chapter buttons (I to VI) to jump to an act, or the quick facts at the end for the short version.
+7. Use the chapter buttons (I to VI) to jump to an act, or the short version at the end. Say hello at the end (or the @ in the top bar) lists the ways to reach Joe.
 
 ## Files
 
@@ -47,10 +47,9 @@ Every merge to `main` publishes it there within a minute or two, through GitHub 
 | `js/belt.js` | The inventory belt and experience bar along the bottom. |
 | `js/sheet.js` | The character sheet and story cards. |
 | `js/map.js` | The world map on the sheet. |
-| `js/look.js` | The draft look picker on the sheet. |
 | `js/games/` | The hammer throw, the BMX race and their sounds. |
 | `js/story.js` | Collects the recipes and checks them for mistakes. |
-| `js/main.js` | The top bar, the intro, the quick facts and start-up. |
+| `js/main.js` | The top bar, the intro, the short version, Say hello and start-up. |
 | `vendor/gsap/` | GSAP 3.15.0 and ScrollTrigger, kept here so the page works offline. |
 | `tests/smoke.mjs` | An end-to-end check in Chrome. |
 
@@ -61,7 +60,7 @@ Each act is one file in `recipes/`. The fields:
 | Field | Meaning |
 | --- | --- |
 | `id`, `numeral`, `title`, `years` | The act's name and when it happened |
-| `summary` | One line for the quick facts |
+| `summary` | One line for the short version |
 | `color` | `name` plus `light`, `base` and `shade` colors, and an optional `accent` for the scene |
 | `theme` | `light`, or `dark` for a dark act screen |
 | `scene` | Which scene in `js/scenes.js` to draw |
@@ -75,7 +74,7 @@ Each act is one file in `recipes/`. The fields:
 
 To add a photo, put the file in a `photos/` folder next to `index.html` and set the item's `photo` to `'photos/hammer.jpg'`.
 
-`recipes/site.js` holds the name, the tagline, the stats and `look`: the hero's skin, hair and streak colors, eye color, and today's hair style and beard, drawn from Joe's photos, which are not part of this repository. Each act's `hero` sets the hair and beard for that part of the story: short hair as a kid, bald with a goatee from college to Denver, then the beard and the bun grow through the year off. To try other colors: open the sheet, open "Make the character look like you", try the options, and copy the line it shows into `recipes/site.js`. The picker only shows while `draft` is `true`.
+`recipes/site.js` holds the name, the tagline, the Say hello `contact` links (a blank address is left out), the stats and `look`: the hero's skin, hair and streak colors, eye color, and today's hair style and beard, drawn from Joe's photos, which are not part of this repository. Each act's `hero` sets the hair and beard for that part of the story: short hair as a kid, bald with a goatee from college to Denver, then the beard and the bun grow through the year off. To try other colors, change `look` in `recipes/site.js` and reload.
 
 If a recipe has a mistake, such as a skill growing from one that does not exist or a moment giving an item from another act, the page lists it near the top and in the browser console.
 

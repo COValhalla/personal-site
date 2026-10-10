@@ -92,7 +92,7 @@ async function desktop(browser) {
     check(done.inBelt, `Act ${n + 1} drops its items into the inventory belt`);
     check(!done.gray.includes('grayscale(1)'), `Act ${n + 1} has its color`);
     const next = await page.$eval(`#${id} .act-next`, a => ({ text: a.textContent.trim(), shown: getComputedStyle(a).visibility === 'visible' }));
-    check(next.shown && next.text.startsWith(n < 5 ? `Next: Act ${['II', 'III', 'IV', 'V', 'VI'][n]}` : 'Next: quick facts'), `Act ${n + 1} ends with a Next tag (${next.text})`);
+    check(next.shown && next.text.startsWith(n < 5 ? `Next: Act ${['II', 'III', 'IV', 'V', 'VI'][n]}` : 'Next: the short version'), `Act ${n + 1} ends with a Next tag (${next.text})`);
   }
   check(await page.textContent('.hud-count') === `${items}/${items}`, `the sheet holds all ${items} items`);
 
@@ -111,8 +111,8 @@ async function desktop(browser) {
   await page.click('#sheet .inv-slot[data-item="hammer"]');
   await page.waitForSelector('#card[open]');
   const card = await page.$eval('#card', c => c.textContent);
-  check(['Hammer', 'Act II', 'life', 'Four turns', 'What it added', 'Grit', 'Photo goes here', 'Play hammer throw'].every(t => card.includes(t)),
-    'the hammer story card shows name, act, tag, line, what it added, photo slot and Play');
+  check(['Hammer', 'Act II', 'life', 'Four turns', 'What it added', 'Grit', 'Play hammer throw'].every(t => card.includes(t)),
+    'the hammer story card shows name, act, tag, line, what it added and Play');
   await page.keyboard.press('Escape');
   await page.click('#tab-map');
   check(await page.$$eval('#sheet .map-stop', n => n.length) === 6 && await page.$eval('#sheet .map-canvas', c => c.getBoundingClientRect().width > 300), 'the Map tab shows the map with six stops');
@@ -130,14 +130,14 @@ async function desktop(browser) {
   check(!(await page.$('#sheet[open]')) && await page.$eval('#act-school', s => Math.abs(s.getBoundingClientRect().top) < 4), 'Go to Act II closes the sheet at Act II');
   await page.evaluate(() => Sheet.open({ tab: 'items' }));
   await page.waitForSelector('#sheet[open]');
-  // The draft look picker changes the character everywhere and gives the line to keep.
-  const before = await page.$eval('.intro-hero img', i => i.src);
-  await page.click('#sheet .look-picker summary');
-  await page.selectOption('#sheet .look-field select >> nth=0', 'short');
-  await page.click('#sheet .look-check input');
-  const after = await page.$eval('.intro-hero img', i => i.src);
-  check(after !== before && (await page.textContent('#sheet .look-line')).includes("hairStyle: 'short'") && (await page.textContent('#sheet .look-line')).includes('glasses: true'),
-    'the look picker restyles the character and shows the line to keep');
+  check(await page.$('.look-picker') === null && await page.$('.card-draft') === null, 'the look picker and the draft notes are gone');
+  await page.evaluate(() => Sheet.openItem(Story.items()[0].id));
+  await page.waitForSelector('#card[open]');
+  check(await page.$('#card .card-photo') === null, 'a story card with no photo shows no photo box');
+  await page.keyboard.press('Escape');
+  check(await page.$eval('#say-hello .hello-links', ul => [...ul.querySelectorAll('a')].map(a => a.textContent).join()) === 'GitHub', 'Say hello lists the links from the recipe');
+  check(await page.getAttribute('.hud-hello', 'href') === '#say-hello' && await page.title() === 'Joe Vellella · A life in six acts', 'the top bar links to Say hello and the tab says the full name');
+  check(await page.textContent('.site-foot') === 'Joe Vellella', 'the footer says the full name');
   await page.keyboard.press('Escape');
 
   await hammer(page);
@@ -267,7 +267,8 @@ async function pacing(browser) {
     await scrollTo(page, start + room);
     await page.waitForTimeout(100);
     await page.evaluate(v => window.scrollBy({ top: v, behavior: 'instant' }), nudge);
-    await page.waitForTimeout(900);
+    // The settle takes up to 0.16 s to start and 0.45 s to glide; read it after a longer wait so a slow frame cannot catch it mid-glide.
+    await page.waitForTimeout(1200);
     return (await page.evaluate(() => window.scrollY)) - (start + room);
   };
   const back = await settledAfter(40);
@@ -340,6 +341,8 @@ async function phone(browser) {
   console.log('\nPhone');
   const { context, page, errors } = await open(browser, { ...devices['iPhone 13'] });
   check(await page.$eval('.hud', h => Math.abs(h.getBoundingClientRect().bottom - window.innerHeight) < 1), 'the bar sits along the bottom');
+  check(await page.isVisible('.hud-hello .hud-at') && !(await page.isVisible('.hud-hello .hud-label')), 'the bar shows an @ for Say hello');
+  check(await page.$eval('.hud', h => h.scrollWidth <= h.clientWidth), 'the bar fits the phone width');
   const where = await pins(page);
   await scrollTo(page, where[1].start - 300);
   await page.waitForFunction(() => Acts.sections[1].played >= 1, null, { timeout: 5000 });
