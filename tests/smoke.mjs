@@ -237,38 +237,33 @@ async function bmx(page) {
   await page.waitForSelector('#game[open]');
   check(await page.$eval(st, s => s.dataset.state) === 'ready', 'the BMX race waits on the start hill');
   await page.keyboard.press('Space');
-  check(await page.$eval(st, s => s.dataset.state) === 'cadence', 'pressing Pump starts the gate cadence');
+  check(await page.$eval(st, s => s.dataset.state) === 'cadence', 'pressing Jump starts the gate cadence');
   check(await page.$eval(st, s => s.bmx.s.player.h > 30), 'the riders start on the raised start hill');
   check(await page.$eval(st, s => s.bmx.s.riders.map(r => r.lane * Games.get('bmx').sim.LANE_GAP).join(',')) === '0,5,10', 'you race two rivals, in lanes 5 pixels apart');
+  check(await page.$eval(st, s => Math.abs((s.bmx.s.dropAt - s.bmx.s.redAt) - 0.9) < 1e-9), 'the start lights come on 0.3 seconds apart');
   await page.waitForFunction(s => document.querySelector(s).dataset.state === 'riding', st, { timeout: 8000 });
   check(await page.$eval(st, s => s.bmx.s.gate === 1), 'the gate drops and the race starts');
-  // A bot rider: hold Pedal, and tap Pump just before each roller and each lip.
-  await page.evaluate(s => {
-    const g = document.querySelector(s).bmx;
-    g.pedal(true);
-    let done = null;
-    (function loop() {
-      if (g.s.phase !== 'riding') return;
-      const r = g.s.player;
-      const next = g.track.features.find(f => (f.kind === 'roller' ? f.x0 : f.x) > r.x + 4 && f !== done);
-      if (next && r.x + 6 >= (next.kind === 'roller' ? next.x0 - 4 : next.x - 6)) { g.press(); done = next; }
-      requestAnimationFrame(loop);
-    })();
-  }, st);
-  await page.waitForFunction(s => Number(document.querySelector(s).dataset.speed) > 60, st, { timeout: 4000 });
-  check(true, 'holding Pedal builds speed');
-  await page.waitForFunction(s => Number(document.querySelector(s).dataset.perfect) >= 3, st, { timeout: 12000 });
-  check(true, 'timed pumps in the roller section count as perfect pumps');
-  await page.waitForFunction(s => document.querySelector(s).dataset.state === 'finished', st, { timeout: 30000 });
+  const shape = await page.evaluate(() => {
+    const { buildTrack } = Games.get('bmx').sim;
+    const t = buildTrack();
+    const jumps = t.jumps;
+    return {
+      straights: t.straights.length, berms: t.berms.length, jumps: jumps.length,
+      tables: jumps.filter(j => j.shape === 'table').length, steps: jumps.filter(j => j.shape === 'step').length,
+      rollers: t.rollers.length,
+    };
+  });
+  check(shape.straights === 6 && shape.berms === 5 && shape.jumps === 13, `the track has six straights, five berms and 13 jumps (${JSON.stringify(shape)})`);
+  check(shape.tables === 10 && shape.steps === 3, `the 13 jumps are 10 tabletops and 3 step-ups, with no gaps (${shape.tables} and ${shape.steps})`);
+  await page.evaluate(s => document.querySelector(s).bmx.setBot(true), st);
+  await page.waitForFunction(s => document.querySelector(s).dataset.state === 'finished', st, { timeout: 90000 });
   const place = await page.$eval(st, s => Number(s.dataset.place));
-  check(place >= 1 && place <= 3, `the race finishes with a place (${place})`);
+  check(place >= 1 && place <= 3, `a rider finishes the race with a place (${place})`);
   await page.click('#game .game-skip');
-  // The pump rules, without drawing: the call for a press at each spot before a roller.
   const calls = await page.evaluate(() => {
     const { buildTrack, newRider, step, liftAngle } = Games.get('bmx').sim;
     const track = buildTrack();
-    const rollers = track.features.filter(f => f.kind === 'roller');
-    const f = rollers[0];
+    const f = track.rollers[0];
     const ride = pressAt => {
       const r = newRider(0, track);
       r.x = f.x0 - 60; r.h = track.heightAt(r.x); r.v = 60;
@@ -281,15 +276,51 @@ async function bmx(page) {
       }
       return events.join(' then ');
     };
+    const jump = track.jumps[0];
+    const wheelie = tap => {
+      const r = newRider(0, track);
+      r.x = jump.x0 - 60; r.h = track.heightAt(r.x); r.v = 90;
+      const events = [];
+      let pressed = false;
+      for (let i = 0; i < 4000 && events.length < 1 && r.x < jump.lip; i++) {
+        if (!pressed && r.x + 6 >= tap) { r.press = { x: r.x + 6, used: false }; pressed = true; }
+        const e = step(r, track, { pedal: false, held: false, heldFor: 0 }, 0.004);
+        if (e) events.push(e);
+      }
+      return events.join(' then ');
+    };
+    const flight = () => {
+      const r = newRider(0, track);
+      r.x = jump.x0 - 20; r.h = track.heightAt(r.x); r.v = 110;
+      let event = null;
+      for (let i = 0; i < 4000 && !event; i++) {
+        const held = r.x > jump.x0 - 10;
+        event = step(r, track, { pedal: false, held, heldFor: held ? 0.5 : 0 }, 0.004) || event;
+      }
+      return { event, air: r.air };
+    };
+    const roll = () => {
+      const r = newRider(0, track);
+      r.x = jump.x0 - 20; r.h = track.heightAt(r.x); r.v = 100;
+      let event = null;
+      for (let i = 0; i < 4000 && !event; i++) event = step(r, track, { pedal: false, held: false, heldFor: 0 }, 0.004) || event;
+      return { event, v: Math.round(r.v) };
+    };
     return {
       perfect: ride(f.x0 - 4), early: ride(f.x0 - 20), late: ride(f.x0 + 8), tooEarly: ride(f.x0 - 40), none: ride(Infinity),
       carried: ride(f.x0 + 14),
+      wheelie: wheelie(jump.x0 - 6),
+      flight: flight(),
+      roll: roll(),
       lift: [0.035, 0.1, 0.3, 0.4].map(t => Math.round(liftAngle(t) * 180 / Math.PI)),
     };
   });
   check(calls.perfect.startsWith('perfect') && calls.early.startsWith('good-early') && calls.late.startsWith('good-late') && calls.tooEarly.startsWith('early') && calls.none.startsWith('bump'),
-    `each press gets its call: ${calls.perfect}, ${calls.early}, ${calls.late}, ${calls.tooEarly}, ${calls.none}`);
+    `each roller press gets its call: ${calls.perfect}, ${calls.early}, ${calls.late}, ${calls.tooEarly}, ${calls.none}`);
   check(calls.carried === 'bump then perfect', `a press after a roller's strip counts toward the next roller (${calls.carried})`);
+  check(calls.wheelie === 'manual', `a tap on the lit strip wheelies over the jump (${calls.wheelie})`);
+  check(calls.flight.event === 'air' && calls.flight.air, 'holding Jump through the lip flies the jump');
+  check(calls.roll.event === 'roll' && calls.roll.v < 100, `no press rolls over the jump at 90% speed (${calls.roll.v})`);
   check(calls.lift.join(',') === '11,22,10,0', `a press lifts the front wheel up to 22 degrees and back down (${calls.lift.join(', ')})`);
 }
 
