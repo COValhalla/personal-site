@@ -147,14 +147,14 @@
     const act = Story.acts[i];
     buttons.forEach((b, k) => b.setAttribute('aria-pressed', String(k === i)));
     if (!reached(i)) {
-      info.replaceChildren(el('b', { text: `Act ${act.numeral} · ${act.title}` }), '. Not reached yet: keep scrolling to get here.');
+      info.replaceChildren(el('b', { text: `${Story.name(act)} · ${act.title}` }), '. Not reached yet: keep scrolling to get here.');
       return;
     }
     const skills = act.skills.map(s => s.name).join(', ');
     info.replaceChildren(
-      el('b', { text: `Act ${act.numeral} · ${act.title} · ${act.hero.title}` }),
+      el('b', { text: `${Story.name(act)} · ${act.title} · ${act.hero.title}` }),
       `. Skills: ${skills}. `,
-      el('a', { class: 'map-go', href: `#act-${act.id}`, onclick: e => { e.preventDefault(); go(act); } }, `Go to Act ${act.numeral} ▸`));
+      el('a', { class: 'map-go', href: `#act-${act.id}`, onclick: e => { e.preventDefault(); go(act); } }, `Go to ${Story.name(act)} ▸`));
   }
 
   function go(act) {
@@ -174,7 +174,7 @@
   function build() {
     canvas = el('canvas', { class: 'px map-canvas', width: W, height: H, role: 'img', 'aria-label': 'World map: one road through every act, your character at the furthest stop reached' });
     ctx = canvas.getContext('2d');
-    buttons = Story.acts.map((act, i) => el('button', { class: 'map-stop', style: colorVars(act), 'data-stop': String(i), 'aria-pressed': 'false', 'aria-label': `Act ${act.numeral}: ${act.title}`, onclick: () => select(i) }, act.numeral));
+    buttons = Story.acts.map((act, i) => el('button', { class: 'map-stop', style: colorVars(act), 'data-stop': String(i), 'aria-pressed': 'false', 'aria-label': `${Story.name(act)}: ${act.title}`, onclick: () => select(i) }, act.numeral));
     info = el('p', { class: 'map-info', 'aria-live': 'polite' });
     canvas.addEventListener('click', e => {
       const r = canvas.getBoundingClientRect();

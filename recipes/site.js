@@ -3,7 +3,8 @@
  */
 Story.site({
   name: 'Joe',
-  tagline: 'A life in six acts. Scroll down and watch the character sheet fill in.',
+  // The welcome on the title screen: one to three sentences that ask the visitor to scroll.
+  welcome: "Hi, I'm Joe, an engineer turned product manager. Welcome to my story, told like the games I grew up on. Scroll down to play it, one level at a time.",
   // Say hello links. A blank address leaves its link out.
   contact: {
     linkedin: 'https://www.linkedin.com/in/josephvellella/',

@@ -96,9 +96,9 @@
     pop.style.top = ((Scenes.GROUND - 30) / Scenes.H) * 100 + '%';
     const flash = el('div', { class: 'scene-flash', 'aria-hidden': 'true' });
     const chapter = el('div', { class: 'chapter-card', 'aria-hidden': 'true' },
-      el('span', { class: 'chapter-num', text: `Act ${act.numeral}` }),
+      el('span', { class: 'chapter-num', text: Story.name(act) }),
       el('b', { class: 'chapter-title', text: act.title }));
-    const sceneEl = el('div', { class: 'scene', role: 'img', 'aria-label': `Act ${act.numeral} scene: your character in ${act.title.toLowerCase()}.` },
+    const sceneEl = el('div', { class: 'scene', role: 'img', 'aria-label': `${Story.name(act)} scene: your character in ${act.title.toLowerCase()}.` },
       ...stages.map(st => st.canvas), flash, hero, el('div', { class: 'scene-burst', 'aria-hidden': 'true' }), label, pop, chapter);
     // The progress rail: a node per moment and one for the level-up, filled as you scroll.
     const beatCount = Story.beatsOf(act).length;
@@ -126,7 +126,7 @@
         }))));
 
     const game = act.game && Games.get(act.game);
-    const story = el('aside', { class: 'story', 'aria-label': `What happened in Act ${act.numeral}` },
+    const story = el('aside', { class: 'story', 'aria-label': `What happened in ${Story.name(act)}` },
       el('p', { class: 'story-state' },
         el('span', { class: 'unlock-pill', text: 'Locked' }),
         el('span', { class: 'unlock-say', text: act.unlock.say })),
@@ -141,13 +141,13 @@
       actions);
 
     const head = el('header', { class: 'act-head' },
-      el('p', { class: 'act-num', text: `Act ${act.numeral}` }),
+      el('p', { class: 'act-num', text: Story.name(act) }),
       el('h2', { class: 'act-title', id: `title-${act.id}`, text: act.title }),
       el('p', { class: 'act-years', text: act.years }));
 
     const hint = el('p', { class: 'act-hint', 'aria-hidden': 'true' }, 'Scroll to continue the story ', el('span', { class: 'act-hint-arrow', text: '▼' }));
     const after = Story.acts[i + 1];
-    const next = el('a', { class: 'act-next', href: after ? `#act-${after.id}` : '#facts' }, after ? `Next: Act ${after.numeral} ` : 'Next: the short version ', el('span', { 'aria-hidden': 'true', text: '▼' }));
+    const next = el('a', { class: 'act-next', href: after ? `#act-${after.id}` : '#facts' }, after ? `Next: ${Story.name(after)} ` : 'Next: the short version ', el('span', { 'aria-hidden': 'true', text: '▼' }));
     const screen = el('div', { class: `act-screen act--${act.theme || 'light'}`, style: colorVars(act) + (act.color.accent ? `;--ca:${act.color.accent}` : '') },
       head,
       el('div', { class: 'act-stage' },
@@ -165,7 +165,7 @@
     }
 
     const steps = [{ kind: 'intro' }, ...Story.beatsOf(act).map((beat, k) => ({ kind: 'beat', beat, k })), { kind: 'level' }];
-    const parts = { act, i, style, section, screen, head, hero, heroLeft, walkFrom, heroX: scene.heroX, label, pop, flash, chapter, sceneEl, stages, stageIdx: 0, beats, skillCards, story, actions, hint, rail, railFill, railNodes, railLabel, steps, played: 0, target: 0, running: null, walkOn: 1, fill: 1, local: 1, inView: false, heroAt: scene.heroX };
+    const parts = { act, i, style, startStyle: style, section, screen, head, hero, heroLeft, walkFrom, heroX: scene.heroX, label, pop, flash, chapter, sceneEl, stages, stageIdx: 0, beats, skillCards, story, actions, hint, rail, railFill, railNodes, railLabel, steps, played: 0, target: 0, running: null, walkOn: 1, fill: 1, local: 1, inView: false, heroAt: scene.heroX };
     sections.push(parts);
     return section;
   }
@@ -187,7 +187,7 @@
     p.railFill.style.transform = `scaleX(${p.fill})`;
     p.railNodes.forEach((node, k) => node.classList.toggle('is-on', p.fill * beats >= k - 0.001));
     const done = p.played >= p.steps.length;
-    p.railLabel.textContent = done ? `Level ${p.i + 1} · ${p.act.hero.title}` : `Moment ${Math.min(beats, Math.max(1, p.target - 1))} of ${beats}`;
+    p.railLabel.textContent = done ? `${p.act.tutorial ? 'Tutorial complete' : `Level ${Story.levelOf(p.i)}`} · ${p.act.hero.title}` : `Moment ${Math.min(beats, Math.max(1, p.target - 1))} of ${beats}`;
     p.screen.classList.toggle('is-done', done);
   }
 
@@ -385,7 +385,7 @@
       pill.textContent = act.unlock.banner;
       Story.state.unlocked.add(i);
       Story.emit('unlock', i);
-      if (window.Belt) Belt.levelUp(Story.state.unlocked.size);
+      if (window.Belt) Belt.levelUp(Story.level());
     }, null, BEATS.gearSwap);
     tl.add(burst(p), BEATS.gearSwap);
     tl.to(hero, { yPercent: 0, duration: 0.45, ease: 'bounce.out' }, BEATS.gearSwap);
@@ -469,7 +469,7 @@
     p.hint.classList.toggle('is-done', left <= 0);
     railNote(p);
     if (window.Belt) {
-      const done = Story.state.unlocked.size;
+      const done = Story.level();
       Belt.xp(done, p.played >= p.steps.length ? 0 : p.played / p.steps.length);
     }
   }
@@ -514,6 +514,62 @@
     advance(p, p.steps.length, !(opts && opts.animate));
   }
 
+  // ---------- Rewind: scrolling back above an act puts it back the way it started ----------
+
+  function rewind(p) {
+    if (p.played === 0 && !p.running) return;
+    const { act, i, section, screen, hero, story } = p;
+    if (p.running) { p.running.eventCallback('onComplete', null); p.running.kill(); p.running = null; }
+    p.played = 0; p.target = 0; p.leaving = false;
+    section.classList.add('is-locked');
+    section.classList.remove('is-unlocked');
+    screen.classList.remove('is-colored', 'is-ready', 'is-done');
+    gsap.set(screen, { clearProps: '--gray' });
+    p.beats.forEach(li => {
+      li.classList.add('is-locked');
+      li.classList.remove('is-new');
+      const text = li.querySelector('.beat-text');
+      text.textContent = text.dataset.text;
+      const chip = li.querySelector('.beat-item');
+      if (chip) chip.classList.remove('is-on');
+    });
+    p.skillCards.forEach(card => {
+      card.classList.add('is-locked');
+      card.classList.remove('is-on');
+      card.querySelector('.skill-name').textContent = '???';
+    });
+    story.querySelector('.unlock-pill').textContent = 'Locked';
+    gsap.set([p.label, p.pop, p.flash], { clearProps: 'transform,opacity' });
+    gsap.set(p.chapter, { opacity: 0, xPercent: 0 });
+    // Every stage goes back to its first frame.
+    p.stages.forEach(st => {
+      gsap.killTweensOf(st.stage.state);
+      Object.assign(st.stage.state, (st.stage.scene.init && st.stage.scene.init()) || {});
+      gsap.set(st.canvas, { clearProps: 'transform,opacity' });
+    });
+    p.style = p.startStyle;
+    hero.src = heroBefore(p);
+    gsap.set(hero, { clearProps: 'transform,opacity' });
+    hero.className = 'px scene-hero';
+    setStage(p, 0, 0);
+    p.walkOn = 0; p.fill = 0; p.local = 0;
+    place(p);
+    railNote(p);
+    runStage(p, false);
+    // The act's items, skills and level leave the sheet; what was read stays read.
+    act.items.forEach(item => { Story.state.owned.delete(item.id); if (window.Belt) Belt.empty(item.id); });
+    act.skills.forEach(skill => Story.state.skills.delete(skill.id));
+    Story.state.unlocked.delete(i);
+    p.hint.classList.remove('is-done');
+    Story.emit('rewind', i);
+    if (window.Belt) Belt.xp(Story.level(), 0);
+  }
+
+  // Rewind this act and every act after it.
+  function rewindFrom(i) {
+    for (let j = sections.length - 1; j >= i; j--) rewind(sections[j]);
+  }
+
   function catchUp() {
     sections.forEach(p => {
       if (p.played < p.steps.length && p.section.getBoundingClientRect().bottom < 0) advance(p, p.steps.length, true);
@@ -540,8 +596,10 @@
       railNote(p);
       // The chapter card plays as the act scrolls into view.
       ScrollTrigger.create({
-        trigger: p.section, start: 'top 55%', once: true,
+        trigger: p.section, start: 'top 55%',
         onEnter: () => advance(p, 1),
+        // Back above the act: it and every act after it rewind, ready to play again.
+        onLeaveBack: () => rewindFrom(p.i),
       });
       // Then the act holds still while scrolling steps through its story.
       const storySteps = p.steps.length - 1;
@@ -566,7 +624,9 @@
           const u = Math.min(1, self.progress / stepPart);
           advance(p, 1 + Math.min(storySteps, Math.floor(u * storySteps * 0.999) + 1));
           // The walk and the rail reach the end as the level-up starts; each stage's walk runs within its own span.
-          const span = u * storySteps;
+          // Within an act nothing un-tells: the walk and the rail never fall behind the story.
+          const told = p.played >= p.steps.length ? storySteps : Math.max(0, p.played - 2);
+          const span = Math.max(u * storySteps, told);
           const fill = Math.min(1, span / (storySteps - 1));
           scrub(p, fill, p.stages.length > 1 ? Math.min(1, Math.max(0, span - p.stageIdx)) : fill);
         },
@@ -584,5 +644,5 @@
     catchUp();
   }
 
-  window.Acts = { styleOf, BEATS, STEP_SCROLL, LEVEL_HOLD, sections, build, unlock, advance, watch };
+  window.Acts = { styleOf, BEATS, STEP_SCROLL, LEVEL_HOLD, sections, build, unlock, advance, watch, rewind, rewindFrom };
 })();

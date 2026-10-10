@@ -9,7 +9,7 @@
   function hud() {
     const pips = Story.acts.map((act, i) => el('a', {
       class: 'pip', href: `#act-${act.id}`, style: colorVars(act), 'data-act': String(i),
-      'aria-label': `Act ${act.numeral}: ${act.title}, locked`,
+      'aria-label': `${Story.name(act)}: ${act.title}, locked`,
     }, act.numeral));
     const bar = el('header', { class: 'hud', id: 'hud' },
       el('button', { class: 'hud-me', onclick: () => Sheet.open({ tab: 'items' }), 'aria-label': 'Open the character sheet' },
@@ -17,9 +17,7 @@
         el('span', {}, el('span', { class: 'hud-name', text: Story.config.name }),
           el('span', { class: 'hud-level' }, el('span', { class: 'hud-lv', text: 'Level 0' }), el('span', { class: 'hud-class' })))),
       el('nav', { class: 'hud-acts', 'aria-label': 'Chapters' }, pips),
-      el('a', { class: 'btn hud-hello', href: '#say-hello', 'aria-label': 'Say hello' },
-        el('span', { class: 'hud-label', text: 'Say hello' }),
-        el('span', { class: 'hud-at', 'aria-hidden': 'true', text: '@' })),
+      helloMenu(),
       el('button', { class: 'btn hud-sheet', onclick: () => Sheet.open({ tab: 'items' }) },
         el('span', { class: 'hud-label', text: 'Sheet' }),
         el('span', { class: 'hud-count', text: `0/${Story.items().length}` }),
@@ -34,7 +32,7 @@
     const act = Story.acts[top];
     const avatar = document.querySelector('.hud-avatar');
     avatar.replaceChildren(Pixel.hero(act ? act.hero.gear : 'none', act ? act.color : Pixel.GRAY, 1, '', act && Acts.styleOf(act)));
-    document.querySelector('.hud-lv').textContent = `Level ${unlocked.size}`;
+    document.querySelector('.hud-lv').textContent = `Level ${Story.level()}`;
     document.querySelector('.hud-class').textContent = act ? ` · ${act.hero.title}` : '';
     const owned = Story.state.owned;
     document.querySelector('.hud-count').textContent = `${owned.size}/${Story.items().length}`;
@@ -42,39 +40,72 @@
     document.querySelectorAll('.pip').forEach((pip, i) => {
       const on = unlocked.has(i);
       pip.classList.toggle('is-on', on);
-      pip.setAttribute('aria-label', `Act ${Story.acts[i].numeral}: ${Story.acts[i].title}${on ? '' : ', locked'}`);
+      pip.setAttribute('aria-label', `${Story.name(Story.acts[i])}: ${Story.acts[i].title}${on ? '' : ', locked'}`);
     });
     document.querySelectorAll('.hud-strip i').forEach((bit, i) => { bit.style.background = unlocked.has(i) ? Story.acts[i].color.base : 'transparent'; });
     Belt.refresh();
     Sheet.refresh();
   }
 
-  function intro() {
-    return el('section', { class: 'intro', id: 'top' },
-      el('div', { class: 'intro-inner' },
-        el('p', { class: 'intro-kicker', text: 'Press start' }),
-        el('h1', { class: 'intro-title', text: Story.config.name }),
-        el('p', { class: 'intro-tag', text: Story.config.tagline }),
-        el('div', { class: 'intro-hero' }, Pixel.hero('none', Pixel.GRAY, 6, `${Story.config.name}, before the story starts`)),
-        el('div', { class: 'intro-ground' }),
-        el('p', { class: 'intro-hint', text: 'Scroll to start ▼' }),
-        el('p', { class: 'intro-note' },
-          el('a', { href: '#facts', text: 'Short on time? Read the short version.' }), ' · ',
-          el('a', { href: '#say-hello', text: 'Say hello' }))));
-  }
-
-  function sayHello() {
+  // The ways to reach Joe, from the contact links in recipes/site.js.
+  function contactLinks() {
     const { linkedin, email, github } = Story.config.contact;
-    const links = [
+    return [
       linkedin && ['LinkedIn', linkedin],
       email && ['Email', `mailto:${email}`],
       github && ['GitHub', github],
     ].filter(Boolean);
+  }
+  const linkAttrs = href => (href.startsWith('http') ? { target: '_blank', rel: 'noopener' } : {});
+
+  // Say hello in the top bar opens a small menu of links, so reaching Joe never skips the story.
+  function helloMenu() {
+    const menu = el('ul', { class: 'hello-menu', id: 'hello-menu', hidden: '' },
+      contactLinks().map(([label, href]) => el('li', {}, el('a', { href, text: label, ...linkAttrs(href) }))));
+    const button = el('button', { class: 'btn hud-hello', 'aria-expanded': 'false', 'aria-controls': 'hello-menu', 'aria-label': 'Say hello' },
+      el('span', { class: 'hud-label', text: 'Say hello' }),
+      el('span', { class: 'hud-at', 'aria-hidden': 'true', text: '@' }));
+    const set = open => { menu.hidden = !open; button.setAttribute('aria-expanded', String(open)); };
+    button.addEventListener('click', e => { e.stopPropagation(); set(menu.hidden); });
+    document.addEventListener('click', e => { if (!menu.contains(e.target)) set(false); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') set(false); });
+    return el('div', { class: 'hud-hello-wrap' }, button, menu);
+  }
+
+  // Press start glides to the first act, where the story begins.
+  function start() {
+    const first = Acts.sections[0];
+    const pin = window.ScrollTrigger && ScrollTrigger.getAll().find(t => t.pin === first.screen);
+    window.scrollTo({ top: pin ? pin.start + 2 : first.section.offsetTop, behavior: 'smooth' });
+  }
+
+  function intro() {
+    const press = el('button', { class: 'btn btn--start intro-start', onclick: start },
+      el('span', { class: 'intro-start-arrow', 'aria-hidden': 'true', text: '▶' }), 'Press start');
+    // Enter starts the story from the title screen, like a game.
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Enter' || e.target !== document.body) return;
+      if (document.getElementById('top').getBoundingClientRect().bottom > window.innerHeight / 2) start();
+    });
+    return el('section', { class: 'intro', id: 'top' },
+      el('div', { class: 'intro-inner' },
+        el('h1', { class: 'intro-title', text: Story.config.name }),
+        el('p', { class: 'intro-tag', text: Story.config.welcome }),
+        el('div', { class: 'intro-hero' }, Pixel.hero('none', Pixel.GRAY, 6, `${Story.config.name}, before the story starts`)),
+        el('div', { class: 'intro-ground' }),
+        press,
+        el('p', { class: 'intro-hint', text: 'or scroll ▼' }),
+        el('p', { class: 'intro-note' },
+          el('a', { href: '#facts', text: 'Short on time? Read the short version.' }))));
+  }
+
+  function sayHello() {
+    const links = contactLinks();
     return el('section', { class: 'finale hello', id: 'say-hello', 'aria-labelledby': 'hello-title' },
       el('div', { class: 'finale-inner' },
         el('h2', { id: 'hello-title', text: 'Say hello' }),
         el('ul', { class: 'hello-links' }, links.map(([label, href]) => el('li', {},
-          el('a', { class: 'btn', href, text: label, ...(href.startsWith('http') ? { target: '_blank', rel: 'noopener' } : {}) }))))));
+          el('a', { class: 'btn', href, text: label, ...linkAttrs(href) }))))));
   }
 
   function finale() {
@@ -88,7 +119,7 @@
         el('h3', { style: 'margin-top:40px;font-family:var(--mono)', text: 'The short version' }),
         el('p', { class: 'facts-note', text: 'The whole story in six lines, for anyone in a hurry.' }),
         el('ol', { class: 'facts' }, Story.acts.map(act => el('li', {},
-          el('b', { text: `Act ${act.numeral} · ${act.title}` }), ` (${act.years}): ${act.summary}`)))));
+          el('b', { text: `${Story.name(act)} · ${act.title}` }), ` (${act.years}): ${act.summary}`)))));
   }
 
   function markHere() {
@@ -114,7 +145,7 @@
     }
     Story.acts.forEach((act, i) => main.append(Acts.build(act, i)));
     main.append(finale(), sayHello());
-    ['unlock', 'item', 'skill', 'seen'].forEach(event => Story.on(event, updateHud));
+    ['unlock', 'item', 'skill', 'seen', 'rewind'].forEach(event => Story.on(event, updateHud));
     updateHud();
     if (window.gsap && window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
     Acts.watch();

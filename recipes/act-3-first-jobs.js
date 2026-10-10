@@ -34,7 +34,8 @@ Story.addAct({
   ],
   skills: [
     { id: 'materials', name: 'Materials', parents: ['chemistry'], line: 'Why parts bend, crack or hold.' },
-    { id: 'plant-ops', name: 'Plant ops', parents: ['fixing', 'chemistry'], line: 'Keeping a line running, shift after shift.' },
+    { id: 'plant-ops', name: 'Plant ops', parents: ['fixing', 'chemistry', 'inventory'], line: 'Keeping a line running, shift after shift.' },
+    { id: 'adapting', name: 'Adapting', parents: ['riding'], moment: 3, line: 'Learned on the road: a new town and a new crew, the same job.' },
   ],
   game: null,
   photos: [],

@@ -42,8 +42,9 @@ Story.addAct({
     },
   ],
   skills: [
-    { id: 'code', name: 'Code', parents: ['fixing', 'plant-ops'], line: 'Making the computer do the boring part.' },
+    { id: 'code', name: 'Code', parents: ['typing', 'fixing', 'plant-ops'], line: 'Making the computer do the boring part.' },
     { id: 'debugging', name: 'Debugging', parents: ['code', 'plant-ops'], line: 'Troubleshooting, the same way as on the plant floor.' },
+    { id: 'curiosity', name: 'Curiosity', parents: [], moment: 1, line: 'A whole year of following what I wanted to learn.' },
   ],
   game: null,
   photos: [],
