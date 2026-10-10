@@ -76,6 +76,13 @@
     rect(ctx, color, x + 4, y - 1, 3, 1);
   }
 
+  function outline(ctx, x, y, w, h, color) {
+    rect(ctx, color, x, y, w, 1);
+    rect(ctx, color, x, y + h - 1, w, 1);
+    rect(ctx, color, x, y, 1, h);
+    rect(ctx, color, x + w - 1, y, 1, h);
+  }
+
   function puff(ctx, x, y, r, color) {
     for (let j = -r; j <= r; j++) for (let i = -r; i <= r; i++) if (i * i + j * j <= r * r) rect(ctx, color, x + i, y + j, 1, 1);
   }
@@ -116,7 +123,7 @@
   const scenes = {
     // Act I: a bright BMX track on a Saturday, the start hill on the left and the family shop on the right.
     'bmx-track': {
-      heroX: 50,
+      heroX: 100,
       draw(ctx, c) {
         const sky = c.accent || '#3fa9f5';
         ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff'].forEach((w, i) => rect(ctx, mix(sky, w, 0.25 + i * 0.14), 0, i * 8, W, 8));
@@ -178,51 +185,19 @@
         rect(ctx, N.o, 143, 47, 12, 1);
         rect(ctx, N.o, 148, 38, 1, 10);
       },
-      init: () => ({ race: -1, door: 0, night: 0, screen: 0 }),
+      door: { x: 129, y: 55 },
+      init: () => ({ race: -1 }),
       frame(ctx, c, s, t) {
-        const dark = steps4(s.night);
-        // Clouds drift by day; stars come out at night.
-        [[0, 6, 4], [70, 14, 3], [120, 9, 5]].forEach(([x0, y, speed]) => {
-          if (dark < 1) cloud(ctx, ((x0 + t * speed) % (W + 30)) - 15, y, dark > 0.4 ? '#c9d2e8' : N.w);
-        });
-        if (dark > 0) {
-          ctx.globalAlpha = dark * 0.72;
-          rect(ctx, '#0d1030', 0, 0, W, H);
-          ctx.globalAlpha = 1;
-          const r = rng(4);
-          for (let i = 0; i < 26; i++) {
-            const x = Math.floor(r() * W);
-            const y = Math.floor(r() * 34);
-            if (dark >= 0.75 && (i + Math.floor(t * 2)) % 7) rect(ctx, i % 3 ? '#f6f4ef' : c.light, x, y, 1, 1);
-          }
-          if (dark >= 0.75) puff(ctx, 92, 10, 3, '#f6f0d8');
-        }
+        [[0, 6, 4], [70, 14, 3], [120, 9, 5]].forEach(([x0, y, speed]) => cloud(ctx, ((x0 + t * speed) % (W + 30)) - 15, y, N.w));
         // The tower flag flaps.
         rect(ctx, N.o, 9, 19, 1, 6);
         rect(ctx, c.light, 10, 19, blink(t, 2.5) ? 5 : 4, 2);
         rect(ctx, c.base, 10, 21, blink(t, 2.5) ? 4 : 5, 1);
-        // The shop door rolls up to show the tool wall.
-        const open = Math.round(Math.max(0, Math.min(1, s.door)) * 17);
+        // The shop door, shut, is where the camera dives in.
         rect(ctx, '#d9c7a3', 118, 47, 22, 17);
-        if (open > 0) {
-          rect(ctx, '#e8d9b8', 118, 47, 22, 17);
-          for (let y = 49; y < 63; y += 2) for (let x = 119; x < 140; x += 2) rect(ctx, '#cdb98f', x, y, 1, 1);
-          rect(ctx, N.n, 121, 50, 1, 7); rect(ctx, N.m, 120, 49, 3, 2);
-          rect(ctx, N.n, 125, 50, 6, 1); rect(ctx, c.base, 129, 49, 3, 3);
-          rect(ctx, N.m, 134, 50, 1, 8); rect(ctx, N.o, 133, 49, 3, 1);
-          rect(ctx, c.shade, 120, 59, 18, 4); rect(ctx, c.light, 121, 59, 16, 1);
-          rect(ctx, '#fff3b0', 128, 47, 2, 1);
-        }
-        for (let y = 47; y < 64 - open; y += 2) rect(ctx, '#b9b2a6', 118, y, 22, 1);
-        // The upstairs window: by night, a computer glows with a little inventory on screen.
-        const glow = steps4(s.screen);
-        rect(ctx, glow > 0 ? mix('#2a3a6a', '#9fd8ff', glow) : '#cfe6f7', 144, 39, 4, 8);
-        rect(ctx, glow > 0 ? mix('#2a3a6a', '#9fd8ff', glow) : '#cfe6f7', 149, 39, 5, 8);
-        if (glow > 0) {
-          rect(ctx, N.o, 145, 41, 8, 6);
-          rect(ctx, '#2a1416', 146, 42, 6, 4);
-          if (glow >= 0.5) for (let j = 0; j < 2; j++) for (let i = 0; i < 3; i++) rect(ctx, (i + j + Math.floor(t * 3)) % 4 ? '#7a3324' : c.light, 146 + i * 2, 42 + j * 2, 1, 1);
-        }
+        for (let y = 47; y < 64; y += 2) rect(ctx, '#b9b2a6', 118, y, 22, 1);
+        rect(ctx, '#cfe6f7', 144, 39, 4, 8);
+        rect(ctx, '#cfe6f7', 149, 39, 5, 8);
         // Riders race past on the cue.
         if (s.race >= 0) {
           ['#e0533d', c.accent || '#3fa9f5', c.base].forEach((jersey, k) => {
@@ -240,9 +215,143 @@
       },
       cues: {
         race: s => gsap.timeline().fromTo(s, { race: 0 }, { race: 1, duration: 2.6, ease: 'none' }).set(s, { race: -1 }),
-        shop: s => gsap.timeline().to(s, { door: 1, duration: 0.9, ease: 'steps(6)' }),
-        // Night falls, the game glows upstairs, and Saturday morning comes back round.
-        night: s => gsap.timeline().to(s, { night: 1, duration: 1, ease: 'none' }).to(s, { screen: 1, duration: 0.5, ease: 'none' }, 0.8).to(s, { night: 0, duration: 0.9, ease: 'none' }, 2.6),
+      },
+    },
+
+    // Act I, moment 2: the shop. Tools pop onto the pegboard, and the stairs lead up to the door.
+    'bmx-shop': {
+      heroX: 98,
+      arrive: 26,
+      door: { x: 152, y: 15 },
+      draw(ctx, c) {
+        rect(ctx, '#f6e6c8', 0, 0, W, GROUND);
+        for (let x = 0; x < W; x += 16) rect(ctx, '#ecd5ac', x, 0, 1, GROUND);
+        rect(ctx, '#c98a55', 0, GROUND, W, H - GROUND);
+        rect(ctx, '#e0a46f', 0, GROUND, W, 1);
+        rect(ctx, '#d9c7a3', 8, 8, 84, 36);
+        for (let x = 12; x < 90; x += 6) for (let y = 12; y < 40; y += 6) rect(ctx, '#b9a27a', x, y, 1, 1);
+        [[14, 12, 16, 12], [36, 12, 16, 12], [58, 12, 16, 12], [14, 30, 16, 10]].forEach(([x, y, w, h]) => outline(ctx, x, y, w, h, N.n));
+        for (let i = 0; i < 7; i++) {
+          const x = 104 + i * 6;
+          const top = 58 - i * 6;
+          rect(ctx, c.shade, x, top, 6, GROUND - top);
+          rect(ctx, c.base, x, top, 6, 1);
+        }
+        rect(ctx, c.shade, 146, 22, 14, GROUND - 22);
+        rect(ctx, c.base, 146, 22, 14, 1);
+        rect(ctx, N.o, 146, 8, 13, 14);
+        rect(ctx, '#a96b3e', 147, 9, 11, 13);
+        rect(ctx, '#fff3b0', 155, 15, 1, 1);
+        rect(ctx, c.base, 14, 44, 80, 4);
+        rect(ctx, c.light, 14, 44, 80, 1);
+        rect(ctx, c.shade, 16, 48, 76, 16);
+        rect(ctx, N.n, 70, 34, 8, 10);
+        rect(ctx, N.o, 72, 37, 4, 1);
+        rect(ctx, N.n, 24, 38, 5, 6);
+        rect(ctx, N.w, 24, 38, 5, 1);
+      },
+      init: () => ({ tools: 0 }),
+      frame(ctx, c, s) {
+        // Each tool pops onto its outline in turn.
+        [
+          (x, y) => { rect(ctx, N.n, x + 2, y + 2, 12, 4); rect(ctx, c.shade, x + 7, y + 6, 2, 6); },
+          (x, y) => { rect(ctx, N.n, x + 4, y, 2, 11); rect(ctx, N.n, x + 2, y - 1, 6, 3); rect(ctx, '#d9c7a3', x + 3, y - 1, 2, 1); },
+          (x, y) => { rect(ctx, N.n, x, y + 4, 12, 2); for (let i = 0; i < 12; i += 2) rect(ctx, N.n, x + i, y + 6, 1, 1); rect(ctx, c.base, x + 9, y + 1, 3, 3); },
+          (x, y) => { rect(ctx, c.light, x + 2, y + 2, 8, 6); rect(ctx, N.w, x + 9, y + 5, 5, 1); },
+        ].forEach((draw, i) => { if (s.tools * 4 > i + 0.01) draw([16, 38, 60, 16][i], [14, 14, 14, 32][i], c); });
+      },
+      cues: {
+        shop: s => gsap.timeline().to(s, { tools: 1, duration: 0.8, ease: 'steps(4)' }),
+      },
+    },
+
+    // Act I, moment 3: the bedroom. The lights drop in four steps, and the computer glows with the inventory.
+    'bmx-night': {
+      heroX: 104,
+      arrive: 50,
+      door: { x: 135, y: 39 },
+      draw(ctx, c) {
+        rect(ctx, '#f3e3c4', 0, 0, W, GROUND);
+        for (let x = 0; x < W; x += 16) rect(ctx, '#ecd7b0', x, 0, 1, GROUND);
+        rect(ctx, '#c98a55', 0, GROUND, W, H - GROUND);
+        rect(ctx, '#e0a46f', 0, GROUND, W, 1);
+        rect(ctx, '#cfe6f7', 56, 8, 24, 18);
+        outline(ctx, 56, 8, 24, 18, N.o);
+        rect(ctx, N.o, 68, 8, 1, 18);
+        rect(ctx, N.o, 56, 16, 24, 1);
+        rect(ctx, c.base, 92, 10, 12, 16);
+        rect(ctx, c.light, 94, 12, 8, 4);
+        rect(ctx, c.shade, 6, 38, 3, 26);
+        rect(ctx, '#f6f4ef', 9, 50, 32, 8);
+        rect(ctx, c.base, 16, 48, 25, 10);
+        rect(ctx, c.light, 16, 48, 25, 1);
+        rect(ctx, N.w, 9, 47, 6, 4);
+        rect(ctx, '#a96b3e', 116, 44, 36, 3);
+        rect(ctx, '#a96b3e', 118, 47, 2, 17);
+        rect(ctx, '#a96b3e', 148, 47, 2, 17);
+        rect(ctx, N.o, 124, 30, 22, 14);
+        rect(ctx, N.o, 134, 43, 4, 1);
+        rect(ctx, c.base, 146, 36, 4, 4);
+        rect(ctx, N.o, 148, 40, 1, 4);
+      },
+      init: () => ({ dark: 0, screen: 0 }),
+      frame(ctx, c, s, t) {
+        const dark = steps4(s.dark);
+        if (dark > 0) {
+          ctx.globalAlpha = dark * 0.72;
+          rect(ctx, '#0d1030', 0, 0, W, GROUND);
+          ctx.globalAlpha = 1;
+          if (dark >= 0.5) {
+            const r = rng(4);
+            for (let i = 0; i < 8; i++) rect(ctx, '#f6f4ef', 58 + Math.floor(r() * 20), 10 + Math.floor(r() * 14), 1, 1);
+          }
+        }
+        const glow = steps4(s.screen);
+        rect(ctx, mix('#2a1416', '#9fd8ff', glow), 126, 32, 18, 10);
+        if (glow >= 0.5) {
+          for (let j = 0; j < 2; j++) for (let i = 0; i < 5; i++) {
+            const shade = [c.light, c.base, N.w][(i + j + Math.floor(t * 3)) % 3];
+            rect(ctx, shade, 128 + i * 3, 34 + j * 3, 2, 2);
+          }
+        }
+      },
+      cues: {
+        night: s => gsap.timeline().to(s, { dark: 1, duration: 1, ease: 'steps(4)' }).to(s, { screen: 1, duration: 0.5, ease: 'steps(2)' }, 0.9),
+      },
+    },
+
+    // Act I, level-up: the character screen the computer opens on. The bike and wrench drop into their slots.
+    'bmx-sheet': {
+      heroX: 26,
+      draw(ctx, c) {
+        rect(ctx, '#1f2440', 0, 0, W, H);
+        for (let y = 0; y < H; y += 8) rect(ctx, '#252b4f', 0, y, W, 1);
+        rect(ctx, N.o, 6, 4, 148, 64);
+        rect(ctx, '#2a3a6a', 8, 6, 144, 60);
+        rect(ctx, c.base, 8, 6, 144, 9);
+        text(ctx, 'BMX KID', 12, 8, N.o);
+        rect(ctx, '#1d1b22', 14, 20, 38, 44);
+        outline(ctx, 14, 20, 38, 44, N.n);
+        ['HEAD', 'BIKE', 'TOOL'].forEach((label, k) => {
+          const x = 62 + k * 30;
+          rect(ctx, '#1d1b22', x, 20, 26, 18);
+          outline(ctx, x, 20, 26, 18, N.n);
+          text(ctx, label, x + 2, 42, c.light);
+        });
+        text(ctx, 'LEVEL 1', 62, 52, N.w);
+        text(ctx, 'RIDING  FIXING', 62, 58, c.light);
+      },
+      init: () => ({ bike: -1, wrench: -1, helmet: 0 }),
+      frame(ctx, c, s) {
+        if (s.bike > -0.5) Pixel.paint(ctx, Pixel.ITEMS.bike, c, 97, Math.round(21 - (1 - s.bike) * 30), 1);
+        if (s.wrench > -0.5) Pixel.paint(ctx, Pixel.ITEMS.wrench, c, 127, Math.round(21 - (1 - s.wrench) * 30), 1);
+        if (s.helmet >= 0.5) sprite(ctx, ['.oooooo.', 'obbbbbbo', 'oBBBBBBo', '.oooooo.'], 71, 25, { o: N.o, b: c.light, B: c.base });
+      },
+      cues: {
+        equip: s => gsap.timeline()
+          .fromTo(s, { bike: -1 }, { bike: 1, duration: 0.6, ease: 'bounce.out' })
+          .fromTo(s, { wrench: -1 }, { wrench: 1, duration: 0.6, ease: 'bounce.out' }, 0.5)
+          .fromTo(s, { helmet: 0 }, { helmet: 1, duration: 0.2, ease: 'steps(2)' }, 0.9),
       },
     },
 

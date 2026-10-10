@@ -62,12 +62,23 @@
     if (!p.section.classList.contains('is-unlocked')) p.hero.src = heroBefore(p);
   }
 
+  // The stage each step plays in: moment k in stage k, the level-up in the last stage.
+  function stageOf(p, step) {
+    if (p.stages.length === 1) return 0;
+    return step.kind === 'beat' ? step.k : p.stages.length - 1;
+  }
+
   function build(act, i) {
     const prev = previous(i);
-    const scene = Scenes.get(act.scene);
-    const canvas = el('canvas', { class: 'px scene-canvas', width: Scenes.W, height: Scenes.H });
-    const stage = Scenes.mount(act.scene, canvas, act.color, Story.acts);
-    stage.render();
+    const stages = (act.stages || [act.scene]).map((name, s) => {
+      const canvas = el('canvas', { class: 'px scene-canvas', width: Scenes.W, height: Scenes.H });
+      const mounted = Scenes.mount(name, canvas, act.color, Story.acts);
+      mounted.render();
+      if (s > 0) canvas.style.visibility = 'hidden';
+      const drawn = Scenes.get(name);
+      return { canvas, stage: mounted, heroX: drawn.heroX, walkFrom: Math.max(2, drawn.heroX - WALK), door: drawn.door };
+    });
+    const scene = stages[0];
     // Until the level-up the hero keeps the last act's gear, hair and beard.
     const style = styleOf(prev || act);
     const hero = Pixel.hero(prev ? prev.hero.gear : 'none', prev ? prev.color : Pixel.GRAY, 1, '', style);
@@ -88,7 +99,7 @@
       el('span', { class: 'chapter-num', text: `Act ${act.numeral}` }),
       el('b', { class: 'chapter-title', text: act.title }));
     const sceneEl = el('div', { class: 'scene', role: 'img', 'aria-label': `Act ${act.numeral} scene: your character in ${act.title.toLowerCase()}.` },
-      canvas, flash, hero, el('div', { class: 'scene-burst', 'aria-hidden': 'true' }), label, pop, chapter);
+      ...stages.map(st => st.canvas), flash, hero, el('div', { class: 'scene-burst', 'aria-hidden': 'true' }), label, pop, chapter);
     // The progress rail: a node per moment and one for the level-up, filled as you scroll.
     const beatCount = Story.beatsOf(act).length;
     const railFill = el('i', { class: 'rail-fill' });
@@ -154,7 +165,7 @@
     }
 
     const steps = [{ kind: 'intro' }, ...Story.beatsOf(act).map((beat, k) => ({ kind: 'beat', beat, k })), { kind: 'level' }];
-    const parts = { act, i, style, section, screen, head, hero, heroLeft, walkFrom, heroX: scene.heroX, label, pop, flash, chapter, sceneEl, stage, beats, skillCards, story, actions, hint, rail, railFill, railNodes, railLabel, steps, played: 0, target: 0, running: null, walkOn: 1, fill: 1, heroAt: scene.heroX };
+    const parts = { act, i, style, section, screen, head, hero, heroLeft, walkFrom, heroX: scene.heroX, label, pop, flash, chapter, sceneEl, stages, stageIdx: 0, beats, skillCards, story, actions, hint, rail, railFill, railNodes, railLabel, steps, played: 0, target: 0, running: null, walkOn: 1, fill: 1, local: 1, inView: false, heroAt: scene.heroX };
     sections.push(parts);
     return section;
   }
@@ -163,7 +174,7 @@
 
   // Where the hero stands: walked on by the intro (walkOn), then across the scene by the scroll (fill).
   function place(p) {
-    const along = p.walkFrom + (p.heroX - p.walkFrom) * p.fill;
+    const along = p.walkFrom + (p.heroX - p.walkFrom) * p.local;
     const x = Math.round(-16 + (along + 16) * p.walkOn);
     if (x === p.heroAt) return;
     p.hero.classList.toggle('is-flipped', x < p.heroAt);
@@ -181,9 +192,10 @@
   }
 
   // Scrolling while pinned: fill is how far through the moments the scroll has come, 0 to 1.
-  function scrub(p, fill) {
-    if (fill === p.fill) return;
+  function scrub(p, fill, local) {
+    if (fill === p.fill && local === p.local) return;
     p.fill = fill;
+    p.local = local;
     place(p);
     railNote(p);
     if (p.walkOn < 1) return;
@@ -192,12 +204,50 @@
     p.walkTimer = setTimeout(() => p.hero.classList.remove('is-walking'), 180);
   }
 
+  // ---------- Stages: one scene per moment, changed by a dive through a door ----------
+
+  function runStage(p, on) {
+    p.stages.forEach((st, s) => (on && s === p.stageIdx ? st.stage.start() : st.stage.stop()));
+  }
+
+  function setStage(p, s, local) {
+    p.stageIdx = s;
+    const st = p.stages[s];
+    p.heroX = st.heroX;
+    p.walkFrom = st.walkFrom;
+    p.local = local;
+    p.stages.forEach((o, k) => { o.canvas.style.visibility = k === s ? 'visible' : 'hidden'; });
+    st.stage.render();
+    p.label.style.left = ((st.heroX + 8) / Scenes.W) * 100 + '%';
+    p.heroAt = -1;
+    place(p);
+  }
+
+  // The camera dives through the door the hero walks to, and the next scene zooms in from the middle.
+  function dive(p, s) {
+    const from = p.stages[p.stageIdx];
+    const to = p.stages[s];
+    const door = from.door;
+    const tl = gsap.timeline();
+    tl.to(p.hero, { left: (door.x / Scenes.W) * 100 + '%', duration: 0.4, ease: 'power1.in' }, 0);
+    tl.to(p.hero, { scale: 0, opacity: 0, duration: 0.25, ease: 'power2.in' }, 0.35);
+    tl.to(from.canvas, { scale: 3, opacity: 0, transformOrigin: `${(door.x / Scenes.W) * 100}% ${(door.y / Scenes.H) * 100}%`, duration: 0.6, ease: 'power2.in' }, 0.4);
+    tl.call(() => {
+      gsap.set(from.canvas, { clearProps: 'transform,opacity' });
+      setStage(p, s, 0);
+      gsap.set(p.hero, { clearProps: 'scale,opacity' });
+      runStage(p, p.inView);
+    }, null, 1.0);
+    tl.fromTo(to.canvas, { scale: 0.35, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: 'power2.out' }, 1.0);
+    return tl;
+  }
+
   // ---------- Steps, played with motion ----------
 
   function intro(p) {
-    const { act, section, screen, head, hero, chapter, stage } = p;
+    const { act, section, screen, head, hero, chapter } = p;
     const tl = gsap.timeline();
-    tl.call(() => { section.classList.remove('is-locked'); stage.start(); }, null, 0);
+    tl.call(() => { section.classList.remove('is-locked'); runStage(p, true); }, null, 0);
     tl.fromTo(chapter, { xPercent: -100, opacity: 1 }, { xPercent: 0, duration: 0.45, ease: 'power3.out' }, BEATS.chapterIn);
     tl.fromTo(chapter.children, { x: -30, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, stagger: 0.08, ease: 'power2.out' }, BEATS.chapterIn + 0.15);
     tl.fromTo(head.children, { x: -56, opacity: 0.2 }, { x: 0, opacity: 1, duration: 0.5, stagger: 0.08, ease: 'power3.out' }, BEATS.chapterIn);
@@ -270,8 +320,14 @@
     });
     tl.fromTo(li, { x: 24, opacity: 0 }, { x: 0, opacity: 1, duration: 0.35, ease: 'power2.out' }, 0);
     tl.add(typeOut(text), 0.1);
-    const cue = step.beat.cue && p.stage.cue(step.beat.cue);
+    const cue = step.beat.cue && p.stages[stageOf(p, step)].stage.cue(step.beat.cue);
     if (cue) tl.add(cue, 0);
+    p.act.skills.forEach((skill, n) => {
+      if (skill.moment !== step.k + 1) return;
+      const card = p.skillCards[n];
+      tl.call(() => lightSkill(p, card), null, 0.9);
+      tl.fromTo(card, { scale: 0.85 }, { scale: 1, duration: 0.35, ease: 'back.out(2.5)' }, 0.9);
+    });
     if (step.beat.look) {
       tl.call(() => restyle(p, step.beat), null, 0.3);
       tl.fromTo(p.flash, { opacity: 0.3 }, { opacity: 0, duration: 0.35 }, 0.3);
@@ -287,8 +343,7 @@
   function burst(p) {
     const box = p.sceneEl.querySelector('.scene-burst');
     const unit = p.sceneEl.clientWidth / Scenes.W;
-    const scene = Scenes.get(p.act.scene);
-    const left = ((scene.heroX + 7) / Scenes.W) * 100 + '%';
+    const left = ((p.heroX + 7) / Scenes.W) * 100 + '%';
     const top = ((Scenes.GROUND - 12) / Scenes.H) * 100 + '%';
     const bits = Array.from({ length: 26 }, () => {
       const b = el('i');
@@ -321,6 +376,7 @@
   function level(p) {
     const { act, i, hero, label, story, skillCards, actions, screen } = p;
     const pill = story.querySelector('.unlock-pill');
+    const pending = skillCards.filter(card => !card.classList.contains('is-on'));
     const tl = gsap.timeline();
     tl.to(hero, { yPercent: -40, duration: 0.25, ease: 'power2.out' }, BEATS.jump);
     tl.call(() => {
@@ -337,15 +393,17 @@
     tl.fromTo(pill, { scale: 1.4 }, { scale: 1, duration: 0.4, ease: 'back.out(3)' }, BEATS.gearSwap);
     // Items no moment gave arrive with the level-up.
     Story.leftoverItems(act).forEach((item, k) => tl.add(popItem(p, item), BEATS.gearSwap + 0.3 + k * 0.5));
-    // The new skills light, each with the skills it grew from.
-    skillCards.forEach((card, k) => {
+    const equip = p.stages[p.stages.length - 1].stage.cue('equip');
+    if (equip) tl.add(equip, BEATS.gearSwap);
+    // The skills no moment lit light now, each with the skills it grew from.
+    pending.forEach((card, k) => {
       const t = BEATS.skills + k * BEATS.skillGap;
       const chips = card.querySelectorAll('.skill-chip');
       if (chips.length) tl.fromTo(chips, { x: -18, opacity: 0 }, { x: 0, opacity: 1, duration: 0.3, stagger: 0.06, ease: 'power2.out' }, t);
       tl.call(() => lightSkill(p, card), null, t + 0.15);
       tl.fromTo(card, { scale: 0.85 }, { scale: 1, duration: 0.35, ease: 'back.out(2.5)' }, t + 0.15);
     });
-    const tEnd = BEATS.skills + skillCards.length * BEATS.skillGap;
+    const tEnd = BEATS.skills + pending.length * BEATS.skillGap;
     tl.to(label, { opacity: 0, y: -12, duration: 0.4, ease: 'power1.in' }, Math.max(tEnd - 0.2, 1.6));
     tl.call(() => screen.classList.add('is-ready'), null, tEnd + BEATS.button);
     tl.fromTo(actions, { y: 12, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: 'back.out(2)' }, tEnd + BEATS.button);
@@ -360,8 +418,11 @@
   function play(p, k) {
     const step = p.steps[k];
     if (step.kind === 'intro') return intro(p);
-    if (step.kind === 'beat') return beat(p, step);
-    return level(p);
+    const target = stageOf(p, step);
+    const tl = gsap.timeline();
+    if (target > p.stageIdx) tl.add(dive(p, target));
+    tl.add(step.kind === 'beat' ? beat(p, step) : level(p));
+    return tl;
   }
 
   // ---------- The same steps, settled at once without motion ----------
@@ -369,26 +430,30 @@
   function settleStep(p, k) {
     const { act, i, section, screen, hero, story } = p;
     const step = p.steps[k];
+    const target = step.kind === 'intro' ? 0 : stageOf(p, step);
     if (step.kind === 'intro') {
       section.classList.remove('is-locked');
       screen.classList.add('is-colored');
       gsap && gsap.set(screen, { clearProps: '--gray' });
       return;
     }
+    if (target !== p.stageIdx) setStage(p, target, 1);
     if (step.kind === 'beat') {
       const li = p.beats[step.k];
       li.classList.remove('is-locked');
       const chip = li.querySelector('.beat-item');
       if (chip) chip.classList.add('is-on');
-      if (step.beat.cue) p.stage.settle(step.beat.cue);
+      if (step.beat.cue) p.stages[target].stage.settle(step.beat.cue);
       restyle(p, step.beat);
       if (step.beat.give) { own(step.beat.give.id); if (window.Belt) Belt.fill(step.beat.give.id); }
+      act.skills.forEach((skill, n) => { if (skill.moment === step.k + 1) lightSkill(p, p.skillCards[n]); });
       return;
     }
     hero.src = Pixel.heroURL(act.hero.gear, act.color, styleOf(act));
     section.classList.add('is-unlocked');
     story.querySelector('.unlock-pill').textContent = act.unlock.banner;
     Story.leftoverItems(act).forEach(item => { own(item.id); if (window.Belt) Belt.fill(item.id); });
+    p.stages[target].stage.settle('equip');
     p.skillCards.forEach(card => lightSkill(p, card));
     screen.classList.add('is-ready');
     if (!Story.state.unlocked.has(i)) {
@@ -422,7 +487,7 @@
       p.running = null;
       if (running) { running.eventCallback('onComplete', null); running.progress(1); running.kill(); p.played += 1; }
       while (p.played < p.target) { settleStep(p, p.played); p.played += 1; }
-      p.stage.render();
+      p.stages[p.stageIdx].stage.render();
       progressNote(p);
       return;
     }
@@ -464,11 +529,13 @@
     // The scene draws its moving parts only while its screen is in view, pinned or not.
     const seen = new IntersectionObserver(entries => entries.forEach(e => {
       const p = sections.find(q => q.screen === e.target);
-      if (e.isIntersecting && p.played > 0) p.stage.start(); else if (!e.isIntersecting) p.stage.stop();
+      p.inView = e.isIntersecting;
+      if (e.isIntersecting && p.played > 0) runStage(p, true); else if (!e.isIntersecting) runStage(p, false);
     }));
     sections.forEach(p => seen.observe(p.screen));
     sections.forEach(p => {
       p.fill = 0;
+      p.local = 0;
       place(p);
       railNote(p);
       // The chapter card plays as the act scrolls into view.
@@ -498,8 +565,10 @@
           heading = self.direction;
           const u = Math.min(1, self.progress / stepPart);
           advance(p, 1 + Math.min(storySteps, Math.floor(u * storySteps * 0.999) + 1));
-          // The walk and the rail reach the end as the level-up starts.
-          scrub(p, Math.min(1, (u * storySteps) / (storySteps - 1)));
+          // The walk and the rail reach the end as the level-up starts; each stage's walk runs within its own span.
+          const span = u * storySteps;
+          const fill = Math.min(1, span / (storySteps - 1));
+          scrub(p, fill, p.stages.length > 1 ? Math.min(1, Math.max(0, span - p.stageIdx)) : fill);
         },
         // Moving on before the story is told finishes the act at the leave speed.
         onLeave: () => { p.leaving = true; advance(p, p.steps.length); },

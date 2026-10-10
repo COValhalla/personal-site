@@ -26,6 +26,8 @@ async function open(browser, options) {
 }
 
 const scrollTo = (page, y) => page.evaluate(top => window.scrollTo({ top, behavior: 'instant' }), y);
+// The index of the scene stage on screen (its canvas is the visible one).
+const stageShown = (page, id) => page.$$eval(`#${id} .scene-canvas`, cs => cs.findIndex(c => getComputedStyle(c).visibility === 'visible'));
 // Where each act holds still, and for how long, in page pixels.
 const pins = page => page.evaluate(() => ScrollTrigger.getAll().filter(t => t.pin).map(t => ({ start: t.start, end: t.end })));
 
@@ -64,6 +66,14 @@ async function desktop(browser) {
     for (let k = 1; k <= act.beats; k++) {
       await scrollTo(page, start + room * k + 2);
       await page.waitForTimeout(700);
+      if (n === 0) {
+        // Act I: each moment dives into its own scene, and the skills light with the moment they belong to.
+        const ok = await page.waitForFunction(([sel, want, lit]) => {
+          const shown = [...document.querySelectorAll(sel)].findIndex(c => getComputedStyle(c).visibility === 'visible');
+          return shown === want && document.querySelectorAll('.skill-card.is-on').length === lit;
+        }, [`#${id} .scene-canvas`, k - 1, Math.min(k, 2)], { timeout: 8000 }).then(() => true, () => false);
+        check(ok, `Act I: after moment ${k} the scene is ${k} of 4 and ${Math.min(k, 2)} skill(s) are lit`);
+      }
       if (k === 1) {
         // Between moments the scroll still moves things: the hero walks and the rail fills.
         const mid = await page.$eval(`#${id}`, s => ({ fill: s.querySelector('.rail-fill').style.transform, label: s.querySelector('.rail-label').textContent }));
@@ -74,6 +84,7 @@ async function desktop(browser) {
     await scrollTo(page, end - 4);
     await page.waitForFunction(i => Story.state.unlocked.has(i), n, { timeout: 15000 });
     await page.waitForSelector(`#${id} .act-screen.is-ready`, { timeout: 8000 });
+    if (n === 0) check((await stageShown(page, id)) === 3, 'Act I: the level-up opens on the character screen');
     await page.waitForTimeout(900);
     const done = await page.evaluate(([sel, ids]) => {
       const s = document.querySelector(sel);

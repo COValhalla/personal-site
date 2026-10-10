@@ -64,11 +64,12 @@ Each act is one file in `recipes/`. The fields:
 | `color` | `name` plus `light`, `base` and `shade` colors, and an optional `accent` for the scene |
 | `theme` | `light`, or `dark` for a dark act screen |
 | `scene` | Which scene in `js/scenes.js` to draw |
+| `stages` | Optional: one scene per moment, then one for the level-up (so `beats` plus one names), for an act whose background changes as the story goes on. The camera dives into each next scene |
 | `hero` | `gear` from `js/pixel.js`, the class `title` shown on level up, and the `hair` and `beard` the hero has in this act |
 | `beats` | The moments of the act, in order. Each has a `tag` (`life` or `work`) and `text`, and optionally the `item` it gives (an item id from this act), a scene `cue` to play and a `look` (`hair`, `beard`) that changes the hero at that moment |
 | `unlock` | `banner` (such as Level 2), `say` (the line beside it) and an optional `pop` (the word over the hero, Level up! by default) |
 | `items` | Two or three items: `id`, `name`, `sprite`, `tag`, `line`, `adds` (stats), `photo` (a path or `null`) and an optional `game` |
-| `skills` | Two or three skills: `id`, `name`, `parents` (ids from this or an earlier act) and `line` |
+| `skills` | Two or three skills: `id`, `name`, `parents` (ids from this or an earlier act), `line` and an optional `moment` (the number of the moment it lights with; otherwise the level-up lights it) |
 | `game` | The game this act offers, or `null` |
 | `photos` | Spare photos for later |
 
