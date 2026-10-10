@@ -21,6 +21,11 @@
     skills() { return story.acts.flatMap((act, i) => act.skills.map(skill => ({ ...skill, act: i }))); },
     skill(id) { return story.skills().find(s => s.id === id); },
     item(id) { return story.items().find(it => it.id === id); },
+    // What an act is called on the page: "Act II", or its own label, such as Tutorial.
+    name(act) { return act.label || `Act ${act.numeral}`; },
+    // The level reached: a tutorial completes without a level.
+    level() { return [...story.state.unlocked].filter(i => !story.acts[i].tutorial).length; },
+    levelOf(i) { return story.acts.slice(0, i + 1).filter(a => !a.tutorial).length; },
     // The beats of an act in order, each with the item it gives. Items no beat
     // gives arrive with the level-up at the end of the act.
     beatsOf(act) { return (act.beats || []).map(b => ({ ...b, give: b.item ? act.items.find(it => it.id === b.item) : null })); },

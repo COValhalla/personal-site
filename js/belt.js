@@ -48,6 +48,17 @@
     slot.setAttribute('aria-label', `${item.name}. Read its story.`);
   }
 
+  // Rewinding an act empties its slots again.
+  function empty(id) {
+    if (!belt) return;
+    const slot = belt.querySelector(`.belt-slot[data-item="${id}"]`);
+    if (!slot) return;
+    slot.disabled = true;
+    slot.classList.remove('is-filled', 'is-landing');
+    slot.title = 'Still to unlock';
+    slot.setAttribute('aria-label', 'Empty slot, still to unlock');
+  }
+
   // Fly a copy of the item's sprite from a point on screen into its slot.
   function fly(id, from) {
     const item = Story.item(id);
@@ -78,7 +89,7 @@
     const tl = gsap.timeline({ onComplete: () => ghost.remove() });
     tl.to(p, { t: 1, duration: 0.75, ease: 'power2.in', onUpdate: place });
     tl.call(() => {
-      fill(id);
+      if (Story.state.owned.has(id)) fill(id);
       to.classList.remove('is-landing');
       void to.offsetWidth;
       to.classList.add('is-landing');
@@ -120,5 +131,5 @@
       .to(fill, { scaleX: 0, duration: 0.4, ease: 'power2.in' }, '+=0.25');
   }
 
-  window.Belt = { build, target, fill, fly, refresh, xp, levelUp };
+  window.Belt = { build, target, fill, empty, fly, refresh, xp, levelUp };
 })();

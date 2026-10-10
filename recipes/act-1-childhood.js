@@ -20,7 +20,7 @@ Story.addAct({
   beats: [
     { tag: 'life', text: 'Raced BMX most weekends: gate drops, rollers and scraped knees.', item: 'bmx-bike', cue: 'race' },
     { tag: 'work', text: 'Worked in the family business and learned where every tool lived.', item: 'shop-wrench', cue: 'shop' },
-    { tag: 'life', text: 'Stayed up too late playing Diablo 2 and learned what an inventory is for.', cue: 'night' },
+    { tag: 'life', text: 'Stayed up too late playing Diablo 2, where the chat rewarded whoever typed fastest. I learned what an inventory is for.', cue: 'night' },
   ],
   unlock: { banner: 'Level 1', say: 'New class: BMX kid' },
   items: [
@@ -41,6 +41,7 @@ Story.addAct({
   skills: [
     { id: 'riding', name: 'Riding', parents: [], moment: 1, line: 'Balance, speed and getting back on.' },
     { id: 'fixing', name: 'Fixing', parents: [], moment: 2, line: 'Taking things apart and putting them back better.' },
+    { id: 'inventory', name: 'Inventory', parents: ['fixing'], moment: 3, line: 'Knowing what to carry, and what to drop.' },
   ],
   game: 'bmx',
   photos: [],

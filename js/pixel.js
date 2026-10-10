@@ -342,6 +342,44 @@
     ],
   };
 
+  // The Tutorial's items: a school keyboard and a floppy disk.
+  ITEMS.keyboard = [
+    '................',
+    '................',
+    '................',
+    '..........oo....',
+    '...........o....',
+    '.oooooooooooooo.',
+    'o11111111111111o',
+    'o1w2w2w2w2w2w23o',
+    'o12222222222223o',
+    'o1w2w2w2w2w2w23o',
+    'o12222222222223o',
+    'o12w2wwwwww2w23o',
+    'o33333333333333o',
+    '.oooooooooooooo.',
+    '................',
+    '................',
+  ];
+  ITEMS.floppy = [
+    '................',
+    '.oooooooooooooo.',
+    '.o22ommmmmmo22o.',
+    '.o22omnn.mmo22o.',
+    '.o22omnn.mmo22o.',
+    '.o22ommmmmmo22o.',
+    '.o222oooooo222o.',
+    '.o222222222222o.',
+    '.o2oooooooooo2o.',
+    '.o2owwwwwwwwo2o.',
+    '.o2ownnnnnnwo2o.',
+    '.o2owwwwwwwwo2o.',
+    '.o2ownnnnnnwo2o.',
+    '.o2owwwwwwwwo3o.',
+    '.oooooooooooooo.',
+    '................',
+  ];
+
   // Drawn in place of a sprite a recipe names but pixel.js does not have yet.
   const MISSING = [
     '................',
@@ -459,6 +497,14 @@
       '..o22o....o22o..',
       '..o33o....o33o..',
       '...oo......oo...',
+    ],
+    // A school backpack: two straps over the shirt.
+    backpack: [null, null, null, null, null, null, null, null, null, null,
+      '.....k....k.....',
+      '.....k....k.....',
+      '.....k....k.....',
+      '.....k....k.....',
+      '.....k....k.....',
     ],
     cap: [
       '................',

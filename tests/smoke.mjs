@@ -37,13 +37,21 @@ async function desktop(browser) {
   await page.evaluate(() => { window.__unlocks = 0; Story.on('unlock', () => { window.__unlocks += 1; }); });
   const ids = await page.$$eval('section.act', s => s.map(x => x.id));
   const items = await page.evaluate(() => Story.items().length);
-  check(ids.length === 6, 'six acts are on the page');
+  check(ids.length === 7, 'the tutorial and six acts are on the page');
   check(await page.textContent('.intro-title') === 'Joe' && await page.textContent('.hud-name') === 'Joe', 'the intro and the bar say Joe');
+  check(await page.textContent('.intro-tag') === "Hi, I'm Joe, an engineer turned product manager. Welcome to my story, told like the games I grew up on. Scroll down to play it, one level at a time.", 'the welcome names Joe and asks the reader to scroll');
+  check(await page.$$eval('.intro .intro-note a', a => a.length) === 1 && await page.$('.intro .intro-start') !== null, 'the welcome has a Press start button and only the short-version link');
   check(await page.textContent('.hud-count') === `0/${items}`, 'the sheet starts empty');
   check(await page.$$eval('.belt-slot.is-filled', s => s.length) === 0, 'the inventory belt starts empty');
   check(await page.$eval('#act-school .act-screen', s => getComputedStyle(s).filter.includes('grayscale(1)')), 'acts start in gray');
 
   const where = await pins(page);
+  await page.click('.intro-start');
+  await page.waitForTimeout(1500);
+  check(Math.abs((await page.evaluate(() => window.scrollY)) - (where[0].start + 2)) < 4, 'Press start glides to the first act');
+  await scrollTo(page, 0);
+  await page.waitForTimeout(300);
+  const names = ['Tutorial', 'Act I', 'Act II', 'Act III', 'Act IV', 'Act V', 'Act VI'];
   for (const [n, id] of ids.entries()) {
     const { start, end } = where[n];
     const act = await page.evaluate(i => ({ beats: Story.acts[i].beats.length, items: Story.acts[i].items.map(it => it.id), skills: Story.acts[i].skills.length }), n);
@@ -53,12 +61,12 @@ async function desktop(browser) {
     await scrollTo(page, start + 2);
     await page.waitForTimeout(200);
     const fit = await page.$eval(`#${id} .act-screen`, s => { const r = s.getBoundingClientRect(); return Math.abs(r.top) < 2 && Math.abs(r.height - window.innerHeight) < 2; });
-    check(fit, `Act ${n + 1} fills the screen and holds still`);
+    check(fit, `${names[n]} fills the screen and holds still`);
     // The first moment plays at once and gives its item.
     await page.waitForFunction(i => Acts.sections[i].played >= 2, n, { timeout: 6000 });
     const first = await page.$$eval(`#${id} .beat:not(.is-locked)`, b => b.length);
-    check(first === 1, `Act ${n + 1} tells its first moment before the rest`);
-    check((end - start) <= 900 * (0.6 * (act.beats + 1) + 0.7) + 2, `Act ${n + 1} holds still for ${((end - start) / 900).toFixed(2)} screens, 0.6 a moment plus 0.7`);
+    check(first === 1, `${names[n]} tells its first moment before the rest`);
+    check((end - start) <= 900 * (0.6 * (act.beats + 1) + 0.7) + 2, `${names[n]} holds still for ${((end - start) / 900).toFixed(2)} screens, 0.6 a moment plus 0.7`);
     const heroAt = () => page.$eval(`#${id} .scene-hero`, h => parseFloat(h.style.left));
     const startX = await heroAt();
     // Scroll on through the story, one moment's room at a time: each stop is a whole moment.
@@ -66,25 +74,25 @@ async function desktop(browser) {
     for (let k = 1; k <= act.beats; k++) {
       await scrollTo(page, start + room * k + 2);
       await page.waitForTimeout(700);
-      if (n === 0) {
+      if (n === 1) {
         // Act I: each moment dives into its own scene, and the skills light with the moment they belong to.
-        const ok = await page.waitForFunction(([sel, want, lit]) => {
+        const ok = await page.waitForFunction(([sel, want, lit, scope]) => {
           const shown = [...document.querySelectorAll(sel)].findIndex(c => getComputedStyle(c).visibility === 'visible');
-          return shown === want && document.querySelectorAll('.skill-card.is-on').length === lit;
-        }, [`#${id} .scene-canvas`, k - 1, Math.min(k, 2)], { timeout: 8000 }).then(() => true, () => false);
+          return shown === want && document.querySelectorAll(`${scope} .skill-card.is-on`).length === lit;
+        }, [`#${id} .scene-canvas`, k - 1, Math.min(k, 2), `#${id}`], { timeout: 8000 }).then(() => true, () => false);
         check(ok, `Act I: after moment ${k} the scene is ${k} of 4 and ${Math.min(k, 2)} skill(s) are lit`);
       }
       if (k === 1) {
         // Between moments the scroll still moves things: the hero walks and the rail fills.
         const mid = await page.$eval(`#${id}`, s => ({ fill: s.querySelector('.rail-fill').style.transform, label: s.querySelector('.rail-label').textContent }));
-        check((await heroAt()) > startX && mid.fill !== 'scaleX(0)', `Act ${n + 1}: scrolling walks the hero and fills the progress rail`);
-        check(/^Moment 2 of \d$/.test(mid.label), `Act ${n + 1}: the rail says ${mid.label}`);
+        check((await heroAt()) > startX && mid.fill !== 'scaleX(0)', `${names[n]}: scrolling walks the hero and fills the progress rail`);
+        check(/^Moment 2 of \d$/.test(mid.label), `${names[n]}: the rail says ${mid.label}`);
       }
     }
     await scrollTo(page, end - 4);
     await page.waitForFunction(i => Story.state.unlocked.has(i), n, { timeout: 15000 });
     await page.waitForSelector(`#${id} .act-screen.is-ready`, { timeout: 8000 });
-    if (n === 0) check((await stageShown(page, id)) === 3, 'Act I: the level-up opens on the character screen');
+    if (n === 1) check((await stageShown(page, id)) === 3, 'Act I: the level-up opens on the character screen');
     await page.waitForTimeout(900);
     const done = await page.evaluate(([sel, ids]) => {
       const s = document.querySelector(sel);
@@ -98,12 +106,13 @@ async function desktop(browser) {
         gray: getComputedStyle(s.querySelector('.act-screen')).filter,
       };
     }, [`#${id}`, act.items]);
-    check(done.pill === `Level ${n + 1}` && done.skillsLit === act.skills, `Act ${n + 1} levels up and lights its ${act.skills} skills`);
-    check(done.beatsShown === act.beats && done.beatsInView, `Act ${n + 1} shows all ${act.beats} life and work moments without scrolling`);
-    check(done.inBelt, `Act ${n + 1} drops its items into the inventory belt`);
-    check(!done.gray.includes('grayscale(1)'), `Act ${n + 1} has its color`);
+    const pill = n === 0 ? 'Tutorial complete' : `Level ${n}`;
+    check(done.pill === pill && done.skillsLit === act.skills, `${names[n]} levels up and lights its ${act.skills} skills`);
+    check(done.beatsShown === act.beats && done.beatsInView, `${names[n]} shows all ${act.beats} life and work moments without scrolling`);
+    check(done.inBelt, `${names[n]} drops its items into the inventory belt`);
+    check(!done.gray.includes('grayscale(1)'), `${names[n]} has its color`);
     const next = await page.$eval(`#${id} .act-next`, a => ({ text: a.textContent.trim(), shown: getComputedStyle(a).visibility === 'visible' }));
-    check(next.shown && next.text.startsWith(n < 5 ? `Next: Act ${['II', 'III', 'IV', 'V', 'VI'][n]}` : 'Next: the short version'), `Act ${n + 1} ends with a Next tag (${next.text})`);
+    check(next.shown && next.text.startsWith(n < 6 ? `Next: ${names[n + 1]}` : 'Next: the short version'), `${names[n]} ends with a Next tag (${next.text})`);
   }
   check(await page.textContent('.hud-count') === `${items}/${items}`, `the sheet holds all ${items} items`);
 
@@ -111,7 +120,16 @@ async function desktop(browser) {
   await page.waitForTimeout(300);
   await scrollTo(page, await page.evaluate(() => document.body.scrollHeight));
   await page.waitForTimeout(300);
-  check(await page.evaluate(() => window.__unlocks) === 6, 'scrolling back and forth does not replay any unlock');
+  await scrollTo(page, 0);
+  await page.waitForTimeout(600);
+  check(await page.evaluate(() => Story.state.unlocked.size) === 0 && await page.textContent('.hud-count') === `0/${items}`,
+    'scrolling back above the tutorial rewinds every act and empties the sheet');
+  const before = await page.evaluate(() => window.__unlocks);
+  await scrollTo(page, await page.evaluate(() => document.body.scrollHeight));
+  await page.waitForTimeout(900);
+  const after = await page.evaluate(() => [window.__unlocks, Story.state.unlocked.size]);
+  const replay = [after[0] - before, after[1]];
+  check(replay[0] === 7 && replay[1] === 7, `scrolling down again plays every act once more (${replay.join(', ')})`);
 
   // The character sheet.
   await page.evaluate(() => Sheet.open({ tab: 'items' }));
@@ -126,15 +144,15 @@ async function desktop(browser) {
     'the hammer story card shows name, act, tag, line, what it added and Play');
   await page.keyboard.press('Escape');
   await page.click('#tab-map');
-  check(await page.$$eval('#sheet .map-stop', n => n.length) === 6 && await page.$eval('#sheet .map-canvas', c => c.getBoundingClientRect().width > 300), 'the Map tab shows the map with six stops');
-  await page.waitForFunction(() => document.querySelector('#sheet .map').dataset.at === '5.00', null, { timeout: 2000 });
+  check(await page.$$eval('#sheet .map-stop', n => n.length) === 7 && await page.$eval('#sheet .map-canvas', c => c.getBoundingClientRect().width > 300), 'the Map tab shows the map with seven stops');
+  await page.waitForFunction(() => document.querySelector('#sheet .map').dataset.at === '6.00', null, { timeout: 2000 });
   check(true, 'the hero stands at the furthest stop reached');
-  await page.click('#sheet [data-stop="1"]');
+  await page.click('#sheet [data-stop="2"]');
   check((await page.textContent('#sheet .map-info')).includes('Hammer thrower. Skills: Throwing, Chemistry.'), 'a stop shows its class and skills');
   await page.waitForTimeout(400);
   const walking = Number(await page.$eval('#sheet .map', m => m.dataset.at));
-  check(walking < 5 && walking > 1, `the hero walks the road toward the selected stop (at ${walking})`);
-  await page.waitForFunction(() => document.querySelector('#sheet .map').dataset.at === '1.00', null, { timeout: 8000 });
+  check(walking < 6 && walking > 2, `the hero walks the road toward the selected stop (at ${walking})`);
+  await page.waitForFunction(() => document.querySelector('#sheet .map').dataset.at === '2.00', null, { timeout: 8000 });
   check(true, 'the hero reaches the selected stop');
   await page.click('#sheet .map-go');
   await page.waitForTimeout(400);
@@ -146,13 +164,22 @@ async function desktop(browser) {
   await page.waitForSelector('#card[open]');
   check(await page.$('#card .card-photo') === null, 'a story card with no photo shows no photo box');
   await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#sheet').open, null, { timeout: 2000 });
   check(await page.$eval('#say-hello .hello-links', ul => [...ul.querySelectorAll('a')].map(a => `${a.textContent} ${a.getAttribute('href')}`).join()) === 'LinkedIn https://www.linkedin.com/in/josephvellella/,Email mailto:connect-with-joe.next036@passmail.net,GitHub https://github.com/COValhalla', 'Say hello lists the links from the recipe');
-  check(await page.getAttribute('.hud-hello', 'href') === '#say-hello' && await page.title() === 'Joe Vellella · A life in six acts', 'the top bar links to Say hello and the tab says the full name');
+  const hereY = await page.evaluate(() => window.scrollY);
+  await page.click('.hud-hello');
+  check(await page.$$eval('#hello-menu a', a => a.map(x => x.textContent).join()) === 'LinkedIn,Email,GitHub' && await page.isVisible('#hello-menu')
+    && await page.evaluate(() => window.scrollY) === hereY, 'the top bar opens a small menu of the three links without jumping');
+  await page.keyboard.press('Escape');
+  check(!(await page.isVisible('#hello-menu')), 'Escape closes the Say hello menu');
+  check(await page.title() === 'Joe Vellella · Engineer turned product manager', 'the tab says the full name and role');
   check(await page.textContent('.site-foot') === 'Joe Vellella', 'the footer says the full name');
   await page.keyboard.press('Escape');
 
   await hammer(page);
   await bmx(page);
+  await typing(page);
   check(errors.length === 0, 'no console errors or warnings' + (errors.length ? ': ' + errors.join(' | ') : ''));
   await context.close();
 }
@@ -266,6 +293,21 @@ async function bmx(page) {
   check(calls.lift.join(',') === '11,22,10,0', `a press lifts the front wheel up to 22 degrees and back down (${calls.lift.join(', ')})`);
 }
 
+async function typing(page) {
+  const st = '#game .game-stage';
+  await page.evaluate(() => Games.open('typing'));
+  await page.waitForSelector('#game[open]');
+  check(await page.$eval(st, s => s.dataset.state) === 'ready', 'the typing race waits for Start');
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(s => document.querySelector(s).dataset.state === 'racing', st, { timeout: 6000 });
+  await page.keyboard.type(await page.textContent('#game .type-line'), { delay: 0 });
+  await page.waitForFunction(s => document.querySelector(s).dataset.state === 'done', st, { timeout: 6000 });
+  check(await page.$eval(st, s => s.dataset.place) === '1' && await page.textContent('#game .game-msg') !== '',
+    `typing the whole line first wins the class race at ${await page.$eval(st, s => s.dataset.wpm)} words a minute`);
+  await page.click('#game .game-skip');
+  check(!(await page.$('#game[open]')), 'Skip closes the typing race');
+}
+
 async function pacing(browser) {
   console.log('\nLaptop, the pace of the scroll');
   const { context, page, errors } = await open(browser, { viewport: { width: 1440, height: 900 } });
@@ -313,7 +355,7 @@ async function reducedMotion(browser) {
   console.log('\nLaptop, motion turned off');
   const { context, page, errors } = await open(browser, { viewport: { width: 1280, height: 860 }, reducedMotion: 'reduce' });
   const items = await page.evaluate(() => Story.items().length);
-  check(await page.$$eval('section.act.is-unlocked', s => s.length) === 6, 'every act shows already unlocked');
+  check(await page.$$eval('section.act.is-unlocked', s => s.length) === 7, 'every act shows already unlocked');
   check(await page.$$eval('.beat.is-locked', b => b.length) === 0, 'every moment is shown');
   check(await page.textContent('.hud-count') === `${items}/${items}` && await page.$$eval('.belt-slot.is-filled', s => s.length) === items, 'the sheet and the belt are already full');
   await page.evaluate(() => Games.open('hammer'));
@@ -334,15 +376,15 @@ async function reducedMotion(browser) {
 async function mapPartway(browser) {
   console.log('\nThe map, partway through');
   const { context, page, errors } = await open(browser, { viewport: { width: 1280, height: 860 } });
-  await page.evaluate(() => [0, 1, 2].forEach(i => Acts.unlock(i)));
+  await page.evaluate(() => [0, 1, 2, 3].forEach(i => Acts.unlock(i)));
   await page.evaluate(() => Sheet.open({ tab: 'map' }));
   await page.waitForSelector('#sheet[open]');
-  await page.waitForFunction(() => document.querySelector('#sheet .map').dataset.at === '2.00', null, { timeout: 2000 });
+  await page.waitForFunction(() => document.querySelector('#sheet .map').dataset.at === '3.00', null, { timeout: 2000 });
   check(true, 'the hero waits at Act III, the furthest stop reached');
-  await page.click('#sheet [data-stop="4"]');
+  await page.click('#sheet [data-stop="5"]');
   check((await page.textContent('#sheet .map-info')).includes('Not reached yet'), 'a stop not reached yet says so');
   // The year off grows the beard moment by moment.
-  const looks = await page.evaluate(() => Story.acts[4].beats.map(b => b.look && b.look.beard).join(','));
+  const looks = await page.evaluate(() => Story.acts[5].beats.map(b => b.look && b.look.beard).join(','));
   check(looks === 'stubble,short,full,long', `the beard grows through the year off (${looks})`);
   check(errors.length === 0, 'no console errors or warnings');
   await context.close();
@@ -355,13 +397,13 @@ async function phone(browser) {
   check(await page.isVisible('.hud-hello .hud-at') && !(await page.isVisible('.hud-hello .hud-label')), 'the bar shows an @ for Say hello');
   check(await page.$eval('.hud', h => h.scrollWidth <= h.clientWidth), 'the bar fits the phone width');
   const where = await pins(page);
-  await scrollTo(page, where[1].start - 300);
-  await page.waitForFunction(() => Acts.sections[1].played >= 1, null, { timeout: 5000 });
-  await scrollTo(page, where[1].start + 2);
+  await scrollTo(page, where[2].start - 300);
+  await page.waitForFunction(() => Acts.sections[2].played >= 1, null, { timeout: 5000 });
+  await scrollTo(page, where[2].start + 2);
   await page.waitForTimeout(200);
   check(await page.$eval('#act-school .act-screen', s => Math.abs(s.getBoundingClientRect().height - window.innerHeight) < 2), 'Act II fills the screen');
-  await scrollTo(page, where[1].end - 4);
-  await page.waitForFunction(() => Story.state.unlocked.has(1), null, { timeout: 15000 });
+  await scrollTo(page, where[2].end - 4);
+  await page.waitForFunction(() => Story.state.unlocked.has(2), null, { timeout: 15000 });
   await page.waitForSelector('#act-school .act-screen.is-ready', { timeout: 8000 });
   await page.locator('#act-school .unlock-actions .btn--accent').tap();
   await page.waitForSelector('#sheet[open]');

@@ -42,9 +42,9 @@ Story.addAct({
     },
   ],
   skills: [
-    { id: 'product-engineering', name: 'Product engineering', parents: ['code', 'new-products'], line: 'Finding what the business needs, then building it.' },
-    { id: 'product', name: 'Product', parents: ['throwing', 'capital-projects', 'mountains', 'debugging'], line: 'Ties every branch together.' },
-    { id: 'guiding', name: 'Guiding a team', parents: ['product', 'plant-ops'], line: 'Setting a direction the whole team can build toward.' },
+    { id: 'product-engineering', name: 'Product engineering', parents: ['code', 'new-products', 'curiosity'], line: 'Finding what the business needs, then building it.' },
+    { id: 'product', name: 'Product', parents: ['throwing', 'capital-projects', 'mountains', 'debugging', 'reading'], line: 'Ties every branch together.' },
+    { id: 'guiding', name: 'Guiding a team', parents: ['product', 'plant-ops', 'adapting'], moment: 4, line: 'Setting a direction the whole team can build toward.' },
   ],
   game: null,
   photos: [],

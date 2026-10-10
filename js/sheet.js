@@ -29,7 +29,7 @@
   }
 
   const unlocked = () => Story.state.unlocked;
-  const level = () => unlocked().size;
+  const level = () => Story.level();
   const currentAct = () => Story.acts[Math.max(...unlocked(), -1)] || null;
 
   function build() {
@@ -106,7 +106,7 @@
       const units = act => act.items.reduce((sum, item) => sum + (owned.has(item.id) ? ((item.adds || {})[stat.id] || 0) : 0), 0);
       const segments = Story.acts.map(act => {
         const n = units(act);
-        return n ? el('i', { style: `width:${(n / max) * 100}%;background:${act.color.base}`, title: `Act ${act.numeral}` }) : null;
+        return n ? el('i', { style: `width:${(n / max) * 100}%;background:${act.color.base}`, title: Story.name(act) }) : null;
       });
       const filled = Story.acts.reduce((sum, act) => sum + units(act), 0);
       const words = filled === 0 ? 'empty' : filled / max < 0.4 ? 'a little' : filled / max < 0.75 ? 'growing' : 'strong';
@@ -129,7 +129,7 @@
         const slot = el('button', {
           class: 'inv-slot is-filled' + (item.act === highlightAct ? ' is-pulse' : ''),
           style: colorVars(act),
-          'aria-label': `${item.name}, Act ${act.numeral}. Read its story.`,
+          'aria-label': `${item.name}, ${Story.name(act)}. Read its story.`,
           title: item.name,
           'data-item': item.id,
           onclick: () => openItem(item.id),
@@ -164,7 +164,7 @@
       el('div', { class: 'card-art' }, Pixel.item(item.sprite, act.color, 8, item.name)),
       el('div', {},
         el('h3', { class: 'card-name', id: 'card-name', text: item.name }),
-        el('p', { class: 'card-meta' }, `Act ${act.numeral} · ${act.title}`, el('span', { class: 'tag tag--' + item.tag, text: item.tag })),
+        el('p', { class: 'card-meta' }, `${Story.name(act)} · ${act.title}`, el('span', { class: 'tag tag--' + item.tag, text: item.tag })),
         el('blockquote', { class: 'card-line', text: `“${item.line}”` }),
         el('div', { class: 'card-section' },
           el('p', { class: 'panel-label', text: 'What it added' }),
