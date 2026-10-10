@@ -6,8 +6,8 @@ Story.site({
   tagline: 'A life in six acts. Scroll down and watch the character sheet fill in.',
   // Say hello links. A blank address leaves its link out.
   contact: {
-    linkedin: '',
-    email: '',
+    linkedin: 'https://www.linkedin.com/in/josephvellella/',
+    email: 'connect-with-joe.next036@passmail.net',
     github: 'https://github.com/COValhalla',
   },
   // How the pixel hero looks, drawn from Joe's photos: skin, hair with
