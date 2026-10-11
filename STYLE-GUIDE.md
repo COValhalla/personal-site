@@ -9,7 +9,7 @@ This guide keeps every act, sprite and animation looking like it came from the s
 | Item sprite | 16 × 16 | 4× in slots, 8× on story cards |
 | Hero sprite | 16 × 24 | 1 scene pixel per sprite pixel; 4× on the sheet |
 | Act scene | 160 × 72, ground at y = 64 | As big as fits the screen above the skills row |
-| Hammer throw field | 200 × 150, with a 64 × 64 close-up of the circle | Scaled to fit the game window |
+| Hammer and discus field | 200 × 150, with a 64 × 64 close-up of the circle | Scaled to fit the game window |
 | BMX race | 200 × 100, ground at y = 84, lanes 5 pixels apart, overhead view in each berm | Scaled to fit the game window |
 | World map | 320 × 120, a stop per act | The width of the sheet |
 | BMX rider | drawn on a 32 × 32 canvas, then turned with the slope | 1 game pixel per sprite pixel |
@@ -136,11 +136,12 @@ Along the bottom of a laptop screen sits the belt: one slot per item, grouped by
 
 - Short, one screen, and skippable at any time with Skip or Escape.
 - Drawn on a small canvas in the act's colors, scaled up with pixels kept sharp.
-- At most two controls, each with a button and a key. The hammer is one: hold to spin (Space). The BMX race is two: Pedal (hold, or the right arrow) and Jump (tap, or Space; hold to fly bigger).
-- A game should be able to go wrong. The hammer fouls after a fifth turn, a release in the wind or away from the glow; a BMX rider can case a jump, overshoot it or come up short and crash.
+- At most two controls, each with a button and a key. The hammer and the discus are one: hold to spin (Space). The BMX race is two: Pedal (hold, or the right arrow) and Jump (tap, or Space; hold to fly bigger).
+- A game should be able to go wrong. The hammer fouls after a fifth turn, the discus after a third, and both on a release in the wind or away from the glow; a BMX rider can case a jump, overshoot it or come up short and crash.
 - Show the timing a game judges. The BMX lit strip draws the real windows from `WINDOWS` in `js/games/bmx.js`: green for perfect, amber for good. The roller calls are Perfect pump, Good - a bit early, Good - a bit late, Too early and No pump. A tap on a jump wheelies over it, and a press pulls the front wheel up 22 degrees around the rear wheel (`LIFT`). The hold meter shows, before each jump, the charges that land clean.
-- The hammer's turns run at 4.4, 5.2, 7.2 and 9.2 radians a second (`TURN_SPEED`), and the glow widens on a fast turn so it never lasts under 0.1 s (`MIN_WINDOW`). A fair release on turn 3 or 4 freezes for 0.08 s (0.11 s for a perfect one), then shakes and flashes; a throw of `CAMERA_FROM_M` (70 m) or more plays the side-on throw camera at a dusk stadium.
-- Each game puts its live state on its stage element (`stage.bmx`, `stage.hammer`) for tests and playtesting, and the BMX physics is exported as `Games.get('bmx').sim` so it can be tuned without drawing.
+- The hammer's turns run at 4.4, 5.2, 7.2 and 9.2 radians a second (`turnSpeed`), and the glow widens on a fast turn so it never lasts under 0.1 s (`MIN_WINDOW`). A fair release on turn 3 or 4 freezes for 0.08 s (0.11 s for a perfect one), then shakes and flashes; a throw of 70 m or more plays the side-on throw camera at a dusk stadium.
+- The discus throw shares the hammer's code in `js/games/hammer.js`; `MODES` holds what differs. It turns twice, at 5.0 and 7.8 radians a second, and a fair release on the second turn hits. Marks are in feet, rounded down to the tenth, so 176.0 ties Joe's 176-foot school record (`RECORD_FT`) without beating it. The record is a gold line across the sector and a gold flag in the throw camera, which plays from 165 feet.
+- Each game puts its live state on its stage element (`stage.bmx`, `stage.hammer`, `stage.discus`) for tests and playtesting, and the BMX physics is exported as `Games.get('bmx').sim` so it can be tuned without drawing.
 - Register with `Games.register(name, { title, help, mount })` in `js/games/`; `mount` returns a function that stops the game.
 
 ## Words
