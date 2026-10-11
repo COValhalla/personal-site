@@ -34,7 +34,7 @@ Every merge to `main` publishes it there within a minute or two, through GitHub 
 6. Play the hammer throw in Act II: hold to spin (or hold Space). You get one wind and four turns, and the last two are fast; let go while the hammer glows. A good release on turn 3 or 4 hits with a freeze, a shake and a flash, and a throw of 70 m or more plays a slow-motion throw camera (tap to skip). Hold on past the fourth turn and it is a foul.
 7. Play the typing race in the Tutorial: type the three lines as fast as you can to beat KIM (20 words a minute) and MAX (35 words a minute). Typing is the Tutorial's game, the one you would play in typing class.
 8. Scroll back above an act and it rewinds, together with every act after it, then plays again as you scroll down. Scrolling inside an act never un-tells what you have already seen.
-9. Use the chapter buttons (I to VI) to jump to an act, or the short version at the end. Say hello in the top bar opens a small menu of links to reach Joe, and the same links sit at the end.
+9. Use the chapter buttons (I to VI) to jump to an act. The quest log at the end of the page ("Short on time?" on the title screen goes straight there) lists the real titles, employers and dates, one row per act; select a row to go to its act, or follow its LinkedIn button for the exact details. Say hello in the top bar opens a small menu of links to reach Joe, and the same links sit at the end.
 
 ## Files
 
@@ -51,7 +51,7 @@ Every merge to `main` publishes it there within a minute or two, through GitHub 
 | `js/map.js` | The world map on the sheet. |
 | `js/games/` | The hammer throw, the BMX race, the typing race and their sounds. |
 | `js/story.js` | Collects the recipes and checks them for mistakes. |
-| `js/main.js` | The top bar, the intro, the short version, Say hello and start-up. |
+| `js/main.js` | The top bar, the intro, the quest log, Say hello and start-up. |
 | `vendor/gsap/` | GSAP 3.15.0 and ScrollTrigger, kept here so the page works offline. |
 | `tests/smoke.mjs` | An end-to-end check in Chrome. |
 
@@ -62,7 +62,7 @@ Each act is one file in `recipes/`. The fields:
 | Field | Meaning |
 | --- | --- |
 | `id`, `numeral`, `title`, `years` | The act's name and when it happened |
-| `summary` | One line for the short version |
+| `quests` | The act's lines in the quest log at the end of the page: one or more, each a `what` (a title, degree or record), with an optional `where` (employer or school) and `when` (dates) |
 | `color` | `name` plus `light`, `base` and `shade` colors, and an optional `accent` for the scene |
 | `theme` | `light`, or `dark` for a dark act screen |
 | `scene` | Which scene in `js/scenes.js` to draw |
@@ -89,7 +89,7 @@ Ask an AI coding agent for one act at a time. A prompt that works:
 
 ## Tests
 
-The smoke test opens the page in Google Chrome and does what a reader does: it scrolls through every act step by step, opens the sheet, reads a story card, checks that scrolling walks the hero and fills the progress rail, walks the map, throws the hammer (a centered fourth-turn release with its hit and throw camera, a skipped camera, a fifth-turn foul and a foul in the wind), checks every pump call, the wheelie, the flight and the wheel lift, and races the BMX track with a bot that pumps the rollers and jumps, with motion on, with motion off and on a phone-sized screen.
+The smoke test opens the page in Google Chrome and does what a reader does: it scrolls through every act step by step, opens the sheet, reads a story card, reads the quest log and follows a row to its act, checks that scrolling walks the hero and fills the progress rail, walks the map, throws the hammer (a centered fourth-turn release with its hit and throw camera, a skipped camera, a fifth-turn foul and a foul in the wind), checks every pump call, the wheelie, the flight and the wheel lift, and races the BMX track with a bot that pumps the rollers and jumps, with motion on, with motion off and on a phone-sized screen.
 
 ```sh
 npm install

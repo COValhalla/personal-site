@@ -8,7 +8,9 @@ Story.addAct({
   numeral: 'V',
   title: 'The respec',
   years: 'Year off, 2022',
-  summary: 'Left a safe senior engineering path to learn full-stack JavaScript with The Odin Project.',
+  quests: [
+    { what: 'Full Stack JavaScript', where: 'The Odin Project', when: 'May to Dec 2022' },
+  ],
   color: { name: 'Amber', light: '#f5cf66', base: '#e5ac1f', shade: '#a57712' },
   theme: 'light',
   scene: 'library',

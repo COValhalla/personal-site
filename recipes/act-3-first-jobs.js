@@ -7,7 +7,10 @@ Story.addAct({
   numeral: 'III',
   title: 'High stakes',
   years: 'First jobs, 2015 to 2018',
-  summary: 'Materials engineer in Kansas City, a clearance that stalled, then process engineer in Sioux City, Iowa.',
+  quests: [
+    { what: 'Materials Engineer', where: 'Honeywell FM&T, Kansas City National Security Campus', when: 'Jun 2015 to Jul 2016' },
+    { what: 'Process Engineer', where: 'Gelita USA, Sioux City', when: 'Jul 2016 to Mar 2018' },
+  ],
   color: { name: 'Blueprint blue', light: '#7fb0ee', base: '#3b7dd8', shade: '#24539c' },
   theme: 'light',
   scene: 'plant',

@@ -148,4 +148,4 @@ Every word in the recipes is a placeholder until you replace it.
 
 - Each moment and item is tagged `life` or `work`.
 - An item's line is one sentence in your own voice.
-- Employers are not named yet.
+- Employers and schools are named, with real titles and dates from Joe's resume, in each act's `quests` for the quest log at the end of the page. For anything more exact, the quest log points to LinkedIn.
