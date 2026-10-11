@@ -6,21 +6,21 @@
 Story.addAct({
   id: 'now',
   numeral: 'VI',
-  title: 'Now',
-  years: '2.5 years in software',
-  summary: 'A product engineer who found what the business needed and built it, now a senior product manager guiding the team.',
+  title: 'Party leader',
+  years: 'Since 2023',
+  summary: 'First dedicated software engineer at Wavelynx, builder of the LEAF Verified credential platform, now a senior product manager.',
   color: { name: 'Purple', light: '#b69af0', base: '#8a63d2', shade: '#5d3f9a' },
   theme: 'light',
   scene: 'studio',
   // No hat now, so the bun shows; a badge on the shirt.
-  hero: { gear: 'badge', title: 'Senior product manager', hair: 'bun', beard: 'long' },
+  hero: { gear: 'badge', title: 'Product engineer', hair: 'bun', beard: 'long' },
   beats: [
-    { tag: 'work', text: 'Product engineer: sat with the business to learn what it really needed.', item: 'two-hats', cue: 'listen' },
-    { tag: 'work', text: 'Then built it myself: decide, build, ship, and go round again.', item: 'compass', cue: 'loop' },
-    { tag: 'work', text: 'Senior product manager: now I set direction and guide the rest of the team.', item: 'roadmap', cue: 'team' },
-    { tag: 'life', text: 'Two and a half years in software, still adding to the toolbox.', cue: 'shine' },
+    { tag: 'work', text: 'In January 2023, Wavelynx hired me as its first dedicated software engineer. I took the founders\' undocumented systems and built them into a stable, recoverable platform.', item: 'compass', cue: 'listen' },
+    { tag: 'work', text: 'I built the LEAF Verified credential platform on my own, end to end. It won a SIA New Products and Solutions award at ISC West, and its patents are pending.', item: 'roadmap', cue: 'loop' },
+    { tag: 'work', text: 'Promoted twice in three years, to senior product manager. I coached our team and executives on a new way to build products, and I still build: a Java Card prototype reached an enterprise customer a week after I made it.', item: 'two-hats', cue: 'team' },
+    { tag: 'life', text: 'The kid who raced the typing game in the computer lab now builds the product, and leads the team that ships it.', cue: 'shine' },
   ],
-  unlock: { banner: 'Level 6', say: 'New class: Senior product manager' },
+  unlock: { banner: 'Level 6', say: 'New class: Product engineer' },
   items: [
     {
       id: 'two-hats', name: 'Two hats', sprite: 'hats', tag: 'work',

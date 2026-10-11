@@ -3,8 +3,10 @@
  */
 Story.site({
   name: 'Joe',
-  // The welcome on the title screen: one to three sentences that ask the visitor to scroll.
-  welcome: "Hi, I'm Joe, an engineer turned product manager. Welcome to my story, told like the games I grew up on. Scroll down to play it, one level at a time.",
+  // The welcome on the title screen: one to four sentences that lead to Press start.
+  welcome: "Hi, I'm Joe Vellella, a product engineer. I learn it like a game and build it with a team. Press start to play my story. You may find a few levels you played too.",
+  // The line above the Say hello links, which asks the reader to answer back.
+  hello: 'Your turn: trade me a story. What was your typing class?',
   // Say hello links. A blank address leaves its link out.
   contact: {
     linkedin: 'https://www.linkedin.com/in/josephvellella/',

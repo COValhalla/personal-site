@@ -744,7 +744,7 @@
       },
     },
 
-    // Act V: the library, the year off and the bootcamp.
+    // Act V: the library, the year off and the self-taught year.
     library: {
       heroX: 76,
       draw(ctx, c) {

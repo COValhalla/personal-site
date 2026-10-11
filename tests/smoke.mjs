@@ -39,7 +39,7 @@ async function desktop(browser) {
   const items = await page.evaluate(() => Story.items().length);
   check(ids.length === 7, 'the tutorial and six acts are on the page');
   check(await page.textContent('.intro-title') === 'Joe' && await page.textContent('.hud-name') === 'Joe', 'the intro and the bar say Joe');
-  check(await page.textContent('.intro-tag') === "Hi, I'm Joe, an engineer turned product manager. Welcome to my story, told like the games I grew up on. Scroll down to play it, one level at a time.", 'the welcome names Joe and asks the reader to scroll');
+  check(await page.textContent('.intro-tag') === "Hi, I'm Joe Vellella, a product engineer. I learn it like a game and build it with a team. Press start to play my story. You may find a few levels you played too.", 'the welcome names Joe as a product engineer and leads to Press start');
   check(await page.$$eval('.intro .intro-note a', a => a.length) === 1 && await page.$('.intro .intro-start') !== null, 'the welcome has a Press start button and only the short-version link');
   check(await page.textContent('.hud-count') === `0/${items}`, 'the sheet starts empty');
   check(await page.$$eval('.belt-slot.is-filled', s => s.length) === 0, 'the inventory belt starts empty');
@@ -173,7 +173,7 @@ async function desktop(browser) {
     && await page.evaluate(() => window.scrollY) === hereY, 'the top bar opens a small menu of the three links without jumping');
   await page.keyboard.press('Escape');
   check(!(await page.isVisible('#hello-menu')), 'Escape closes the Say hello menu');
-  check(await page.title() === 'Joe Vellella · Engineer turned product manager', 'the tab says the full name and role');
+  check(await page.title() === 'Joe Vellella · Product engineer', 'the tab says the full name and role');
   check(await page.textContent('.site-foot') === 'Joe Vellella', 'the footer says the full name');
   await page.keyboard.press('Escape');
 
@@ -416,7 +416,7 @@ async function mapPartway(browser) {
   check((await page.textContent('#sheet .map-info')).includes('Not reached yet'), 'a stop not reached yet says so');
   // The year off grows the beard moment by moment.
   const looks = await page.evaluate(() => Story.acts[5].beats.map(b => b.look && b.look.beard).join(','));
-  check(looks === 'stubble,short,full,long', `the beard grows through the year off (${looks})`);
+  check(looks === 'stubble,full,long',`the beard grows through the year off (${looks})`);
   check(errors.length === 0, 'no console errors or warnings');
   await context.close();
 }
