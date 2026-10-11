@@ -30,6 +30,13 @@ const scrollTo = (page, y) => page.evaluate(top => window.scrollTo({ top, behavi
 const stageShown = (page, id) => page.$$eval(`#${id} .scene-canvas`, cs => cs.findIndex(c => getComputedStyle(c).visibility === 'visible'));
 // Where each act holds still, and for how long, in page pixels.
 const pins = page => page.evaluate(() => ScrollTrigger.getAll().filter(t => t.pin).map(t => ({ start: t.start, end: t.end })));
+// How many pixels of an act's moments fall outside its story panel's edges, so only scrolling inside it would show them.
+const storyHidden = (page, id) => page.$eval(`#${id} .story`, st => {
+  const top = st.getBoundingClientRect().top + st.clientTop;
+  const bottom = top + st.clientHeight;
+  const beats = [...st.querySelectorAll('.beat')].map(b => b.getBoundingClientRect());
+  return Math.round(Math.max(st.scrollHeight - st.clientHeight, ...beats.map(b => Math.max(top - b.top, b.bottom - bottom))));
+});
 
 async function desktop(browser) {
   console.log('\nLaptop, motion on');
@@ -117,11 +124,9 @@ async function desktop(browser) {
     await page.waitForTimeout(900);
     const done = await page.evaluate(([sel, ids]) => {
       const s = document.querySelector(sel);
-      const beltTop = (document.querySelector('.belt') || { getBoundingClientRect: () => ({ top: innerHeight }) }).getBoundingClientRect().top;
       return {
         pill: s.querySelector('.unlock-pill').textContent,
         beatsShown: s.querySelectorAll('.beat:not(.is-locked)').length,
-        beatsInView: [...s.querySelectorAll('.beat')].every(b => b.getBoundingClientRect().bottom <= beltTop + 1),
         skillsLit: s.querySelectorAll('.skill-card.is-on').length,
         inBelt: ids.every(id => document.querySelector(`.belt-slot[data-item="${id}"]`).classList.contains('is-filled')),
         gray: getComputedStyle(s.querySelector('.act-screen')).filter,
@@ -129,7 +134,8 @@ async function desktop(browser) {
     }, [`#${id}`, act.items]);
     const pill = n === 0 ? 'Tutorial complete' : `Level ${n}`;
     check(done.pill === pill && done.skillsLit === act.skills, `${names[n]} levels up and lights its ${act.skills} skills`);
-    check(done.beatsShown === act.beats && done.beatsInView, `${names[n]} shows all ${act.beats} life and work moments without scrolling`);
+    const hidden = await storyHidden(page, id);
+    check(done.beatsShown === act.beats && hidden <= 1, `${names[n]} shows all ${act.beats} life and work moments in its story panel without scrolling (${hidden}px hidden)`);
     check(done.inBelt, `${names[n]} drops its items into the inventory belt`);
     check(!done.gray.includes('grayscale(1)'), `${names[n]} has its color`);
     const next = await page.$eval(`#${id} .act-next`, a => ({ text: a.textContent.trim(), shown: getComputedStyle(a).visibility === 'visible' }));
@@ -467,6 +473,22 @@ async function reducedMotion(browser) {
   await context.close();
 }
 
+// Laptop screens shorter than 1440 x 900, and the room a browser leaves on them: every moment still fits.
+async function shortScreens(browser) {
+  console.log('\nShorter laptop screens, motion turned off');
+  for (const [width, height] of [[1440, 790], [1366, 768], [1366, 657], [1280, 800], [1280, 720], [1280, 680]]) {
+    const { context, page, errors } = await open(browser, { viewport: { width, height }, reducedMotion: 'reduce' });
+    const hidden = [];
+    for (const id of await page.$$eval('section.act', s => s.map(x => x.id))) {
+      const px = await storyHidden(page, id);
+      if (px > 1) hidden.push(`${id} ${px}px`);
+    }
+    check(hidden.length === 0, `at ${width} x ${height} every act shows all its moments in its story panel without scrolling${hidden.length ? ` (hidden: ${hidden.join(', ')})` : ''}`);
+    check(errors.length === 0, `at ${width} x ${height}, no console errors or warnings`);
+    await context.close();
+  }
+}
+
 async function mapPartway(browser) {
   console.log('\nThe map, partway through');
   const { context, page, errors } = await open(browser, { viewport: { width: 1280, height: 860 } });
@@ -512,6 +534,7 @@ try {
   await desktop(browser);
   await pacing(browser);
   await reducedMotion(browser);
+  await shortScreens(browser);
   await mapPartway(browser);
   await phone(browser);
 } finally {
