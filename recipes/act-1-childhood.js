@@ -5,26 +5,25 @@
 Story.addAct({
   id: 'childhood',
   numeral: 'I',
-  title: 'Childhood',
-  years: 'Ages 8 to 14',
+  title: 'Open world',
+  years: 'Elementary and middle school',
   quests: [
-    { what: 'BMX racing and the family business' },
+    { what: 'Ran a crew of new-hire butchers in the family business', when: 'Ages 12 to 16' },
   ],
   // A bright, Saturday-morning scheme: sunny orange with a sky-blue accent.
   color: { name: 'Sunny orange', light: '#ffc46b', base: '#ff8a1f', shade: '#c25a0a', accent: '#3fa9f5' },
   theme: 'light',
   scene: 'bmx-track',
   // One scene per moment, then the level-up: the camera dives through a door into each next place.
-  stages: ['bmx-track', 'bmx-shop', 'bmx-night', 'bmx-sheet'],
+  stages: ['bmx-track', 'bmx-shop', 'bmx-sheet'],
   // The hero's hair and beard for this act (styles in js/pixel.js: HAIR and BEARD).
-  hero: { gear: 'helmet', title: 'BMX kid', hair: 'short', beard: 'none' },
+  hero: { gear: 'helmet', title: 'Crew lead', hair: 'short', beard: 'none' },
   // Each moment can give one of this act's items (item) and play a scene animation (cue).
   beats: [
-    { tag: 'life', text: 'Raced BMX most weekends: gate drops, rollers and scraped knees.', item: 'bmx-bike', cue: 'race' },
-    { tag: 'work', text: 'Worked in the family business and learned where every tool lived.', item: 'shop-wrench', cue: 'shop' },
-    { tag: 'life', text: 'Stayed up too late playing Diablo 2, where the chat rewarded whoever typed fastest. I learned what an inventory is for.', cue: 'night' },
+    { tag: 'life', text: 'Baseball and basketball, sure, but mostly I roamed town on my scooter with friends: wheelies, staircase jumps, music playing. On weekends I raced BMX.', item: 'bmx-bike', cue: 'race' },
+    { tag: 'work', text: "Middle school: three towns met in one school, and I hadn't found my group yet. But every busy season from 12 to 16, I ran a crew of butchers in the family business, mostly new hires I trained on the fly.", item: 'apron', cue: 'crew' },
   ],
-  unlock: { banner: 'Level 1', say: 'New class: BMX kid' },
+  unlock: { banner: 'Level 1', say: 'New class: Crew lead' },
   items: [
     {
       id: 'bmx-bike', name: 'BMX bike', sprite: 'bike', tag: 'life',
@@ -34,16 +33,15 @@ Story.addAct({
       game: 'bmx',
     },
     {
-      id: 'shop-wrench', name: 'Shop wrench', sprite: 'wrench', tag: 'work',
-      line: 'The family business handed me a wrench before it handed me a paycheck.',
-      adds: { engineering: 1, grit: 1 },
+      id: 'apron', name: 'Apron', sprite: 'apron', tag: 'work',
+      line: 'Every new hire got an apron, a quick lesson and a spot at the table.',
+      adds: { grit: 2, product: 1 },
       photo: null,
     },
   ],
   skills: [
     { id: 'riding', name: 'Riding', parents: [], moment: 1, line: 'Balance, speed and getting back on.' },
-    { id: 'fixing', name: 'Fixing', parents: [], moment: 2, line: 'Taking things apart and putting them back better.' },
-    { id: 'inventory', name: 'Inventory', parents: ['fixing'], moment: 3, line: 'Knowing what to carry, and what to drop.' },
+    { id: 'teaching', name: 'Teaching', parents: [], moment: 2, line: 'Showing a new hire the job while the work keeps coming in.' },
   ],
   game: 'bmx',
   photos: [],

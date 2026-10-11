@@ -121,58 +121,58 @@
   ];
 
   const scenes = {
-    // Tutorial, moment 1: home. A growth chart on the door frame climbs from 0 to 8.
-    'early-home': {
-      heroX: 88,
-      door: { x: 138, y: 44 },
+    // Tutorial, moment 1: a bedroom at night. The lights drop in four steps, and the computer glows with an inventory.
+    'early-night': {
+      heroX: 104,
+      arrive: 50,
+      door: { x: 135, y: 39 },
       draw(ctx, c) {
-        rect(ctx, '#f7efdc', 0, 0, W, GROUND);
-        for (let x = 4; x < W; x += 12) rect(ctx, mix(c.light, '#f7efdc', 0.55), x, 0, 4, GROUND);
+        rect(ctx, '#f3e3c4', 0, 0, W, GROUND);
+        for (let x = 0; x < W; x += 16) rect(ctx, '#ecd7b0', x, 0, 1, GROUND);
         rect(ctx, '#c98a55', 0, GROUND, W, H - GROUND);
         rect(ctx, '#e0a46f', 0, GROUND, W, 1);
-        rect(ctx, '#f6f4ef', 0, GROUND - 3, W, 3);
-        // A window with a tree outside.
-        rect(ctx, '#bfe3f7', 10, 10, 30, 22);
-        rect(ctx, '#7fc46a', 12, 22, 12, 10);
-        rect(ctx, '#5aa64c', 14, 18, 8, 6);
-        rect(ctx, '#8c5a32', 17, 26, 2, 6);
-        outline(ctx, 10, 10, 30, 22, N.o);
-        rect(ctx, N.o, 25, 10, 1, 22);
-        rect(ctx, N.o, 10, 21, 30, 1);
-        // The family TV on a stand.
-        rect(ctx, '#a96b3e', 46, 50, 26, 3);
-        rect(ctx, '#a96b3e', 48, 53, 2, 11);
-        rect(ctx, '#a96b3e', 68, 53, 2, 11);
-        rect(ctx, N.o, 48, 34, 22, 16);
-        rect(ctx, '#5f5f66', 49, 35, 20, 14);
-        rect(ctx, '#2a3a6a', 51, 37, 13, 10);
-        rect(ctx, N.n, 66, 38, 2, 2);
-        rect(ctx, N.n, 66, 42, 2, 2);
-        // Blocks on the floor.
-        [[100, c.base], [107, c.light], [103, c.shade]].forEach(([x, col], k) => {
-          const y = k === 2 ? 52 : 58;
-          rect(ctx, N.o, x - 1, y - 1, 8, 8);
-          rect(ctx, col, x, y, 6, 6);
-          rect(ctx, N.w, x + 1, y + 1, 2, 1);
-        });
-        // The door, and the growth chart on its frame.
-        rect(ctx, N.o, 129, 18, 22, GROUND - 18);
-        rect(ctx, c.shade, 130, 19, 20, GROUND - 19);
-        rect(ctx, c.base, 132, 21, 16, 18);
-        rect(ctx, c.base, 132, 42, 16, 19);
-        rect(ctx, N.m, 146, 42, 2, 2);
-        rect(ctx, '#f6f4ef', 121, 22, 5, GROUND - 22);
-        outline(ctx, 121, 22, 5, GROUND - 22, '#d9c7a3');
+        rect(ctx, '#cfe6f7', 56, 8, 24, 18);
+        outline(ctx, 56, 8, 24, 18, N.o);
+        rect(ctx, N.o, 68, 8, 1, 18);
+        rect(ctx, N.o, 56, 16, 24, 1);
+        rect(ctx, c.base, 92, 10, 12, 16);
+        rect(ctx, c.light, 94, 12, 8, 4);
+        rect(ctx, c.shade, 6, 38, 3, 26);
+        rect(ctx, '#f6f4ef', 9, 50, 32, 8);
+        rect(ctx, c.base, 16, 48, 25, 10);
+        rect(ctx, c.light, 16, 48, 25, 1);
+        rect(ctx, N.w, 9, 47, 6, 4);
+        rect(ctx, '#a96b3e', 116, 44, 36, 3);
+        rect(ctx, '#a96b3e', 118, 47, 2, 17);
+        rect(ctx, '#a96b3e', 148, 47, 2, 17);
+        rect(ctx, N.o, 124, 30, 22, 14);
+        rect(ctx, N.o, 134, 43, 4, 1);
+        rect(ctx, c.base, 146, 36, 4, 4);
+        rect(ctx, N.o, 148, 40, 1, 4);
       },
-      init: () => ({ grow: 0 }),
-      frame(ctx, c, s) {
-        // One mark a year, each a little higher, and the age beside the newest.
-        const marks = Math.round(Math.max(0, Math.min(1, s.grow)) * 8);
-        for (let k = 1; k <= marks; k++) rect(ctx, k === marks ? c.shade : N.n, 121, GROUND - 4 - k * 4, k % 2 ? 4 : 5, 1);
-        if (marks > 0) text(ctx, String(marks), 115, GROUND - 6 - marks * 4, c.shade);
+      init: () => ({ dark: 0, screen: 0 }),
+      frame(ctx, c, s, t) {
+        const dark = steps4(s.dark);
+        if (dark > 0) {
+          ctx.globalAlpha = dark * 0.72;
+          rect(ctx, '#0d1030', 0, 0, W, GROUND);
+          ctx.globalAlpha = 1;
+          if (dark >= 0.5) {
+            const r = rng(4);
+            for (let i = 0; i < 8; i++) rect(ctx, '#f6f4ef', 58 + Math.floor(r() * 20), 10 + Math.floor(r() * 14), 1, 1);
+          }
+        }
+        const glow = steps4(s.screen);
+        rect(ctx, mix('#2a1416', '#9fd8ff', glow), 126, 32, 18, 10);
+        if (glow >= 0.5) {
+          for (let j = 0; j < 2; j++) for (let i = 0; i < 5; i++) {
+            const shade = [c.light, c.base, N.w][(i + j + Math.floor(t * 3)) % 3];
+            rect(ctx, shade, 128 + i * 3, 34 + j * 3, 2, 2);
+          }
+        }
       },
       cues: {
-        grow: s => gsap.timeline().to(s, { grow: 1, duration: 1.4, ease: 'steps(8)' }),
+        night: s => gsap.timeline().to(s, { dark: 1, duration: 1, ease: 'steps(4)' }).to(s, { screen: 1, duration: 0.5, ease: 'steps(2)' }, 0.9),
       },
     },
 
@@ -236,6 +236,61 @@
           .to(s, { screens: 1, duration: 0.5, ease: 'steps(4)' })
           .to(s, { race: 1, duration: 1.4, ease: 'none' }, 0.4)
           .to(s, { star: 1, duration: 0.01 }, 1.8),
+      },
+    },
+
+    // Tutorial, moment 3: home. A growth chart on the door frame climbs from 0 to 8.
+    'early-home': {
+      heroX: 88,
+      door: { x: 138, y: 44 },
+      draw(ctx, c) {
+        rect(ctx, '#f7efdc', 0, 0, W, GROUND);
+        for (let x = 4; x < W; x += 12) rect(ctx, mix(c.light, '#f7efdc', 0.55), x, 0, 4, GROUND);
+        rect(ctx, '#c98a55', 0, GROUND, W, H - GROUND);
+        rect(ctx, '#e0a46f', 0, GROUND, W, 1);
+        rect(ctx, '#f6f4ef', 0, GROUND - 3, W, 3);
+        // A window with a tree outside.
+        rect(ctx, '#bfe3f7', 10, 10, 30, 22);
+        rect(ctx, '#7fc46a', 12, 22, 12, 10);
+        rect(ctx, '#5aa64c', 14, 18, 8, 6);
+        rect(ctx, '#8c5a32', 17, 26, 2, 6);
+        outline(ctx, 10, 10, 30, 22, N.o);
+        rect(ctx, N.o, 25, 10, 1, 22);
+        rect(ctx, N.o, 10, 21, 30, 1);
+        // The family TV on a stand.
+        rect(ctx, '#a96b3e', 46, 50, 26, 3);
+        rect(ctx, '#a96b3e', 48, 53, 2, 11);
+        rect(ctx, '#a96b3e', 68, 53, 2, 11);
+        rect(ctx, N.o, 48, 34, 22, 16);
+        rect(ctx, '#5f5f66', 49, 35, 20, 14);
+        rect(ctx, '#2a3a6a', 51, 37, 13, 10);
+        rect(ctx, N.n, 66, 38, 2, 2);
+        rect(ctx, N.n, 66, 42, 2, 2);
+        // Blocks on the floor.
+        [[100, c.base], [107, c.light], [103, c.shade]].forEach(([x, col], k) => {
+          const y = k === 2 ? 52 : 58;
+          rect(ctx, N.o, x - 1, y - 1, 8, 8);
+          rect(ctx, col, x, y, 6, 6);
+          rect(ctx, N.w, x + 1, y + 1, 2, 1);
+        });
+        // The door, and the growth chart on its frame.
+        rect(ctx, N.o, 129, 18, 22, GROUND - 18);
+        rect(ctx, c.shade, 130, 19, 20, GROUND - 19);
+        rect(ctx, c.base, 132, 21, 16, 18);
+        rect(ctx, c.base, 132, 42, 16, 19);
+        rect(ctx, N.m, 146, 42, 2, 2);
+        rect(ctx, '#f6f4ef', 121, 22, 5, GROUND - 22);
+        outline(ctx, 121, 22, 5, GROUND - 22, '#d9c7a3');
+      },
+      init: () => ({ grow: 0 }),
+      frame(ctx, c, s) {
+        // One mark a year, each a little higher, and the age beside the newest.
+        const marks = Math.round(Math.max(0, Math.min(1, s.grow)) * 8);
+        for (let k = 1; k <= marks; k++) rect(ctx, k === marks ? c.shade : N.n, 121, GROUND - 4 - k * 4, k % 2 ? 4 : 5, 1);
+        if (marks > 0) text(ctx, String(marks), 115, GROUND - 6 - marks * 4, c.shade);
+      },
+      cues: {
+        grow: s => gsap.timeline().to(s, { grow: 1, duration: 1.4, ease: 'steps(8)' }),
       },
     },
 
@@ -362,109 +417,118 @@
       },
     },
 
-    // Act I, moment 2: the shop. Tools pop onto the pegboard, and the stairs lead up to the door.
+    // Act I, moment 2: the family business, a wild game processing shop in deer season.
+    // New hires walk in behind the table, get their aprons and a quick lesson, and the orders pile up.
     'bmx-shop': {
-      heroX: 98,
-      arrive: 26,
-      door: { x: 152, y: 15 },
-      draw(ctx, c) {
-        rect(ctx, '#f6e6c8', 0, 0, W, GROUND);
-        for (let x = 0; x < W; x += 16) rect(ctx, '#ecd5ac', x, 0, 1, GROUND);
-        rect(ctx, '#c98a55', 0, GROUND, W, H - GROUND);
-        rect(ctx, '#e0a46f', 0, GROUND, W, 1);
-        rect(ctx, '#d9c7a3', 8, 8, 84, 36);
-        for (let x = 12; x < 90; x += 6) for (let y = 12; y < 40; y += 6) rect(ctx, '#b9a27a', x, y, 1, 1);
-        [[14, 12, 16, 12], [36, 12, 16, 12], [58, 12, 16, 12], [14, 30, 16, 10]].forEach(([x, y, w, h]) => outline(ctx, x, y, w, h, N.n));
-        for (let i = 0; i < 7; i++) {
-          const x = 104 + i * 6;
-          const top = 58 - i * 6;
-          rect(ctx, c.shade, x, top, 6, GROUND - top);
-          rect(ctx, c.base, x, top, 6, 1);
-        }
-        rect(ctx, c.shade, 146, 22, 14, GROUND - 22);
-        rect(ctx, c.base, 146, 22, 14, 1);
-        rect(ctx, N.o, 146, 8, 13, 14);
-        rect(ctx, '#a96b3e', 147, 9, 11, 13);
-        rect(ctx, '#fff3b0', 155, 15, 1, 1);
-        rect(ctx, c.base, 14, 44, 80, 4);
-        rect(ctx, c.light, 14, 44, 80, 1);
-        rect(ctx, c.shade, 16, 48, 76, 16);
-        rect(ctx, N.n, 70, 34, 8, 10);
-        rect(ctx, N.o, 72, 37, 4, 1);
-        rect(ctx, N.n, 24, 38, 5, 6);
-        rect(ctx, N.w, 24, 38, 5, 1);
-      },
-      init: () => ({ tools: 0 }),
-      frame(ctx, c, s) {
-        // Each tool pops onto its outline in turn.
-        [
-          (x, y) => { rect(ctx, N.n, x + 2, y + 2, 12, 4); rect(ctx, c.shade, x + 7, y + 6, 2, 6); },
-          (x, y) => { rect(ctx, N.n, x + 4, y, 2, 11); rect(ctx, N.n, x + 2, y - 1, 6, 3); rect(ctx, '#d9c7a3', x + 3, y - 1, 2, 1); },
-          (x, y) => { rect(ctx, N.n, x, y + 4, 12, 2); for (let i = 0; i < 12; i += 2) rect(ctx, N.n, x + i, y + 6, 1, 1); rect(ctx, c.base, x + 9, y + 1, 3, 3); },
-          (x, y) => { rect(ctx, c.light, x + 2, y + 2, 8, 6); rect(ctx, N.w, x + 9, y + 5, 5, 1); },
-        ].forEach((draw, i) => { if (s.tools * 4 > i + 0.01) draw([16, 38, 60, 16][i], [14, 14, 14, 32][i], c); });
-      },
-      cues: {
-        shop: s => gsap.timeline().to(s, { tools: 1, duration: 0.8, ease: 'steps(4)' }),
-      },
-    },
-
-    // Act I, moment 3: the bedroom. The lights drop in four steps, and the computer glows with the inventory.
-    'bmx-night': {
       heroX: 104,
-      arrive: 50,
-      door: { x: 135, y: 39 },
+      door: { x: 139, y: 44 },
       draw(ctx, c) {
-        rect(ctx, '#f3e3c4', 0, 0, W, GROUND);
-        for (let x = 0; x < W; x += 16) rect(ctx, '#ecd7b0', x, 0, 1, GROUND);
-        rect(ctx, '#c98a55', 0, GROUND, W, H - GROUND);
-        rect(ctx, '#e0a46f', 0, GROUND, W, 1);
-        rect(ctx, '#cfe6f7', 56, 8, 24, 18);
-        outline(ctx, 56, 8, 24, 18, N.o);
-        rect(ctx, N.o, 68, 8, 1, 18);
-        rect(ctx, N.o, 56, 16, 24, 1);
-        rect(ctx, c.base, 92, 10, 12, 16);
-        rect(ctx, c.light, 94, 12, 8, 4);
-        rect(ctx, c.shade, 6, 38, 3, 26);
-        rect(ctx, '#f6f4ef', 9, 50, 32, 8);
-        rect(ctx, c.base, 16, 48, 25, 10);
-        rect(ctx, c.light, 16, 48, 25, 1);
-        rect(ctx, N.w, 9, 47, 6, 4);
-        rect(ctx, '#a96b3e', 116, 44, 36, 3);
-        rect(ctx, '#a96b3e', 118, 47, 2, 17);
-        rect(ctx, '#a96b3e', 148, 47, 2, 17);
-        rect(ctx, N.o, 124, 30, 22, 14);
-        rect(ctx, N.o, 134, 43, 4, 1);
-        rect(ctx, c.base, 146, 36, 4, 4);
-        rect(ctx, N.o, 148, 40, 1, 4);
+        // White tile walls with an orange stripe, and a concrete floor with a drain.
+        rect(ctx, '#eef0ec', 0, 0, W, GROUND);
+        for (let y = 7; y < GROUND; y += 8) rect(ctx, '#dde2dc', 0, y, W, 1);
+        for (let x = 7; x < W; x += 8) rect(ctx, '#dde2dc', x, 0, 1, GROUND);
+        rect(ctx, c.base, 0, 37, W, 2);
+        rect(ctx, c.shade, 0, 39, W, 1);
+        rect(ctx, '#c9cdc7', 0, GROUND - 3, W, 3);
+        rect(ctx, '#bdb7ad', 0, GROUND, W, H - GROUND);
+        rect(ctx, '#cfc9bf', 0, GROUND, W, 1);
+        const r = rng(21);
+        for (let i = 0; i < 30; i++) rect(ctx, r() > 0.5 ? '#aca69c' : '#c8c2b8', Math.floor(r() * W), GROUND + 2 + Math.floor(r() * 6), 1, 1);
+        rect(ctx, N.n, 84, GROUND + 3, 5, 2);
+        rect(ctx, N.o, 85, GROUND + 3, 1, 2);
+        rect(ctx, N.o, 87, GROUND + 3, 1, 2);
+        // The hand-painted sign.
+        rect(ctx, N.o, 3, 3, 48, 17);
+        rect(ctx, '#6b4226', 4, 4, 46, 15);
+        rect(ctx, '#8c5a32', 5, 5, 44, 13);
+        text(ctx, 'WILD GAME', 11, 6, c.light);
+        text(ctx, 'PROCESSING', 8, 12, c.light);
+        // The order board; tallies fill it as the season gets busy.
+        rect(ctx, N.n, 56, 4, 38, 24);
+        rect(ctx, N.w, 57, 5, 36, 22);
+        text(ctx, 'ORDERS', 64, 7, c.shade);
+        rect(ctx, '#d9dcd6', 59, 13, 32, 1);
+        // An antler mount over the walk-in cooler.
+        sprite(ctx, [
+          'b..b...b..b',
+          '.b.b...b.b.',
+          '..bb...bb..',
+          '...bb.bb...',
+          '...owwwo...',
+          '...owwwo...',
+          '...ooooo...',
+        ], 134, 8, { b: '#b89a6a', w: '#8c5a32', o: N.o });
+        // The walk-in cooler: the door the camera dives through.
+        rect(ctx, N.n, 122, 22, 34, GROUND - 22);
+        rect(ctx, N.m, 124, 24, 30, GROUND - 24);
+        rect(ctx, '#d5d8dd', 125, 25, 28, 1);
+        rect(ctx, N.n, 124, 28, 4, 3);
+        rect(ctx, N.n, 124, 54, 4, 3);
+        rect(ctx, N.o, 147, 40, 5, 5);
+        rect(ctx, N.n, 148, 41, 3, 3);
+        text(ctx, 'COOLER', 128, 31, N.n);
       },
-      init: () => ({ dark: 0, screen: 0 }),
-      frame(ctx, c, s, t) {
-        const dark = steps4(s.dark);
-        if (dark > 0) {
-          ctx.globalAlpha = dark * 0.72;
-          rect(ctx, '#0d1030', 0, 0, W, GROUND);
-          ctx.globalAlpha = 1;
-          if (dark >= 0.5) {
-            const r = rng(4);
-            for (let i = 0; i < 8; i++) rect(ctx, '#f6f4ef', 58 + Math.floor(r() * 20), 10 + Math.floor(r() * 14), 1, 1);
+      init: () => ({ crew: 0, aprons: 0, talk: 0, work: 0 }),
+      frame(ctx, c, s) {
+        // The crew: three new hires walk in from the left, one after another, and stand behind the table.
+        const shirts = [
+          { light: '#e8786a', base: '#c0392b', shade: '#8a2a20' },
+          { light: '#8fc79a', base: '#4f8f5e', shade: '#33603e' },
+          { light: '#8fb3e0', base: '#4a73b0', shade: '#2f4d7a' },
+        ];
+        const spots = [1, 17, 33];
+        spots.forEach((spot, k) => {
+          const go = Math.max(0, Math.min(1, s.crew * 1.6 - k * 0.3));
+          if (go <= 0) return;
+          const x = Math.round(spot - 60 * (1 - go));
+          person(ctx, x, GROUND - 4, shirts[k], [0, 1, 3][k], false);
+          // A white butcher's apron over the shirt, handed out one at a time.
+          if (s.aprons * 3 > k + 0.01) {
+            rect(ctx, N.w, x + 6, GROUND - 16, 4, 1);
+            rect(ctx, N.w, x + 5, GROUND - 15, 6, 5);
+            rect(ctx, '#d9d4c8', x + 10, GROUND - 15, 1, 5);
           }
-        }
-        const glow = steps4(s.screen);
-        rect(ctx, mix('#2a1416', '#9fd8ff', glow), 126, 32, 18, 10);
-        if (glow >= 0.5) {
-          for (let j = 0; j < 2; j++) for (let i = 0; i < 5; i++) {
-            const shade = [c.light, c.base, N.w][(i + j + Math.floor(t * 3)) % 3];
-            rect(ctx, shade, 128 + i * 3, 34 + j * 3, 2, 2);
-          }
+        });
+        // A question from the new hires, then the answer lands.
+        if (s.talk >= 1 && s.talk < 3) [0, 2].forEach(k => bubble(ctx, spots[k] + 6, 29, s.talk >= 2 ? '!' : '?'));
+        // The stainless table in front of them, with a cutting board at each spot.
+        rect(ctx, N.o, 0, 53, 67, 1);
+        rect(ctx, N.m, 0, 54, 66, 2);
+        rect(ctx, N.w, 0, 54, 66, 1);
+        rect(ctx, N.n, 0, 56, 66, 2);
+        rect(ctx, N.n, 4, 58, 2, GROUND - 58);
+        rect(ctx, N.n, 60, 58, 2, GROUND - 58);
+        rect(ctx, '#c4c7cc', 6, 61, 54, 1);
+        spots.forEach(spot => rect(ctx, '#d9b07a', spot + 3, 53, 10, 1));
+        // Wrapped orders stack up at the end of the table.
+        const parcels = Math.round(Math.max(0, Math.min(1, s.work)) * 6);
+        [[49, 50], [55, 50], [61, 50], [52, 47], [58, 47], [55, 44]].slice(0, parcels).forEach(([x, y]) => {
+          rect(ctx, N.o, x - 1, y - 1, 7, 5);
+          rect(ctx, N.w, x, y, 5, 3);
+          rect(ctx, '#d6cfbf', x, y + 2, 5, 1);
+          rect(ctx, c.base, x + 2, y, 1, 3);
+        });
+        // Tallies on the order board: four strokes and a strike through them, six gates in all.
+        const gates = Math.round(Math.max(0, Math.min(1, s.work)) * 6);
+        for (let g = 0; g < gates; g++) {
+          const x0 = 61 + (g % 3) * 11;
+          const y0 = g < 3 ? 15 : 21;
+          for (let j = 0; j < 4; j++) rect(ctx, c.shade, x0 + j * 2, y0, 1, 5);
+          for (let d = 0; d < 9; d++) rect(ctx, c.base, x0 - 1 + d, y0 + 3 - Math.floor(d / 3), 1, 1);
         }
       },
       cues: {
-        night: s => gsap.timeline().to(s, { dark: 1, duration: 1, ease: 'steps(4)' }).to(s, { screen: 1, duration: 0.5, ease: 'steps(2)' }, 0.9),
+        crew: s => gsap.timeline()
+          .to(s, { crew: 1, duration: 1.2, ease: 'steps(12)' })
+          .to(s, { aprons: 1, duration: 0.6, ease: 'steps(3)' }, 1.0)
+          .set(s, { talk: 1 }, 1.4)
+          .set(s, { talk: 2 }, 2.0)
+          .to(s, { work: 1, duration: 1.2, ease: 'steps(6)' }, 2.0)
+          .set(s, { talk: 3 }, 2.9),
       },
     },
 
-    // Act I, level-up: the character screen the computer opens on. The bike and wrench drop into their slots.
+    // Act I, level-up: the character screen, behind the cooler door. The bike and the apron drop into their slots.
     'bmx-sheet': {
       heroX: 26,
       draw(ctx, c) {
@@ -473,28 +537,28 @@
         rect(ctx, N.o, 6, 4, 148, 64);
         rect(ctx, '#2a3a6a', 8, 6, 144, 60);
         rect(ctx, c.base, 8, 6, 144, 9);
-        text(ctx, 'BMX KID', 12, 8, N.o);
+        text(ctx, 'CREW LEAD', 12, 8, N.o);
         rect(ctx, '#1d1b22', 14, 20, 38, 44);
         outline(ctx, 14, 20, 38, 44, N.n);
-        ['HEAD', 'BIKE', 'TOOL'].forEach((label, k) => {
+        ['HEAD', 'BIKE', 'APRON'].forEach((label, k) => {
           const x = 62 + k * 30;
           rect(ctx, '#1d1b22', x, 20, 26, 18);
           outline(ctx, x, 20, 26, 18, N.n);
           text(ctx, label, x + 2, 42, c.light);
         });
         text(ctx, 'LEVEL 1', 62, 52, N.w);
-        text(ctx, 'RIDING  FIXING', 62, 58, c.light);
+        text(ctx, 'RIDING  TEACHING', 62, 58, c.light);
       },
-      init: () => ({ bike: -1, wrench: -1, helmet: 0 }),
+      init: () => ({ bike: -1, apron: -1, helmet: 0 }),
       frame(ctx, c, s) {
         if (s.bike > -0.5) Pixel.paint(ctx, Pixel.ITEMS.bike, c, 97, Math.round(21 - (1 - s.bike) * 30), 1);
-        if (s.wrench > -0.5) Pixel.paint(ctx, Pixel.ITEMS.wrench, c, 127, Math.round(21 - (1 - s.wrench) * 30), 1);
+        if (s.apron > -0.5) Pixel.paint(ctx, Pixel.ITEMS.apron, c, 127, Math.round(21 - (1 - s.apron) * 30), 1);
         if (s.helmet >= 0.5) sprite(ctx, ['.oooooo.', 'obbbbbbo', 'oBBBBBBo', '.oooooo.'], 71, 25, { o: N.o, b: c.light, B: c.base });
       },
       cues: {
         equip: s => gsap.timeline()
           .fromTo(s, { bike: -1 }, { bike: 1, duration: 0.6, ease: 'bounce.out' })
-          .fromTo(s, { wrench: -1 }, { wrench: 1, duration: 0.6, ease: 'bounce.out' }, 0.5)
+          .fromTo(s, { apron: -1 }, { apron: 1, duration: 0.6, ease: 'bounce.out' }, 0.5)
           .fromTo(s, { helmet: 0 }, { helmet: 1, duration: 0.2, ease: 'steps(2)' }, 0.9),
       },
     },

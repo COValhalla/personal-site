@@ -59,7 +59,7 @@ The colors come from `look` in `recipes/site.js`, and each act's `hero` in its r
 | `beard` | `none`, `goatee`, `stubble`, `short`, `full` or `long` (overlays in `BEARD`) |
 | `glasses` | `true` or `false` |
 
-The story so far: short hair in Act I, bald with a goatee in II to IV, and in V the beard grows moment by moment (a moment's `look`) into the long beard and top bun of V and VI. Hair is drawn under the gear, and under a hat a bun tucks in as short hair; the beard and glasses are drawn over it, so a hat never hides the face. Other people in scenes (the business, the team) are `PERSON_BASE`, a plain face, in other shirts, hair and skin.
+The story so far: short hair in Act I, bald with a goatee in II to IV, and in V the beard grows moment by moment (a moment's `look`) into the long beard and top bun of V and VI. Hair is drawn under the gear, and under a hat a bun tucks in as short hair; the beard and glasses are drawn over it, so a hat never hides the face. Other people in scenes (the shop crew, the business, the team) are `PERSON_BASE`, a plain face, in other shirts, hair and skin.
 
 ## Act colors
 
@@ -67,7 +67,7 @@ Color is added act by act: an act is drawn in grays until it unlocks, then its c
 
 | Act | Name | Light | Base | Shade |
 | --- | --- | --- | --- | --- |
-| I · Childhood | Sunny orange, sky-blue accent `#3fa9f5` | `#ffc46b` | `#ff8a1f` | `#c25a0a` |
+| I · Open world | Sunny orange, sky-blue accent `#3fa9f5` | `#ffc46b` | `#ff8a1f` | `#c25a0a` |
 | II · Training arc | Track red, navy accent `#24366b` | `#f08a75` | `#e0533d` | `#a3352a` |
 | III · High stakes | Blueprint blue | `#7fb0ee` | `#3b7dd8` | `#24539c` |
 | IV · Mountains and factories | Pine green | `#7fd09c` | `#3fa66b` | `#286f46` |
@@ -78,7 +78,7 @@ Act VI's own items are purple; its scene and the end of the page use every act's
 
 An optional `accent` is a second color for the scene and the title underline: Act I's sky and Act II's school color. Sprites never use it.
 
-Childhood is bright on purpose: a Saturday at the track. The Diablo 2 nod lives in its last moment, when night falls and an inventory glows on the computer upstairs, and in the dark character sheet. No game art, names or logos.
+Open world is bright on purpose: a Saturday at the track, then the white-tiled family shop in deer season. The Diablo II nod opens the Tutorial, when night falls and an inventory glows on the computer, and comes back in Act I's dark character sheet. No game art, names or logos.
 
 ## Scenes
 
@@ -96,8 +96,8 @@ A scene lives in `js/scenes.js` and has four parts:
 - Use `Scenes.rng(seed)` for crowds, stars and code lines, so a scene looks the same every time.
 - A moment in a recipe names a cue (`cue: 'plane'`). Played to its end, a cue must leave the scene in its final state: with motion turned off the page jumps every cue to its end.
 - Move things in whole pixels or GSAP `steps()` eases, so motion stays chunky like the art.
-- Cues so far: Act I `race`, `shop`, `night`, and `equip` (the level-up, on the character screen); II `throw`, `study`, `texas`; III `measure`, `plant`, `road`; IV `ski`, `plane`, `line`; V `fun`, `study`, `code`, `duck`; VI `listen`, `loop`, `team`, `shine`.
-- An act can have `stages`: one scene per moment, then one for the level-up (Act I has four: the track, the shop, the bedroom and the character screen). Moment 1 plays in stage 1, moment 2 in stage 2, and so on; a moment's cue must belong to its own stage. Going from one stage to the next, the hero walks to the door it leaves by, the camera dives through it, and the next scene zooms in. A dive takes about 1.5 seconds. Acts without `stages` keep one scene.
+- Cues so far: Tutorial `night`, `type`, `grow`, and `equip` (the level-up, on the high-score board); Act I `race`, `crew`, and `equip` (on the character screen); II `throw`, `study`, `texas`; III `measure`, `plant`, `road`; IV `ski`, `plane`, `line`; V `fun`, `study`, `code`, `duck`; VI `listen`, `loop`, `team`, `shine`.
+- An act can have `stages`: one scene per moment, then one for the level-up (the Tutorial has four: the bedroom at night, the computer lab, home and the high-score board; Act I has three: the track, the shop and the character screen). Moment 1 plays in stage 1, moment 2 in stage 2, and so on; a moment's cue must belong to its own stage. Going from one stage to the next, the hero walks to the door it leaves by, the camera dives through it, and the next scene zooms in. A dive takes about 1.5 seconds. Acts without `stages` keep one scene.
 - The scene only draws while its act is on screen.
 
 ## The story steps

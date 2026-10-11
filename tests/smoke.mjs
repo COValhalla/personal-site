@@ -52,6 +52,14 @@ async function desktop(browser) {
   await scrollTo(page, 0);
   await page.waitForTimeout(300);
   const names = ['Tutorial', 'Act I', 'Act II', 'Act III', 'Act IV', 'Act V', 'Act VI'];
+  // The Tutorial and Act I dive into a scene per moment, then one for the level-up.
+  const scenes = { 0: 4, 1: 3 };
+  const lastScene = { 0: 'the high-score board', 1: 'the character screen' };
+  // What each act's own moment shows once it has played: night falls in the Tutorial, the crew arrives in Act I.
+  const shows = {
+    '0,1': ['the Tutorial opens at night, with the computer glowing', () => { const st = Acts.sections[0].stages[0].stage.state; return st.dark === 1 && st.screen === 1; }],
+    '1,2': ['Act I: the new hires stand at the table in their aprons', () => { const st = Acts.sections[1].stages[1].stage.state; return st.crew === 1 && st.aprons === 1 && st.work === 1; }],
+  };
   for (const [n, id] of ids.entries()) {
     const { start, end } = where[n];
     const act = await page.evaluate(i => ({ beats: Story.acts[i].beats.length, items: Story.acts[i].items.map(it => it.id), skills: Story.acts[i].skills.length }), n);
@@ -74,13 +82,17 @@ async function desktop(browser) {
     for (let k = 1; k <= act.beats; k++) {
       await scrollTo(page, start + room * k + 2);
       await page.waitForTimeout(700);
-      if (n === 1) {
-        // Act I: each moment dives into its own scene, and the skills light with the moment they belong to.
+      if (scenes[n]) {
+        // Each moment dives into its own scene, and the skills light with the moment they belong to.
         const ok = await page.waitForFunction(([sel, want, lit, scope]) => {
           const shown = [...document.querySelectorAll(sel)].findIndex(c => getComputedStyle(c).visibility === 'visible');
           return shown === want && document.querySelectorAll(`${scope} .skill-card.is-on`).length === lit;
-        }, [`#${id} .scene-canvas`, k - 1, Math.min(k, 2), `#${id}`], { timeout: 8000 }).then(() => true, () => false);
-        check(ok, `Act I: after moment ${k} the scene is ${k} of 4 and ${Math.min(k, 2)} skill(s) are lit`);
+        }, [`#${id} .scene-canvas`, k - 1, k, `#${id}`], { timeout: 8000 }).then(() => true, () => false);
+        check(ok, `${names[n]}: after moment ${k} the scene is ${k} of ${scenes[n]} and ${k} skill(s) are lit`);
+      }
+      if (shows[`${n},${k}`]) {
+        const [what, test] = shows[`${n},${k}`];
+        check(await page.waitForFunction(test, null, { timeout: 8000 }).then(() => true, () => false), what);
       }
       if (k === 1) {
         // Between moments the scroll still moves things: the hero walks and the rail fills.
@@ -92,7 +104,7 @@ async function desktop(browser) {
     await scrollTo(page, end - 4);
     await page.waitForFunction(i => Story.state.unlocked.has(i), n, { timeout: 15000 });
     await page.waitForSelector(`#${id} .act-screen.is-ready`, { timeout: 8000 });
-    if (n === 1) check((await stageShown(page, id)) === 3, 'Act I: the level-up opens on the character screen');
+    if (scenes[n]) check((await stageShown(page, id)) === scenes[n] - 1, `${names[n]}: the level-up opens on ${lastScene[n]}`);
     await page.waitForTimeout(900);
     const done = await page.evaluate(([sel, ids]) => {
       const s = document.querySelector(sel);
