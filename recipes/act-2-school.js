@@ -41,7 +41,7 @@ Story.addAct({
   ],
   skills: [
     { id: 'throwing', name: 'Throwing', parents: ['riding'], line: 'Timing, rhythm and one clean release.' },
-    { id: 'chemistry', name: 'Chemistry', parents: ['fixing'], line: 'How things react, and how to make them react on purpose.' },
+    { id: 'chemistry', name: 'Chemistry', parents: ['reading'], line: 'How things react, and how to make them react on purpose.' },
   ],
   game: 'hammer',
   photos: [],

@@ -342,7 +342,7 @@
     ],
   };
 
-  // The Tutorial's items: a school keyboard and a floppy disk.
+  // The Tutorial's items: a floppy disk and a school keyboard. Its book is books, above.
   ITEMS.keyboard = [
     '................',
     '................',
@@ -377,6 +377,26 @@
     '.o2ownnnnnnwo2o.',
     '.o2owwwwwwwwo3o.',
     '.oooooooooooooo.',
+    '................',
+  ];
+
+  // Act I's apron, from the family business: a neck loop, string ties at the waist and a front pocket.
+  ITEMS.apron = [
+    '................',
+    '......3333......',
+    '.....3....3.....',
+    '....oooooooo....',
+    '....o1w1112o....',
+    '....o122223o....',
+    '..nnoo1223oonn..',
+    '.n..o122223o..n.',
+    '...o12222223o...',
+    '...o12oooo23o...',
+    '...o12o22o23o...',
+    '..o122oooo223o..',
+    '..o1222222223o..',
+    '..o3333333333o..',
+    '..oooooooooooo..',
     '................',
   ];
 
