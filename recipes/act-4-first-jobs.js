@@ -1,10 +1,10 @@
 /*
- * Act III recipe. See README.md, "Recipes", for every field.
+ * Act IV recipe. See README.md, "Recipes", for every field.
  * All words are placeholders to replace with your own.
  */
 Story.addAct({
   id: 'first-jobs',
-  numeral: 'III',
+  numeral: 'IV',
   title: 'High stakes',
   years: 'First jobs, 2015 to 2018',
   quests: [
@@ -20,7 +20,7 @@ Story.addAct({
     { tag: 'work', text: "That's where I started coding: 3D models and analysis in MATLAB, and my first machine learning model." },
     { tag: 'work', text: 'My clearance stalled, through nothing on my part, so rather than wait I took a detour to Sioux City as a process engineer at Gelita. It paid off: I trained over 250 operators, and my root-cause study saved a $200,000 equipment project.', item: 'hard-hat', cue: 'plant' },
   ],
-  unlock: { banner: 'Level 3', say: 'New class: Process engineer' },
+  unlock: { banner: 'Level 4', say: 'New class: Process engineer' },
   items: [
     {
       id: 'calipers', name: 'Calipers', sprite: 'calipers', tag: 'work',
@@ -37,7 +37,7 @@ Story.addAct({
   ],
   skills: [
     { id: 'materials', name: 'Materials', parents: ['chemistry'], line: 'Why parts bend, crack or hold.' },
-    { id: 'plant-ops', name: 'Plant ops', parents: ['teaching', 'chemistry'], line: 'Keeping a line running, shift after shift.' },
+    { id: 'plant-ops', name: 'Plant ops', parents: ['teaching', 'chemistry', 'harder-thing'], line: 'Keeping a line running, shift after shift.' },
     { id: 'code', name: 'Code', parents: ['gaming', 'typing', 'materials'], moment: 2, line: 'Making the computer do the boring part.' },
     { id: 'adapting', name: 'Adapting', parents: ['riding'], moment: 3, line: 'Learned on the road: a new town and a new crew, the same job.' },
   ],

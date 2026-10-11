@@ -1,10 +1,10 @@
 /*
- * Act IV recipe. See README.md, "Recipes", for every field.
+ * Act V recipe. See README.md, "Recipes", for every field.
  * All words are placeholders to replace with your own.
  */
 Story.addAct({
   id: 'denver',
-  numeral: 'IV',
+  numeral: 'V',
   title: 'Mountains and factories',
   years: 'Denver, 2018 to 2022',
   quests: [
@@ -20,7 +20,7 @@ Story.addAct({
     { tag: 'work', text: 'At Terumo BCT, a medical-device maker, our capital projects team filled an empty new plant in Vietnam with production lines. I led over $7 million of equipment projects, on time and on budget.', item: 'passport', cue: 'plane' },
     { tag: 'work', text: 'Promoted into new product introduction, I became the bridge between design and the factory floor, and led 10 engineers moving hundreds of products to new materials.', item: 'prototype', cue: 'line' },
   ],
-  unlock: { banner: 'Level 4', say: 'New class: Project engineer' },
+  unlock: { banner: 'Level 5', say: 'New class: Project engineer' },
   items: [
     {
       id: 'skis', name: 'Skis', sprite: 'skis', tag: 'life',
@@ -44,7 +44,7 @@ Story.addAct({
   skills: [
     { id: 'mountains', name: 'Mountains', parents: ['riding', 'throwing'], line: 'Reading terrain and weather, and turning around in time.' },
     { id: 'capital-projects', name: 'Capital projects', parents: ['plant-ops', 'materials'], line: 'Building a plant from an empty lot, across an ocean.' },
-    { id: 'new-products', name: 'New products', parents: ['capital-projects', 'materials'], line: 'Getting a new device from the bench to the line.' },
+    { id: 'new-products', name: 'New products', parents: ['capital-projects', 'materials', 'pitching'], line: 'Getting a new device from the bench to the line.' },
   ],
   game: null,
   photos: [],

@@ -1,4 +1,4 @@
-/* Life in six acts: page styles. Sizes, colors and timing follow STYLE-GUIDE.md. */
+/* Life in a tutorial and seven acts: page styles. Sizes, colors and timing follow STYLE-GUIDE.md. */
 
 :root {
   --paper: #efede8;
@@ -122,14 +122,14 @@ a { color: inherit; }
 
 @media (max-width: 759px) {
   :root { --belt-h: 0px; --hud-h: 60px; }
-  .hud { top: auto; bottom: 0; border-bottom: 0; border-top: 2px solid var(--ink); padding: 0 10px; height: 60px; gap: 6px; }
+  .hud { top: auto; bottom: 0; border-bottom: 0; border-top: 2px solid var(--ink); padding: 0 10px; height: 60px; gap: 4px; }
   .hud-strip { bottom: auto; top: -6px; }
   .hud-name, .hud-class { display: none; }
   .hud-acts { gap: 2px; }
-  .pip { min-width: 28px; height: 28px; padding: 0 2px; font-size: 11px; }
+  .pip { min-width: 24px; height: 28px; padding: 0 1px; font-size: 11px; }
   .hud-sheet .hud-label, .hud-hello .hud-label { display: none; }
   .hud-at { display: inline; }
-  .hud .btn { padding: 9px 10px; }
+  .hud .btn { padding: 9px 8px; }
 }
 
 /* ---------- Intro ---------- */
@@ -433,12 +433,18 @@ a { color: inherit; }
 .belt-skills-label { font: 700 10px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--night-ink-2); }
 .belt-skills-count { font: 800 15px/1 var(--mono); color: #ffb347; }
 .belt-skills.is-landing { animation: land 0.5s ease-out; }
-@media (max-width: 1100px) {
+/* Smaller slots on narrower screens, so every item's slot fits in one row. */
+@media (max-width: 1139px) {
   .belt-label { display: none; }
   .belt-slot { width: 36px; height: 36px; }
   .belt-slot img { width: 24px; height: 24px; }
   .belt-slots { gap: 5px; }
   .belt-group { gap: 3px; }
+}
+@media (max-width: 899px) {
+  .belt-slot { width: 30px; height: 30px; }
+  .belt-slots { gap: 4px; }
+  .belt-group { gap: 2px; }
 }
 @media (max-width: 759px) { .belt { display: none; } }
 

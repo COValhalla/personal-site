@@ -13,7 +13,7 @@
  *   k  trousers              K  trousers, light
  *
  * The act colors come from the act's recipe, so the same sprite drawn in Act II
- * is track red and in Act III is blueprint blue.
+ * is varsity red and in Act III is magenta.
  */
 (function () {
   'use strict';
@@ -397,6 +397,44 @@
     '..o1222222223o..',
     '..o3333333333o..',
     '..oooooooooooo..',
+    '................',
+  ];
+
+  // Act II's items: a discus, a plate with a metal rim and hub, and a captain's patch, a shield with a stitched edge and a C.
+  ITEMS.discus = [
+    '................',
+    '................',
+    '................',
+    '................',
+    '.....oooooo.....',
+    '...oommmmmmoo...',
+    '..omm112222mmo..',
+    '.om1222ww2223no.',
+    '.om1222mm2233no.',
+    '..omn22233nnno..',
+    '...oonnnnnnoo...',
+    '.....oooooo.....',
+    '................',
+    '................',
+    '................',
+    '................',
+  ];
+  ITEMS.patch = [
+    '................',
+    '..oooooooooooo..',
+    '.o111111111112o.',
+    '.o1w2w2w2w2w23o.',
+    '.o12222www2223o.',
+    '.o1w22w222w2w3o.',
+    '.o1222w2222223o.',
+    '.o1w22w22222w3o.',
+    '.o1222w222w223o.',
+    '.o1w222www22w3o.',
+    '.o122222222223o.',
+    '..o1w2w2w2w23o..',
+    '...o12222223o...',
+    '....o122233o....',
+    '......oooo......',
     '................',
   ];
 

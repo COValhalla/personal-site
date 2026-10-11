@@ -1,11 +1,11 @@
 /*
- * Act VI recipe. See README.md, "Recipes", for every field.
+ * Act VII recipe. See README.md, "Recipes", for every field.
  * Purple is for this act's own items; the sheet ends in every color.
  * All words are placeholders to replace with your own.
  */
 Story.addAct({
   id: 'now',
-  numeral: 'VI',
+  numeral: 'VII',
   title: 'Party leader',
   years: 'Since 2023',
   quests: [
@@ -24,7 +24,7 @@ Story.addAct({
     { tag: 'work', text: 'Promoted twice in three years, to senior product manager. I coached our team and executives on a new way to build products, and I still build: a Java Card prototype reached an enterprise customer a week after I made it.', item: 'two-hats', cue: 'team' },
     { tag: 'life', text: 'The kid who raced the typing game in the computer lab now builds the product, and leads the team that ships it.', cue: 'shine' },
   ],
-  unlock: { banner: 'Level 6', say: 'New class: Product engineer' },
+  unlock: { banner: 'Level 7', say: 'New class: Product engineer' },
   items: [
     {
       id: 'two-hats', name: 'Two hats', sprite: 'hats', tag: 'work',
@@ -48,7 +48,7 @@ Story.addAct({
   skills: [
     { id: 'product-engineering', name: 'Product engineering', parents: ['code', 'new-products', 'curiosity'], line: 'Finding what the business needs, then building it.' },
     { id: 'product', name: 'Product', parents: ['throwing', 'capital-projects', 'mountains', 'debugging', 'reading'], line: 'Ties every branch together.' },
-    { id: 'guiding', name: 'Guiding a team', parents: ['product', 'plant-ops', 'adapting'], moment: 4, line: 'Setting a direction the whole team can build toward.' },
+    { id: 'guiding', name: 'Guiding a team', parents: ['product', 'new-products', 'plant-ops', 'adapting'], moment: 4, line: 'Setting a direction the whole team can build toward.' },
   ],
   game: null,
   photos: [],
