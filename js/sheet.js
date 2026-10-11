@@ -158,6 +158,8 @@
   function openItem(id) {
     const item = Story.items().find(i => i.id === id);
     if (!item) return;
+    // The belt and the moments open story cards before the sheet has ever been opened.
+    if (!card) build();
     const act = Story.acts[item.act];
     const statName = sid => (Story.config.stats.find(s => s.id === sid) || { name: sid }).name;
     const game = item.game && Games.get(item.game);

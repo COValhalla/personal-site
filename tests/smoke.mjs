@@ -25,6 +25,14 @@ async function open(browser, options) {
   return { context, page, errors };
 }
 
+// Selects an item and reads the story card it opens: true when the card opens and shows every word.
+async function storyCard(page, selector, words) {
+  await page.click(selector);
+  const opened = await page.waitForSelector('#card[open]', { timeout: 2000 }).then(() => true, () => false);
+  const text = opened ? await page.$eval('#card', c => c.textContent) : '';
+  return opened && words.every(w => text.includes(w));
+}
+
 const scrollTo = (page, y) => page.evaluate(top => window.scrollTo({ top, behavior: 'instant' }), y);
 // The index of the scene stage on screen (its canvas is the visible one).
 const stageShown = (page, id) => page.$$eval(`#${id} .scene-canvas`, cs => cs.findIndex(c => getComputedStyle(c).visibility === 'visible'));
@@ -138,6 +146,16 @@ async function desktop(browser) {
   check(await page.textContent('.hud-count') === `${items}/${items}`, `the sheet holds all ${items} items`);
   const college = await page.$eval('#act-college', s => ({ num: s.querySelector('.act-num').textContent, title: s.querySelector('.act-title').textContent, color: s.querySelector('.act-screen').style.getPropertyValue('--c2') }));
   check(college.num === 'Act III' && college.title === 'Training arc' && college.color === '#d6449a', `college is Act III, Training arc, in magenta (${college.num}, ${college.title}, ${college.color})`);
+  // A first-time reader who has never opened the sheet selects an item in the belt.
+  check(await page.$('#sheet') === null, 'the sheet has not been opened yet');
+  check(await storyCard(page, '.belt-slot[data-item="hammer"]', ['Hammer', 'Act III', 'Four turns', 'Play hammer throw']),
+    'before the sheet is ever opened, selecting the hammer in the belt opens its story card with Play');
+  await page.click('#card .btn--accent');
+  check(await page.waitForSelector('#game[open]', { timeout: 2000 }).then(() => true, () => false) && await page.textContent('#game .game-title') === 'Hammer throw',
+    'Play on that story card opens the hammer throw');
+  await page.click('#game .game-skip');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#card').open, null, { timeout: 2000 });
 
   await scrollTo(page, 0);
   await page.waitForTimeout(300);
@@ -452,6 +470,11 @@ async function reducedMotion(browser) {
   check(await page.$$eval('section.act.is-unlocked', s => s.length) === 8, 'every act shows already unlocked');
   check(await page.$$eval('.beat.is-locked', b => b.length) === 0, 'every moment is shown');
   check(await page.textContent('.hud-count') === `${items}/${items}` && await page.$$eval('.belt-slot.is-filled', s => s.length) === items, 'the sheet and the belt are already full');
+  // On a fresh page the sheet has never been opened: the item button on a moment still opens its story card.
+  check(await page.$('#sheet') === null && await storyCard(page, '#act-high-school .beat-item[data-item="discus"]', ['Discus', 'Act II', 'let it fly flat']),
+    'before the sheet is ever opened, selecting the discus on its moment opens its story card');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#card').open, null, { timeout: 2000 });
   await page.evaluate(() => Games.open('hammer'));
   await page.keyboard.down('Space');
   await page.waitForTimeout(600);
