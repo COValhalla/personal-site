@@ -7,7 +7,9 @@ Story.addAct({
   numeral: 'I',
   title: 'Childhood',
   years: 'Ages 8 to 14',
-  summary: 'BMX racing, the family business and Diablo 2.',
+  quests: [
+    { what: 'BMX racing and the family business' },
+  ],
   // A bright, Saturday-morning scheme: sunny orange with a sky-blue accent.
   color: { name: 'Sunny orange', light: '#ffc46b', base: '#ff8a1f', shade: '#c25a0a', accent: '#3fa9f5' },
   theme: 'light',

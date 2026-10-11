@@ -7,7 +7,11 @@ Story.addAct({
   numeral: 'II',
   title: 'Training arc',
   years: 'College, 2011 to 2015',
-  summary: 'The hammer throw, chemical engineering at Missouri S&T, and two oil-and-gas internships in Texas.',
+  quests: [
+    { what: 'B.S. Chemical Engineering', where: 'Missouri University of Science and Technology', when: 'Aug 2011 to May 2015' },
+    { what: 'Academic All-American, hammer throw' },
+    { what: 'Two summer internships in oil and gas', where: 'Texas' },
+  ],
   // Varsity colors: track red with a navy accent. Placeholders until Joe names his school colors.
   color: { name: 'Track red', light: '#f08a75', base: '#e0533d', shade: '#a3352a', accent: '#24366b' },
   theme: 'light',

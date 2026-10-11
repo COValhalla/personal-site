@@ -10,7 +10,10 @@ Story.addAct({
   tutorial: true,
   title: 'Early years',
   years: 'Ages 0 to 8',
-  summary: 'Growing up, and typing races in the school computer lab.',
+  // The quest log at the end of the page: this act's titles, places and dates.
+  quests: [
+    { what: 'Fastest typist in the computer lab' },
+  ],
   color: { name: 'Crayon teal', light: '#7fe0d4', base: '#22b3a3', shade: '#157a70' },
   theme: 'light',
   scene: 'early-home',

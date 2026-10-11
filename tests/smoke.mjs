@@ -40,7 +40,7 @@ async function desktop(browser) {
   check(ids.length === 7, 'the tutorial and six acts are on the page');
   check(await page.textContent('.intro-title') === 'Joe' && await page.textContent('.hud-name') === 'Joe', 'the intro and the bar say Joe');
   check(await page.textContent('.intro-tag') === "Hi, I'm Joe Vellella, a product engineer. I learn it like a game and build it with a team. Press start to play my story. You may find a few levels you played too.", 'the welcome names Joe as a product engineer and leads to Press start');
-  check(await page.$$eval('.intro .intro-note a', a => a.length) === 1 && await page.$('.intro .intro-start') !== null, 'the welcome has a Press start button and only the short-version link');
+  check(await page.$$eval('.intro .intro-note a', a => a.map(x => `${x.textContent} ${x.getAttribute('href')}`).join()) === 'Short on time? Read the quest log. #quest-log' && await page.$('.intro .intro-start') !== null, 'the welcome has a Press start button and only the quest-log link');
   check(await page.textContent('.hud-count') === `0/${items}`, 'the sheet starts empty');
   check(await page.$$eval('.belt-slot.is-filled', s => s.length) === 0, 'the inventory belt starts empty');
   check(await page.$eval('#act-school .act-screen', s => getComputedStyle(s).filter.includes('grayscale(1)')), 'acts start in gray');
@@ -112,7 +112,7 @@ async function desktop(browser) {
     check(done.inBelt, `${names[n]} drops its items into the inventory belt`);
     check(!done.gray.includes('grayscale(1)'), `${names[n]} has its color`);
     const next = await page.$eval(`#${id} .act-next`, a => ({ text: a.textContent.trim(), shown: getComputedStyle(a).visibility === 'visible' }));
-    check(next.shown && next.text.startsWith(n < 6 ? `Next: ${names[n + 1]}` : 'Next: the short version'), `${names[n]} ends with a Next tag (${next.text})`);
+    check(next.shown && next.text.startsWith(n < 6 ? `Next: ${names[n + 1]}` : 'Next: the quest log'), `${names[n]} ends with a Next tag (${next.text})`);
   }
   check(await page.textContent('.hud-count') === `${items}/${items}`, `the sheet holds all ${items} items`);
 
@@ -173,6 +173,7 @@ async function desktop(browser) {
     && await page.evaluate(() => window.scrollY) === hereY, 'the top bar opens a small menu of the three links without jumping');
   await page.keyboard.press('Escape');
   check(!(await page.isVisible('#hello-menu')), 'Escape closes the Say hello menu');
+  await questLog(page, ids);
   check(await page.title() === 'Joe Vellella · Product engineer', 'the tab says the full name and role');
   check(await page.textContent('.site-foot') === 'Joe Vellella', 'the footer says the full name');
   await page.keyboard.press('Escape');
@@ -182,6 +183,41 @@ async function desktop(browser) {
   await typing(page);
   check(errors.length === 0, 'no console errors or warnings' + (errors.length ? ': ' + errors.join(' | ') : ''));
   await context.close();
+}
+
+// The quest log at the end of the page: each act's real titles, places and dates, and LinkedIn for the rest.
+async function questLog(page, ids) {
+  const log = await page.$eval('#quest-log', s => ({
+    kicker: s.querySelector('.quest-kicker').textContent,
+    title: s.querySelector('h3').textContent,
+    rows: [...s.querySelectorAll('.quest')].map(q => ({
+      href: q.querySelector('.quest-act').getAttribute('href'),
+      head: q.querySelector('.quest-act b').textContent,
+      lines: [...q.querySelectorAll('.quest-lines li')].map(li => [...li.children].map(c => c.textContent).join(' | ')),
+    })),
+    more: s.querySelector('.quest-more a').getAttribute('href'),
+  }));
+  check(log.kicker === 'The short version, with dates' && log.title === 'Quest log', 'the end of the page has the quest log, headed The short version, with dates');
+  check(log.rows.length === ids.length && log.rows.every((r, i) => r.href === `#${ids[i]}` && r.lines.length > 0), 'the quest log has one row per act, each linking to its act');
+  const lines = log.rows.flatMap(r => r.lines);
+  const want = [
+    'B.S. Chemical Engineering, Missouri University of Science and Technology | Aug 2011 to May 2015',
+    'Materials Engineer, Honeywell FM&T, Kansas City National Security Campus | Jun 2015 to Jul 2016',
+    'Process Engineer, Gelita USA, Sioux City | Jul 2016 to Mar 2018',
+    'Manufacturing Project Engineer, Terumo BCT | Mar 2018 to May 2020',
+    'Sr. Process Development Engineer, New Product Introduction, Terumo BCT | Jun 2020 to Mar 2022',
+    'Full Stack JavaScript, The Odin Project | May to Dec 2022',
+    'Software Engineer, Wavelynx Technologies | Jan 2023 to Sep 2025',
+    'Technical Product Lead, Credentials, Wavelynx Technologies | Sep 2025 to Apr 2026',
+    'Sr. Product Manager, Credentials, Wavelynx Technologies | Apr 2026 to now',
+  ];
+  const missing = want.filter(w => !lines.includes(w));
+  check(missing.length === 0, 'the quest log lists every title, employer and date' + (missing.length ? ': missing ' + missing.join('; ') : ''));
+  check(log.more === await page.evaluate(() => Story.config.contact.linkedin), 'the quest log points to LinkedIn for the exact details');
+  // A row takes you to its act.
+  await page.click('#quest-log .quest-act[href="#act-denver"]');
+  await page.waitForFunction(() => Math.abs(document.querySelector('#act-denver').getBoundingClientRect().top) < 4, null, { timeout: 4000 }).catch(() => {});
+  check(await page.$eval('#act-denver', s => Math.abs(s.getBoundingClientRect().top) < 4), 'selecting Act IV in the quest log goes to Act IV');
 }
 
 async function hammer(page) {
@@ -427,6 +463,7 @@ async function phone(browser) {
   check(await page.$eval('.hud', h => Math.abs(h.getBoundingClientRect().bottom - window.innerHeight) < 1), 'the bar sits along the bottom');
   check(await page.isVisible('.hud-hello .hud-at') && !(await page.isVisible('.hud-hello .hud-label')), 'the bar shows an @ for Say hello');
   check(await page.$eval('.hud', h => h.scrollWidth <= h.clientWidth), 'the bar fits the phone width');
+  check(await page.$eval('#quest-log', s => s.scrollWidth <= s.clientWidth && document.documentElement.scrollWidth <= window.innerWidth), 'the quest log fits the phone width');
   const where = await pins(page);
   await scrollTo(page, where[2].start - 300);
   await page.waitForFunction(() => Acts.sections[2].played >= 1, null, { timeout: 5000 });
