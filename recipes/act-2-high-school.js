@@ -30,6 +30,7 @@ Story.addAct({
       line: 'Stay low, spin, and let it fly flat.',
       adds: { grit: 2, outdoors: 1 },
       photo: null,
+      game: 'discus',
     },
     {
       id: 'captain-patch', name: "Captain's patch", sprite: 'patch', tag: 'life',
@@ -43,6 +44,6 @@ Story.addAct({
     { id: 'throwing', name: 'Throwing', parents: ['riding'], moment: 3, line: 'Timing, rhythm and one clean release.' },
     { id: 'leading', name: 'Leading', parents: ['teaching', 'teamwork'], moment: 4, line: 'Earning the C by doing the work first.' },
   ],
-  game: null,
+  game: 'discus',
   photos: [],
 });

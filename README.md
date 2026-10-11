@@ -32,9 +32,10 @@ Every merge to `main` publishes it there within a minute or two, through GitHub 
 4. Select any item in the belt or in a moment to read its story card. Open the sheet for your stats, the full inventory and the map: one road through the Tutorial and the seven acts, with your character at the furthest stop reached. Select a stop to walk there, read its class and skills, and go to that act.
 5. Play the BMX race in Act I: wait for the gate, hold Pedal (or the right arrow) for speed, and tap Jump (or Space) while your front wheel is over the lit strip before each roller, or on a jump strip to wheelie over it. Hold Jump longer to fly bigger, and let go to roll over a jump at 90% speed. Beat the two other riders over six straights, five berms and 13 jumps.
 6. Play the hammer throw in Act III: hold to spin (or hold Space). You get one wind and four turns, and the last two are fast; let go while the hammer glows. A good release on turn 3 or 4 hits with a freeze, a shake and a flash, and a throw of 70 m or more plays a slow-motion throw camera (tap to skip). Hold on past the fourth turn and it is a foul.
-7. Play the typing race in the Tutorial: type the three lines as fast as you can to beat KIM (20 words a minute) and MAX (35 words a minute). Typing is the Tutorial's game, the one you would play in typing class.
-8. Scroll back above an act and it rewinds, together with every act after it, then plays again as you scroll down. Scrolling inside an act never un-tells what you have already seen.
-9. Use the chapter buttons (0 to VII) to jump to an act. The quest log at the end of the page ("Short on time?" on the title screen goes straight there) lists the real titles, employers and dates, one row per act; select a row to go to its act, or follow its LinkedIn button for the exact details. Say hello in the top bar opens a small menu of links to reach Joe, and the same links sit at the end.
+7. Play the discus throw in Act II: open the discus's story card and press Play discus throw, or press it when Act II levels up. It throws like the hammer, with one wind and two turns, the second fast; let go while the discus glows. Marks are in feet, and the gold line at 176 feet is Joe's school record: land past it to beat the record. A throw of 165 feet or more plays the throw camera, with a gold flag on the record. Hold on past the second turn and it is a foul.
+8. Play the typing race in the Tutorial: type the three lines as fast as you can to beat KIM (20 words a minute) and MAX (35 words a minute). Typing is the Tutorial's game, the one you would play in typing class.
+9. Scroll back above an act and it rewinds, together with every act after it, then plays again as you scroll down. Scrolling inside an act never un-tells what you have already seen.
+10. Use the chapter buttons (0 to VII) to jump to an act. The quest log at the end of the page ("Short on time?" on the title screen goes straight there) lists the real titles, employers and dates, one row per act; select a row to go to its act, or follow its LinkedIn button for the exact details. Say hello in the top bar opens a small menu of links to reach Joe, and the same links sit at the end.
 
 ## Files
 
@@ -49,7 +50,7 @@ Every merge to `main` publishes it there within a minute or two, through GitHub 
 | `js/belt.js` | The inventory belt and experience bar along the bottom. |
 | `js/sheet.js` | The character sheet and story cards. |
 | `js/map.js` | The world map on the sheet. |
-| `js/games/` | The hammer throw, the BMX race, the typing race and their sounds. |
+| `js/games/` | The hammer and discus throws, the BMX race, the typing race and their sounds. |
 | `js/story.js` | Collects the recipes and checks them for mistakes. |
 | `js/main.js` | The top bar, the intro, the quest log, Say hello and start-up. |
 | `vendor/gsap/` | GSAP 3.15.0 and ScrollTrigger, kept here so the page works offline. |
@@ -89,7 +90,7 @@ Ask an AI coding agent for one act at a time. A prompt that works:
 
 ## Tests
 
-The smoke test opens the page in Google Chrome and does what a reader does: it scrolls through every act step by step (in high school, the lights come on, the discus lands at 176 feet and the team walks on), opens the sheet, reads a story card, reads the quest log and follows a row to its act, checks that scrolling walks the hero and fills the progress rail, walks the map, throws the hammer (a centered fourth-turn release with its hit and throw camera, a skipped camera, a fifth-turn foul and a foul in the wind), checks every pump call, the wheelie, the flight and the wheel lift, and races the BMX track with a bot that pumps the rollers and jumps, with motion on, with motion off and on a phone-sized screen.
+The smoke test opens the page in Google Chrome and does what a reader does: it scrolls through every act step by step (in high school, the lights come on, the discus lands at 176 feet and the team walks on), opens the sheet, reads a story card, reads the quest log and follows a row to its act, checks that scrolling walks the hero and fills the progress rail, walks the map, throws the hammer (a centered fourth-turn release with its hit and throw camera, a skipped camera, a fifth-turn foul and a foul in the wind), plays the discus from its story card (a second-turn throw past the 176-foot record with its throw camera, a first-turn throw short of it and a third-turn foul), checks every pump call, the wheelie, the flight and the wheel lift, and races the BMX track with a bot that pumps the rollers and jumps, with motion on, with motion off and on a phone-sized screen.
 
 ```sh
 npm install

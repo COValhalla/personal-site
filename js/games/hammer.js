@@ -1,17 +1,23 @@
 /*
- * Hammer throw, Act III. Top-down view of the throwing circle and the sector.
+ * The throws: the hammer throw in Act III and the discus throw in Act II.
+ * Both are a top-down view of the throwing circle and the sector, and they
+ * share the turns, the release timing, the hit and the throw camera. MODES
+ * below holds what differs.
  *
- * Hold to start: one wind over the head, then the turns. Every turn is faster
- * than the last, and the last two are much faster. The hammer glows as it
- * passes the front of the circle. Let go while it glows to throw. You get four
- * turns at most: hold on past the fourth and you spin out of the circle. Let go
- * during the wind, or away from the glow, and it is a foul. Three attempts;
- * your best fair mark counts.
+ * Hold to start: one wind, then the turns. Every turn is faster than the last,
+ * and the last ones are much faster. The hammer or the discus glows as it
+ * passes the front of the circle. Let go while it glows to throw. The hammer
+ * gets four turns and the discus two: hold on past the last and you spin out of
+ * the circle. Let go during the wind, or away from the glow, and it is a foul.
+ * Three attempts; your best fair mark counts.
  *
- * A fair release on turn 3 or 4 hits: the picture freezes for a moment, shakes
- * and flashes, and a phone buzzes where it can. A throw of CAMERA_FROM_M or more
- * cuts to a side-on camera in slow motion that follows the hammer out, then
- * cuts back to the mark. A tap skips it.
+ * A fair release on a fast turn hits: the picture freezes for a moment, shakes
+ * and flashes, and a phone buzzes where it can. A throw of the mode's
+ * cameraFrom or more cuts to a side-on camera in slow motion that follows the
+ * throw out, then cuts back to the mark. A tap skips it.
+ *
+ * The hammer scores in meters. The discus scores in feet against Joe's 176-foot
+ * school record, which is drawn on the field and in the throw camera.
  */
 (function () {
   'use strict';
@@ -19,52 +25,121 @@
   const W = 200;
   const H = 150;
   const C = { x: 100, y: 134 };
-  const PX_PER_M = 1.45;
   const SECTOR = (34.92 / 2) * Math.PI / 180;
   const LINE = 0.05; // a release this far past the sector line still lands on it
-  const ORBIT = 9;
-  const TURNS = 4;
   const WIND_SPEED = 3.6; // radians per second
-  const TURN_SPEED = [4.4, 5.2, 7.2, 9.2];
-  // The glow is never shorter than this, however fast the hammer goes.
+  // The glow is never shorter than this, however fast the throw spins.
   const MIN_WINDOW = 0.1; // seconds
   const ATTEMPTS = 3;
-  const BEST_M = 78; // a centered release on a clean fourth turn
   // The hit on a good release: a freeze, then a shake and a flash.
   const FREEZE = { fair: 0.08, perfect: 0.11 };
-  const CAMERA_FROM_M = 70;
-  // The camera runs slow at first, then follows the hammer at full speed.
-  const CAM = { slow: 0.3, slowFor: 0.55, flight: 2.0, after: 0.9, pxPerM: 3 };
+  // The camera runs slow at first, then follows the throw at full speed.
+  const CAM = { slow: 0.3, slowFor: 0.55, flight: 2.0, after: 0.9 };
+  const GOLD = '#ffd56b';
+  // Joe's school discus record, from Act II's words.
+  const RECORD_FT = 176;
   const TAU = Math.PI * 2;
 
-  // The speed a clean fourth turn actually reaches at the middle of the glow:
-  // the spin eases toward each turn's pace, so it never quite gets to 9.2.
-  // Distance scales to this, so a centered turn-4 release makes BEST_M.
-  const REACH = (function () {
+  const MODES = {
+    hammer: {
+      title: 'Hammer throw',
+      help: 'Hold to wind up and spin. You get four turns, and the last two are fast. Let go while the hammer glows to land it in the sector. Hold past the fourth turn and it is a foul. A big throw plays the throw camera; tap to skip it.',
+      thing: 'hammer',
+      turnSpeed: [4.4, 5.2, 7.2, 9.2],
+      fastFrom: 3, // a fair release from this turn on hits
+      words: { turns: 'four', Turns: 'Four', over: 'fifth' },
+      orbit: 9, // the hammer's path around the thrower: on the field
+      reach: 22, // and in the close-up
+      wire: true,
+      unit: 'm',
+      decimals: 2,
+      pxPerUnit: 1.45,
+      rings: [20, 40, 60, 80],
+      best: 78, // a centered release on a clean last turn
+      cap: 79,
+      cameraFrom: 70,
+      // The throw camera's scale, its ticks, boards and light poles, and how high the throw flies.
+      cam: { pxPerUnit: 3, tick: 10, board: 20, pole: 30, peak: 46 },
+      landed: (mark, d, turn, last) => ({
+        sub: turn < last ? `TURN ${turn}: WAIT FOR TURN ${last}` : 'ALL FOUR TURNS',
+        say: d > 70 ? `${mark} m. A big one.` : d > 50 ? `${mark} m. Nice throw.` : `${mark} m. Hold on for more turns to throw further.`,
+      }),
+      final: mark => ({ say: `Final: your best mark is ${mark} m.` }),
+    },
+    discus: {
+      title: 'Discus throw',
+      help: `Hold to wind up and spin. You get two turns, and the second is fast. Let go while the discus glows to land it in the sector; hold past the second turn and it is a foul. My school record is ${RECORD_FT} feet. Beat it.`,
+      thing: 'discus',
+      turnSpeed: [5.0, 7.8],
+      fastFrom: 2,
+      words: { turns: 'two', Turns: 'Two', over: 'third' },
+      orbit: 6, // the discus is held at arm's length, not on a wire
+      reach: 15,
+      wire: false,
+      unit: 'ft',
+      decimals: 1,
+      // A mark in feet rounds down to the tenth, so 176.0 ties the record and does not beat it.
+      round: d => Math.floor(d * 10) / 10,
+      pxPerUnit: 0.66,
+      rings: [50, 100, 150],
+      best: 186,
+      cap: 189,
+      cameraFrom: 165,
+      cam: { pxPerUnit: 1.3, tick: 25, board: 50, pole: 75, peak: 40 },
+      toBeat: RECORD_FT,
+      landed: (mark, d, turn, last) => {
+        if (d > RECORD_FT) return { sub: 'NEW SCHOOL RECORD', say: `${mark} ft. You beat my ${RECORD_FT}-foot school record.` };
+        if (d === RECORD_FT) return { sub: 'TIES THE RECORD', say: `${mark} ft ties my ${RECORD_FT}-foot record. A tenth more beats it.` };
+        if (turn < last) return { sub: `TURN ${turn}: WAIT FOR TURN ${last}`, say: `${mark} ft. Hold on for the second turn to throw further.` };
+        const short = (RECORD_FT - d).toFixed(1);
+        return { sub: `${short} FT SHORT`, say: `${mark} ft, ${short} ft short of my ${RECORD_FT}-foot record.` };
+      },
+      final: (mark, d) => {
+        if (d > RECORD_FT) return { sub: 'RECORD BROKEN', say: `Final: ${mark} ft. You beat my ${RECORD_FT}-foot school record.` };
+        if (d === RECORD_FT) return { sub: 'TIED THE RECORD', say: `Final: ${mark} ft ties my ${RECORD_FT}-foot school record.` };
+        return { say: `Final: your best is ${mark} ft, ${(RECORD_FT - d).toFixed(1)} ft short of my ${RECORD_FT}-foot record.` };
+      },
+    },
+  };
+
+  // The speed a clean last turn actually reaches at the middle of the glow:
+  // the spin eases toward each turn's pace, so it never quite gets there.
+  // Distance scales to this, so a centered last-turn release makes the mode's best.
+  function reachOf(mode) {
+    const turns = mode.turnSpeed.length;
     let theta = Math.PI;
     let omega = 2;
     let spun = 0;
     let turn = 0;
     const dt = 1 / 120;
     for (let i = 0; i < 6000; i++) {
-      const target = turn === 0 ? WIND_SPEED : TURN_SPEED[turn - 1];
+      const target = turn === 0 ? WIND_SPEED : mode.turnSpeed[turn - 1];
       omega += (target - omega) * Math.min(1, dt * 4);
       const before = Math.atan2(Math.sin(theta), Math.cos(theta));
       theta -= omega * dt;
       spun += omega * dt;
       const after = Math.atan2(Math.sin(theta), Math.cos(theta));
-      if (turn === TURNS && before >= 0 && after < 0) return omega;
+      if (turn === turns && before >= 0 && after < 0) return omega;
       if (spun >= TAU) { spun -= TAU; turn += 1; }
     }
-    return TURN_SPEED[TURNS - 1];
-  })();
+    return mode.turnSpeed[turns - 1];
+  }
 
-  function mount(stage, ramp) {
-    const canvas = Sheet.el('canvas', { class: 'game-canvas px', width: W, height: H, role: 'img', 'aria-label': 'Hammer throw field seen from above' });
+  function mount(stage, ramp, name) {
+    const mode = MODES[name];
+    const TURNS = mode.turnSpeed.length;
+    const TURN_SPEED = mode.turnSpeed;
+    const REACH = reachOf(mode);
+    const ORBIT = mode.orbit;
+    const PX = mode.pxPerUnit;
+    const UNIT = mode.unit.toUpperCase();
+    const READY = `Hold to wind up. ${mode.words.Turns} turns, then let go while the ${mode.thing} glows.`;
+    const canvas = Sheet.el('canvas', { class: 'game-canvas px', width: W, height: H, role: 'img', 'aria-label': `${mode.title} field seen from above` });
     const cells = Array.from({ length: ATTEMPTS }, (_, k) => Sheet.el('div', {}, Sheet.el('span', { text: `Throw ${k + 1}` }), Sheet.el('b', { class: 'sb-throw', text: '--' })));
-    const board = Sheet.el('div', { class: 'scoreboard', style: `grid-template-columns:repeat(${ATTEMPTS + 1},1fr)`, 'aria-live': 'polite' },
-      cells, Sheet.el('div', {}, Sheet.el('span', { text: 'Best' }), Sheet.el('b', { class: 'sb-best', text: '--' })));
-    const msg = Sheet.el('p', { class: 'game-msg', 'aria-live': 'polite', text: 'Hold to wind up. Four turns, then let go while the hammer glows.' });
+    const extra = mode.toBeat ? [Sheet.el('div', {}, Sheet.el('span', { text: 'Record' }), Sheet.el('b', { class: 'sb-record', text: mode.toBeat.toFixed(mode.decimals) }))] : [];
+    const board = Sheet.el('div', { class: extra.length ? 'scoreboard scoreboard--fit' : 'scoreboard', style: `grid-template-columns:repeat(${ATTEMPTS + 1 + extra.length},1fr)`, 'aria-live': 'polite' },
+      cells, Sheet.el('div', {}, Sheet.el('span', { text: 'Best' }), Sheet.el('b', { class: 'sb-best', text: '--' })), extra);
+    const msg = Sheet.el('p', { class: 'game-msg', 'aria-live': 'polite', text: READY });
     const hold = Sheet.el('button', { class: 'btn btn--accent hold' }, 'Hold to spin ', Sheet.el('kbd', { text: 'Space' }));
     const again = Sheet.el('button', { class: 'btn', hidden: '' }, 'Throw again');
     stage.append(canvas, board, msg, Sheet.el('div', { class: 'game-actions' }, hold, again));
@@ -114,18 +189,24 @@
     // Half the glow, in radians: the sector, or wider on a fast turn so it lasts MIN_WINDOW.
     const zone = () => Math.max(SECTOR, (s.omega * MIN_WINDOW) / 2);
     const glowing = () => s.phase === 'turns' && Math.abs(offAxis(s.theta)) <= zone();
-    const fast = () => s.phase === 'turns' && s.turn >= 3;
+    const fast = () => s.phase === 'turns' && s.turn >= mode.fastFrom;
 
     // ---------- Drawing ----------
 
     function drawField() {
       for (let y = 0; y < H; y++) { ctx.fillStyle = Math.floor(y / 6) % 2 ? '#2b4a36' : '#2f5039'; ctx.fillRect(0, y, W, 1); }
       [-SECTOR, SECTOR].forEach(a => line(C.x, C.y, C.x + Math.sin(a) * 170, C.y - Math.cos(a) * 170, '#e8e4dc', true));
-      [20, 40, 60, 80].forEach(m => {
-        const r = m * PX_PER_M;
+      mode.rings.forEach(m => {
+        const r = m * PX;
         for (let a = -SECTOR; a <= SECTOR; a += 0.6 / r) px(C.x + Math.sin(a) * r, C.y - Math.cos(a) * r, ramp.light);
         Pixel.digits(ctx, m, Math.round(C.x + Math.sin(SECTOR) * r) + 3, Math.round(C.y - Math.cos(SECTOR) * r) - 2, '#a9bfae', 1);
       });
+      // The record to beat: a solid gold line across the sector.
+      if (mode.toBeat) {
+        const r = mode.toBeat * PX;
+        for (let a = -SECTOR; a <= SECTOR; a += 0.4 / r) { px(C.x + Math.sin(a) * r, C.y - Math.cos(a) * r, GOLD); px(C.x + Math.sin(a) * (r + 1), C.y - Math.cos(a) * (r + 1), GOLD); }
+        say(`${mode.toBeat} RECORD`, Math.round(C.x + Math.sin(SECTOR) * r) + 3, Math.round(C.y - Math.cos(SECTOR) * r) - 3, GOLD);
+      }
       // The cage, open toward the sector.
       for (let a = 0; a < TAU; a += 0.05) {
         const off = Math.abs(Math.atan2(Math.sin(a - Math.PI / 2), Math.cos(a - Math.PI / 2)));
@@ -159,7 +240,7 @@
       const bx = C.x + Math.cos(theta) * ORBIT;
       const by = C.y + Math.sin(theta) * ORBIT;
       if (s.phase !== 'flying' && s.phase !== 'landed' && s.phase !== 'done') {
-        line(C.x, C.y, bx, by, '#c3c6cc');
+        line(C.x, C.y, bx, by, mode.wire ? '#c3c6cc' : N.s);
         disc(bx, by, 1, N.o);
         const glow = glowing();
         px(bx, by, glow ? '#ffffff' : ramp.base);
@@ -204,7 +285,7 @@
     function drawCloseUp() {
       const cx = 36;
       const cy = 114;
-      const R = 22;
+      const R = mode.reach;
       rect(N.o, 3, 81, 67, 67);
       rect('#1f3326', 4, 82, 65, 65);
       say('CIRCLE', 6, 84, '#a9bfae');
@@ -238,21 +319,23 @@
       const hx = cx + Math.cos(theta) * 4;
       const hy = cy + Math.sin(theta) * 4;
       const holdingHammer = s.phase !== 'flying' && s.phase !== 'landed' && s.phase !== 'done';
+      const ux = Math.cos(theta + Math.PI / 2);
+      const uy = Math.sin(theta + Math.PI / 2);
       if (holdingHammer) {
         const bx = cx + Math.cos(theta) * R;
         const by = cy + Math.sin(theta) * R;
-        line(hx, hy, bx, by, '#c3c6cc');
+        // The hammer hangs from both hands on its wire; the discus sits in one hand at the end of a straight arm.
+        if (mode.wire) line(hx, hy, bx, by, '#c3c6cc');
+        else line(cx + ux * 4, cy + uy * 4, bx, by, N.s);
         disc(bx, by, 2, N.o);
         const glow = glowing();
         disc(bx, by, 1, glow ? '#ffffff' : ramp.base);
         if (glow) [[-4, 0], [4, 0], [0, -4], [0, 4]].forEach(([dx, dy]) => px(bx + dx, by + dy, '#ffffff'));
       }
-      // The thrower from above: shoulders, arms to the handle, head.
-      const ux = Math.cos(theta + Math.PI / 2);
-      const uy = Math.sin(theta + Math.PI / 2);
+      // The thrower from above: shoulders, arms to the handle (or one across the chest), head.
       for (let k = -1; k <= 0; k++) line(cx - ux * 5 + Math.cos(theta) * k, cy - uy * 5 + Math.sin(theta) * k, cx + ux * 5 + Math.cos(theta) * k, cy + uy * 5 + Math.sin(theta) * k, ramp.base);
       line(cx - ux * 4, cy - uy * 4, hx, hy, N.s);
-      line(cx + ux * 4, cy + uy * 4, hx, hy, N.s);
+      if (mode.wire || !holdingHammer) line(cx + ux * 4, cy + uy * 4, hx, hy, N.s);
       disc(cx - Math.cos(theta), cy - Math.sin(theta), 2, N.h);
     }
 
@@ -263,7 +346,7 @@
         const on = s.turn > k;
         const now = s.phase === 'turns' && s.turn === k + 1;
         // The light for a fast turn blinks.
-        const blink = now && s.turn >= 3 && Math.floor(s.t * 10) % 2;
+        const blink = now && s.turn >= mode.fastFrom && Math.floor(s.t * 10) % 2;
         rect(N.o, 22 + k * 7, 3, 6, 7);
         rect(now ? (blink ? N.w : ramp.light) : on ? ramp.base : '#3e5a47', 23 + k * 7, 4, 4, 5);
       }
@@ -311,7 +394,7 @@
 
     // ---------- The throw ----------
 
-    const fmt = m => m.toFixed(2);
+    const fmt = d => d.toFixed(mode.decimals);
     function banner(text, color, sub, seconds) { s.banner = { text, color, sub }; s.bannerT = seconds || 1.6; }
 
     function start() {
@@ -336,29 +419,32 @@
     }
 
     function release() {
-      if (s.phase === 'wind') { foul('Foul: you let go during the wind, and the hammer went into the cage.', 'TOO EARLY'); return; }
+      if (s.phase === 'wind') { foul(`Foul: you let go during the wind, and the ${mode.thing} went into the cage.`, 'TOO EARLY'); return; }
       if (s.phase !== 'turns') return;
       const off = offAxis(s.theta);
       if (Math.abs(off) > zone() + LINE) {
         const sub = Math.abs(off) > Math.PI / 2 ? 'INTO THE CAGE' : 'OUTSIDE THE SECTOR';
-        foul(`Foul: let go while the hammer glows. Turn ${s.turn} of ${TURNS}.`, sub);
+        foul(`Foul: let go while the ${mode.thing} glows. Turn ${s.turn} of ${TURNS}.`, sub);
         return;
       }
       const clamped = Math.max(-SECTOR, Math.min(SECTOR, off));
       const speed = s.omega / REACH;
       const centered = Math.min(1, Math.abs(off) / zone());
-      const meters = Math.min(BEST_M + 1, BEST_M * speed * speed * (1 - 0.15 * centered ** 2));
+      const raw = Math.min(mode.cap, mode.best * speed * speed * (1 - 0.15 * centered ** 2));
+      const dist = mode.round ? mode.round(raw) : raw;
       const bx = C.x + Math.cos(s.theta) * ORBIT;
       const by = C.y + Math.sin(s.theta) * ORBIT;
-      const dist = meters * PX_PER_M;
-      // It flies the way the hammer was moving: off straight up by the release angle.
+      const far = dist * PX;
+      // It flies the way it was moving: off straight up by the release angle.
       const dir = { x: Math.sin(clamped), y: -Math.cos(clamped) };
-      s.flight = { x0: bx, y0: by, x1: C.x + dir.x * dist, y1: C.y + dir.y * dist, t: 0, dur: 0.5 + meters / 90, peak: 4 + meters / 6, meters, turn: s.turn };
+      // A best throw stays up 1.37 s and lifts 17 pixels; shorter ones less.
+      const k = dist / mode.best;
+      s.flight = { x0: bx, y0: by, x1: C.x + dir.x * far, y1: C.y + dir.y * far, t: 0, dur: 0.5 + k * 0.8667, peak: 4 + k * 13, dist, turn: s.turn };
       Sound.play('release');
       msg.textContent = `Released on turn ${s.turn}.`;
       // A fair release on a fast turn hits: freeze, then shake and flash, and buzz a phone.
       const perfect = s.turn === TURNS && Math.abs(off) <= zone() / 2;
-      if (s.turn >= 3) {
+      if (s.turn >= mode.fastFrom) {
         s.freeze = perfect ? FREEZE.perfect : FREEZE.fair;
         // With motion turned off, the hit is the freeze and the buzz only.
         const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -367,8 +453,8 @@
         try { if (navigator.vibrate) navigator.vibrate(perfect ? 45 : 25); } catch (e) { /* not allowed here */ }
         if (perfect) banner('PERFECT', '#9be36c', 'RELEASE', 0.9);
       }
-      stage.dataset.hit = s.turn >= 3 ? (perfect ? 'perfect' : 'fair') : 'none';
-      if (meters >= CAMERA_FROM_M) {
+      stage.dataset.hit = s.turn >= mode.fastFrom ? (perfect ? 'perfect' : 'fair') : 'none';
+      if (dist >= mode.cameraFrom) {
         s.cam = { real: 0, u: 0, landed: -1, dirt: [] };
         stage.dataset.camera = 'on';
         setPhase('camera');
@@ -378,7 +464,7 @@
       }
     }
 
-    // The throw camera ends: cut back to the top-down field, the hammer landing on its mark.
+    // The throw camera ends: cut back to the top-down field, the throw landing on its mark.
     function endCamera() {
       if (s.phase !== 'camera') return;
       s.cam = null;
@@ -395,17 +481,20 @@
     function drawCamera() {
       const c = s.cam;
       const f = s.flight;
-      const P = CAM.pxPerM;
+      const view = mode.cam;
+      const P = view.pxPerUnit;
       const p = Math.min(1, c.u / CAM.flight);
-      const xm = f.meters * p;
+      const xm = f.dist * p;
       const GROUND_Y = 118;
-      const hy = GROUND_Y - 14 + 14 * p - 4 * 46 * p * (1 - p);
-      // The camera keeps the hammer a third of the way in, and starts on the thrower.
+      // The height of the throw, from the hand at the start to the ground at the end.
+      const heightAt = q => GROUND_Y - 14 + 14 * q - 4 * view.peak * q * (1 - q);
+      const hy = heightAt(p);
+      // The camera keeps the throw a third of the way in, and starts on the thrower.
       const camX = Math.max(-40, xm * P - 66);
       for (let k = 0; k < SKY.length; k++) rect(SKY[k], 0, k * 10, W, 10);
       rect('#f2a07a', 0, 80, W, 4);
-      // Light poles every 30 m, moving a little slower than the field.
-      for (let m = 0; m <= 120; m += 30) {
+      // Light poles, moving a little slower than the field.
+      for (let m = 0; m <= view.pole * 4; m += view.pole) {
         const x = Math.round(m * P * 1.1 - camX * 0.9);
         if (x < -4 || x > W + 4) continue;
         rect('#3a3744', x, 22, 1, 62);
@@ -423,50 +512,66 @@
         const wx = Math.floor(x + camX);
         rect(Math.floor(wx / 12) % 2 ? '#3f8a4f' : '#378046', x, 95, 1, H - 95);
       }
-      // Ticks every 10 m and boards every 20 m.
-      for (let m = 10; m <= 90; m += 10) {
+      // Ticks and boards along the field.
+      for (let m = view.tick; m <= view.tick * 9; m += view.tick) {
         const x = Math.round(m * P - camX);
         if (x < -10 || x > W + 10) continue;
         rect(N.w, x, GROUND_Y - 4, 1, 5);
-        if (m % 20 === 0) {
+        if (m % view.board === 0) {
           rect('#1d1b22', x - 7, 126, 15, 9);
-          Pixel.text(ctx, String(m), x - 3, 128, '#ffd56b', 1);
+          Pixel.text(ctx, String(m), x - Math.floor((String(m).length * 4 - 1) / 2), 128, GOLD, 1);
         }
       }
-      // The thrower, in Act III's look, at the front of the circle.
+      // The record to beat: a gold flag on the line.
+      if (mode.toBeat) {
+        const x = Math.round(mode.toBeat * P - camX);
+        const label = `${mode.toBeat} RECORD`;
+        const w = label.length * 4 + 3;
+        if (x > -w - 4 && x < W + 2) {
+          rect(GOLD, x, GROUND_Y - 30, 1, 33);
+          rect(N.o, x + 1, GROUND_Y - 31, w + 2, 11);
+          rect(GOLD, x + 2, GROUND_Y - 30, w, 9);
+          say(label, x + 4, GROUND_Y - 28, N.o);
+        }
+      }
+      // The thrower, in the act's look, at the front of the circle.
       const tx = Math.round(-camX - 8);
       if (tx > -20) {
-        const act = Story.acts.find(a => a.game === 'hammer') || Story.acts[0];
+        const act = Story.acts.find(a => a.game === name) || Story.acts[0];
         Pixel.paint(ctx, Pixel.heroGrid(act.hero.gear, Acts.styleOf(act)), ramp, tx, GROUND_Y - 22, 1, false);
       }
-      // The hammer and its wire, with a dotted trail.
+      // The hammer and its wire, or the spinning discus, with a dotted trail.
       const bx = Math.round(xm * P - camX);
       for (let k = 1; k < 10; k++) {
         const q = Math.max(0, p - k * 0.02);
-        const tx2 = f.meters * q * P - camX;
-        const ty2 = GROUND_Y - 14 + 14 * q - 4 * 46 * q * (1 - q);
-        if (k % 2) px(tx2, ty2, 'rgba(255,255,255,0.7)');
+        if (k % 2) px(f.dist * q * P - camX, heightAt(q), 'rgba(255,255,255,0.7)');
       }
-      if (c.landed < 0) {
+      if (c.landed < 0 && mode.wire) {
         line(bx, hy, bx - 3, hy - 2, '#c3c6cc');
         rect('#1d1b22', bx - 3, hy - 3, 2, 2);
         disc(bx, hy, 2, N.o);
         disc(bx, hy, 1, ramp.base);
         px(bx - 1, hy - 1, N.w);
+      } else if (c.landed < 0) {
+        // Flat and spinning: a light rim pixel runs around it.
+        const y = Math.round(hy);
+        rect(N.o, bx - 3, y - 1, 7, 3);
+        rect(ramp.base, bx - 2, y, 5, 1);
+        px(bx - 2 + (Math.floor(c.real * 24) % 5), y, N.w);
       } else {
         disc(bx, GROUND_Y, 2, '#2a2420');
       }
       c.dirt.forEach(d => px(d.x - camX, d.y, d.life > 0.3 ? '#b9a98a' : '#8a7a5c'));
       // The live distance, and what the camera is doing.
-      const shown = c.landed >= 0 ? `${fmt(f.meters)} M` : `${xm.toFixed(1)} M`;
+      const shown = c.landed >= 0 ? `${fmt(f.dist)} ${UNIT}` : `${xm.toFixed(1)} ${UNIT}`;
       rect('rgba(20,26,22,0.85)', 3, 3, shown.length * 8 + 4, 14);
-      say(shown, 5, 5, '#ffd56b', 2);
+      say(shown, 5, 5, GOLD, 2);
       const tag = c.real < CAM.slowFor ? 'SLOW-MO' : 'THROW CAM';
       say(tag, W - tag.length * 4 - 3, 5, N.w);
       if (c.landed >= 0) {
-        const big = `${fmt(f.meters)} M`;
+        const big = `${fmt(f.dist)} ${UNIT}`;
         rect('rgba(20,26,22,0.85)', W / 2 - big.length * 6 - 4, 44, big.length * 12 + 6, 22);
-        sayCenter(big, 48, '#ffd56b', 3);
+        sayCenter(big, 48, beats(f.dist) ? '#9be36c' : GOLD, 3);
       } else {
         say('TAP TO SKIP', W - 47, 140, 'rgba(255,255,255,0.75)');
       }
@@ -482,7 +587,7 @@
         c.landed = 0;
         Sound.play('thud');
         s.shake = 0.2;
-        const x = s.flight.meters * CAM.pxPerM;
+        const x = s.flight.dist * mode.cam.pxPerUnit;
         for (let k = 0; k < 18; k++) c.dirt.push({ x, y: 117, vx: (Math.random() - 0.3) * 60, vy: -30 - Math.random() * 50, life: 0.5 + Math.random() * 0.4 });
       }
       if (c.landed >= 0) {
@@ -491,25 +596,33 @@
       }
     }
 
-    function record(meters) {
+    const beats = d => mode.toBeat && d > mode.toBeat;
+
+    function record(mark) {
       const cell = cells[s.attempt - 1].querySelector('b');
-      cell.textContent = meters === null ? 'X' : fmt(meters);
-      cell.classList.toggle('is-foul', meters === null);
-      s.results.push(meters);
-      if (meters !== null && (s.best === null || meters > s.best)) s.best = meters;
-      if (s.best !== null) board.querySelector('.sb-best').textContent = fmt(s.best);
+      cell.textContent = mark === null ? 'X' : fmt(mark);
+      cell.classList.toggle('is-foul', mark === null);
+      s.results.push(mark);
+      if (mark !== null && (s.best === null || mark > s.best)) s.best = mark;
+      if (s.best !== null) {
+        const best = board.querySelector('.sb-best');
+        best.textContent = fmt(s.best);
+        best.classList.toggle('is-record', beats(s.best));
+      }
     }
 
     function land() {
       const f = s.flight;
       s.marks.push({ x: Math.round(f.x1), y: Math.round(f.y1), foul: false });
-      record(f.meters);
+      record(f.dist);
       Sound.play('thud');
       Sound.play('fair');
       s.flag = 'fair';
-      banner(`${fmt(f.meters)} M`, '#ffd56b', f.turn < TURNS ? `TURN ${f.turn}: WAIT FOR TURN 4` : 'ALL FOUR TURNS', 1.8);
-      msg.textContent = f.meters > 70 ? `${fmt(f.meters)} m. A big one.` : f.meters > 50 ? `${fmt(f.meters)} m. Nice throw.` : `${fmt(f.meters)} m. Hold on for more turns to throw further.`;
-      stage.dataset.last = fmt(f.meters);
+      const told = mode.landed(fmt(f.dist), f.dist, f.turn, TURNS);
+      banner(`${fmt(f.dist)} ${UNIT}`, beats(f.dist) ? '#9be36c' : GOLD, told.sub, 1.8);
+      msg.textContent = told.say;
+      stage.dataset.last = fmt(f.dist);
+      if (mode.toBeat) stage.dataset.record = beats(f.dist) ? 'beaten' : 'short';
       setPhase('landed');
       setTimeout(nextAttempt, 1700);
     }
@@ -521,8 +634,10 @@
       if (s.attempt >= ATTEMPTS) {
         setPhase('done');
         const fouls = s.results.filter(m => m === null).length;
-        banner(s.best === null ? 'NO MARK' : `BEST ${fmt(s.best)} M`, s.best === null ? '#f08a75' : '#ffd56b', fouls ? `${fouls} FOUL${fouls > 1 ? 'S' : ''}` : 'NO FOULS', 99);
-        msg.textContent = s.best === null ? 'Three fouls. It happens to everyone. Throw again?' : `Final: your best mark is ${fmt(s.best)} m.`;
+        const told = s.best === null ? { say: 'Three fouls. It happens to everyone. Throw again?' } : mode.final(fmt(s.best), s.best);
+        banner(s.best === null ? 'NO MARK' : `BEST ${fmt(s.best)} ${UNIT}`, s.best === null ? '#f08a75' : beats(s.best) ? '#9be36c' : GOLD, told.sub || (fouls ? `${fouls} FOUL${fouls > 1 ? 'S' : ''}` : 'NO FOULS'), 99);
+        msg.textContent = told.say;
+        if (mode.toBeat) stage.dataset.record = s.best !== null && beats(s.best) ? 'beaten' : 'short';
         hold.hidden = true;
         again.hidden = false;
         again.focus();
@@ -563,7 +678,7 @@
         s.spun += step;
         s.trail.push([C.x + Math.cos(s.theta) * ORBIT, C.y + Math.sin(s.theta) * ORBIT]);
         // A longer trail on the fast turns.
-        if (s.trail.length > (s.turn >= 3 ? s.turn * 6 : 10)) s.trail.shift();
+        if (s.trail.length > (s.turn >= mode.fastFrom ? s.turn * 6 : 10)) s.trail.shift();
         if (s.phase === 'wind' && s.spun >= TAU) {
           s.spun -= TAU;
           s.turn = 1;
@@ -575,7 +690,7 @@
           s.turn += 1;
           if (s.turn > TURNS) {
             s.turn = TURNS;
-            foul('Foul: four turns is the limit. A fifth took you out of the circle.', 'FIFTH TURN');
+            foul(`Foul: ${mode.words.turns} turns is the limit. A ${mode.words.over} took you out of the circle.`, `${mode.words.over.toUpperCase()} TURN`);
           } else {
             Sound.play('swish', s.turn);
             msg.textContent = s.turn === TURNS ? 'Last turn. Let go while it glows.' : `Turn ${s.turn}.`;
@@ -635,14 +750,14 @@
       cells.forEach(c => { const b = c.querySelector('b'); b.textContent = '--'; b.classList.remove('is-foul'); });
       board.querySelector('.sb-best').textContent = '--';
       resetThrow();
-      msg.textContent = 'Hold to wind up. Four turns, then let go while the hammer glows.';
+      msg.textContent = READY;
       again.hidden = true;
       hold.hidden = false;
       hold.focus();
     });
 
     // For tests and playtesting.
-    stage.hammer = { s, start, release, REACH, zone };
+    stage[name] = { s, start, release, REACH, zone, mode };
 
     resetThrow();
     hold.focus();
@@ -654,9 +769,9 @@
     };
   }
 
-  Games.register('hammer', {
-    title: 'Hammer throw',
-    help: 'Hold to wind up and spin. You get four turns, and the last two are fast. Let go while the hammer glows to land it in the sector. Hold past the fourth turn and it is a foul. A big throw plays the throw camera; tap to skip it.',
-    mount,
-  });
+  Object.keys(MODES).forEach(name => Games.register(name, {
+    title: MODES[name].title,
+    help: MODES[name].help,
+    mount: (stage, ramp) => mount(stage, ramp, name),
+  }));
 })();

@@ -204,6 +204,7 @@ async function desktop(browser) {
   await page.keyboard.press('Escape');
 
   await hammer(page);
+  await discus(page);
   await bmx(page);
   await typing(page);
   check(errors.length === 0, 'no console errors or warnings' + (errors.length ? ': ' + errors.join(' | ') : ''));
@@ -292,6 +293,75 @@ async function hammer(page) {
   check((await page.$$eval('#game .sb-throw', b => b.map(x => x.textContent))).join(' ') === `${mark} X X`, 'the scoreboard lists the mark and the two fouls');
   await page.click('#game .game-skip');
   check(!(await page.$('#game[open]')), 'Skip closes the game');
+}
+
+// The discus throw in Act II: the hammer's turns, glow and throw camera, scored in feet against my 176-foot school record.
+async function discus(page) {
+  const st = '#game .game-stage';
+  check((await page.$$eval('#act-high-school .unlock-actions button', b => b.map(x => x.textContent))).includes('▶ Play discus throw'), 'Act II ends with Play discus throw');
+  // A reader opens the discus story card from the sheet and plays from there.
+  await page.evaluate(() => Sheet.open({ tab: 'items' }));
+  await page.waitForSelector('#sheet[open]');
+  await page.click('#sheet .inv-slot[data-item="discus"]');
+  await page.waitForSelector('#card[open]');
+  const play = page.locator('#card .card-actions .btn--accent');
+  check(await play.textContent() === '▶ Play discus throw', 'the discus story card offers Play discus throw');
+  await play.click();
+  await page.waitForSelector('#game[open]');
+  check(await page.textContent('#game .game-title') === 'Discus throw' && (await page.textContent('#game .game-help')).includes('My school record is 176 feet.'), 'Play opens the discus throw, with my 176-foot record to beat');
+  check(await page.$eval('#game .sb-record', b => b.textContent) === '176.0', 'the scoreboard shows the record to beat, 176.0');
+  const ready = () => page.waitForFunction(s => document.querySelector(s).dataset.state === 'ready', st, { timeout: 8000 });
+  await ready();
+  // The record line crosses the middle of the sector in gold at 176 feet, two pixels thick. One read, after a frame is drawn.
+  await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
+  const gold = await page.$eval('#game .game-canvas', c => { const d = c.getContext('2d').getImageData(100, Math.round(134 - 176 * 0.66) - 1, 1, 2).data; return [d[0], d[1], d[2], d[4], d[5], d[6]].join() === '255,213,107,255,213,107'; });
+  check(gold, 'the field draws the 176-foot record line in gold');
+  const lastTurn = await page.$eval(st, s => s.discus.mode.turnSpeed.length);
+  check(lastTurn === 2, 'the discus gets two turns');
+  // A centered release on the last turn hits, plays the throw camera and beats the record.
+  await page.keyboard.down('Space');
+  await page.waitForFunction(s => { const h = document.querySelector(s).discus; return h.s.turn === 2 && Math.abs(Math.atan2(Math.sin(h.s.theta), Math.cos(h.s.theta))) < 0.06; }, st, { polling: 'raf', timeout: 12000 });
+  await page.keyboard.up('Space');
+  check(await page.$eval(st, s => s.dataset.hit) === 'perfect', 'a centered release on the second turn hits');
+  await page.waitForFunction(s => document.querySelector(s).dataset.camera === 'on', st, { timeout: 2000 }).then(() => check(true, 'a big discus throw cuts to the throw camera'), () => check(false, 'a big discus throw cuts to the throw camera'));
+  await page.waitForFunction(s => document.querySelector(s).dataset.last, st, { timeout: 8000 });
+  const best = await page.$eval(st, s => ({ mark: s.dataset.last, record: s.dataset.record }));
+  const msg1 = await page.textContent('#game .game-msg');
+  check(/^\d+\.\d$/.test(best.mark) && Number(best.mark) > 176 && Number(best.mark) < 190 && best.record === 'beaten' && msg1 === `${best.mark} ft. You beat my 176-foot school record.`,
+    `a clean second-turn release scores in feet and beats the 176-foot record (${best.mark} ft: ${msg1})`);
+  // A release on the first turn lands in feet, short of the record.
+  await ready();
+  await page.keyboard.down('Space');
+  await page.waitForFunction(s => { const h = document.querySelector(s).discus; return h.s.phase === 'turns' && h.s.turn === 1 && Math.abs(Math.atan2(Math.sin(h.s.theta), Math.cos(h.s.theta))) < 0.06; }, st, { polling: 'raf', timeout: 12000 });
+  await page.keyboard.up('Space');
+  await page.waitForFunction(s => document.querySelector(s).dataset.state === 'landed', st, { timeout: 9000 });
+  const short = await page.$eval(st, s => ({ mark: s.dataset.last, record: s.dataset.record }));
+  check(/^\d+\.\d$/.test(short.mark) && Number(short.mark) < 176 && short.record === 'short' && (await page.textContent('#game .game-msg')) === `${short.mark} ft. Hold on for the second turn to throw further.`,
+    `a first-turn release lands short of the record (${short.mark} ft)`);
+  // Holding on past the second turn is a foul.
+  await ready();
+  await page.keyboard.down('Space');
+  let most = 0;
+  for (let i = 0; i < 60; i++) {
+    const d = await page.$eval(st, s => ({ turn: Number(s.dataset.turn), state: s.dataset.state }));
+    most = Math.max(most, d.turn);
+    if (d.state === 'landed') break;
+    await page.waitForTimeout(150);
+  }
+  await page.keyboard.up('Space');
+  check(most === 2 && await page.$eval(st, s => s.dataset.last) === 'foul', 'holding on past two turns is a foul');
+  await page.waitForFunction(s => document.querySelector(s).dataset.state === 'done', st, { timeout: 4000 });
+  check((await page.$$eval('#game .sb-throw', b => b.map(x => x.textContent))).join(' ') === `${best.mark} ${short.mark} X` && await page.$eval('#game .sb-best', b => b.textContent === document.querySelector('#game .sb-throw').textContent && b.classList.contains('is-record')),
+    'the scoreboard lists both marks and the foul, and the best mark shows as a record');
+  check(await page.textContent('#game .game-msg') === `Final: ${best.mark} ft. You beat my 176-foot school record.`, 'the final word says the record fell');
+  // What a throw short of the record says, and a tie at 176.0 does not beat it.
+  const words = await page.$eval(st, s => { const m = s.discus.mode; return [m.landed('170.0', 170, 2, 2).say, m.final('176.0', m.round(176.09)).say]; });
+  check(words[0] === '170.0 ft, 6.0 ft short of my 176-foot record.' && words[1] === 'Final: 176.0 ft ties my 176-foot school record.', `a last-turn mark short of the record says by how much, and 176.09 rounds down to a tie (${words.join(' / ')})`);
+  await page.click('#game .game-skip');
+  check(!(await page.$('#game[open]')), 'Skip closes the discus throw');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#sheet').open && !document.querySelector('#card').open, null, { timeout: 2000 });
 }
 
 async function bmx(page) {
@@ -503,6 +573,12 @@ async function phone(browser) {
   await page.locator('#act-high-school .unlock-actions .btn--accent').tap();
   await page.waitForSelector('#sheet[open]');
   check(await page.$eval('#sheet', d => d.getBoundingClientRect().width <= window.innerWidth), 'the sheet fits the screen');
+  await page.keyboard.press('Escape');
+  await page.evaluate(() => Games.open('discus'));
+  await page.waitForSelector('#game[open]');
+  const board = await page.$eval('#game .scoreboard', b => { b.querySelectorAll('.sb-throw, .sb-best').forEach(x => { x.textContent = '185.9'; }); return [b.scrollWidth, b.clientWidth]; });
+  check(board[0] <= board[1], `the discus scoreboard's five cells fit the phone width (${board.join(' in ')} px)`);
+  await page.click('#game .game-skip');
   check(errors.length === 0, 'no console errors or warnings');
   await context.close();
 }
