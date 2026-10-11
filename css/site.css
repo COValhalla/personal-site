@@ -366,7 +366,7 @@ a { color: inherit; }
   .act-screen { grid-template-columns: minmax(0, 1fr) 300px; }
 }
 @media (max-width: 759px) {
-  .act-screen { grid-template-columns: minmax(0, 1fr); padding: 12px 14px calc(var(--hud-h) + 12px); gap: 10px; }
+  .act-screen { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; padding: 12px 14px calc(var(--hud-h) + 6px); gap: 10px; }
   .act-head, .story { grid-area: auto; }
   .act-title { font-size: clamp(24px, 7.4vw, 34px); }
   .act-title::after { margin-top: 6px; height: 4px; }
@@ -392,7 +392,9 @@ a { color: inherit; }
   .story { padding: 10px 12px; gap: 8px; border-width: 3px; box-shadow: 4px 4px 0 rgba(29, 27, 34, 0.18); }
   .beat { font-size: 14px; padding: 6px 8px; }
   .skill-cards { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
-  .act-hint, .act-next { bottom: calc(var(--hud-h) + 2px); }
+  /* The scroll hint and the Next tag take turns in a row of their own under the buttons, so neither covers them. */
+  .act-hint, .act-next { position: static; grid-area: 3 / 1; justify-self: center; align-self: center; translate: none; }
+  .act-next { padding: 5px 10px; font-size: 12px; }
   .scene-box { width: auto; }
   .act-rail { gap: 10px; }
   .rail-label { font-size: 11px; min-width: 0; }

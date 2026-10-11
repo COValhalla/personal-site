@@ -45,6 +45,35 @@ const storyHidden = (page, id) => page.$eval(`#${id} .story`, st => {
   const beats = [...st.querySelectorAll('.beat')].map(b => b.getBoundingClientRect());
   return Math.round(Math.max(st.scrollHeight - st.clientHeight, ...beats.map(b => Math.max(top - b.top, b.bottom - bottom))));
 });
+// On a phone, with every act unlocked, what each act's Next tag covers at the top of its pulse: a button, a skill card or the bar.
+async function nextCovers(page) {
+  // From the top, so scrolling down to each act never rewinds one.
+  await scrollTo(page, 0);
+  await page.waitForTimeout(300);
+  await page.evaluate(() => Acts.sections.forEach((_, i) => Acts.unlock(i)));
+  const where = await pins(page);
+  const covered = [];
+  for (let i = 0; i < where.length; i++) {
+    await scrollTo(page, where[i].end - 4);
+    await page.waitForTimeout(300);
+    covered.push(...await page.evaluate(i => {
+      const { act, screen } = Acts.sections[i];
+      const tag = screen.querySelector('.act-next');
+      if (!screen.classList.contains('is-done') || getComputedStyle(tag).visibility !== 'visible') return [`${act.id} shows no Next tag`];
+      tag.getAnimations().forEach(a => { a.pause(); a.currentTime = a.effect.getTiming().duration / 2; });
+      const t = tag.getBoundingClientRect();
+      const hits = [...screen.querySelectorAll('.unlock-actions .btn, .skill-card')].filter(el => {
+        const b = el.getBoundingClientRect();
+        return b.left < t.right && t.left < b.right && b.top < t.bottom && t.top < b.bottom;
+      }).map(el => `${act.id} ${(el.querySelector('.skill-name') || el).textContent.trim()}`);
+      // The bar covers the bottom of the act's screen, which is one screen tall.
+      const bar = window.innerHeight - document.querySelector('.hud').getBoundingClientRect().top;
+      if (t.bottom > screen.getBoundingClientRect().bottom - bar) hits.push(`${act.id} the bar`);
+      return hits;
+    }, i));
+  }
+  return covered;
+}
 
 async function desktop(browser) {
   console.log('\nLaptop, motion on');
@@ -624,8 +653,18 @@ async function phone(browser) {
   const board = await page.$eval('#game .scoreboard', b => { b.querySelectorAll('.sb-throw, .sb-best').forEach(x => { x.textContent = '185.9'; }); return [b.scrollWidth, b.clientWidth]; });
   check(board[0] <= board[1], `the discus scoreboard's five cells fit the phone width (${board.join(' in ')} px)`);
   await page.click('#game .game-skip');
+  const covered = await nextCovers(page);
+  check(covered.length === 0, `every act's Next tag sits clear of its Open sheet and Play buttons, its skills and the bar${covered.length ? ` (covers: ${covered.join(', ')})` : ''}`);
   check(errors.length === 0, 'no console errors or warnings');
   await context.close();
+  // Narrower phones wrap the skills and buttons differently.
+  for (const name of ['iPhone SE (3rd gen)', 'Galaxy S8']) {
+    const { context, page, errors } = await open(browser, { ...devices[name] });
+    const covered = await nextCovers(page);
+    check(covered.length === 0, `on the ${name}, every act's Next tag sits clear of its buttons, its skills and the bar${covered.length ? ` (covers: ${covered.join(', ')})` : ''}`);
+    check(errors.length === 0, `on the ${name}, no console errors or warnings`);
+    await context.close();
+  }
 }
 
 const browser = await chromium.launch({ ...launch, headless: true });
