@@ -25,11 +25,26 @@ async function open(browser, options) {
   return { context, page, errors };
 }
 
+// Selects an item and reads the story card it opens: true when the card opens and shows every word.
+async function storyCard(page, selector, words) {
+  await page.click(selector);
+  const opened = await page.waitForSelector('#card[open]', { timeout: 2000 }).then(() => true, () => false);
+  const text = opened ? await page.$eval('#card', c => c.textContent) : '';
+  return opened && words.every(w => text.includes(w));
+}
+
 const scrollTo = (page, y) => page.evaluate(top => window.scrollTo({ top, behavior: 'instant' }), y);
 // The index of the scene stage on screen (its canvas is the visible one).
 const stageShown = (page, id) => page.$$eval(`#${id} .scene-canvas`, cs => cs.findIndex(c => getComputedStyle(c).visibility === 'visible'));
 // Where each act holds still, and for how long, in page pixels.
 const pins = page => page.evaluate(() => ScrollTrigger.getAll().filter(t => t.pin).map(t => ({ start: t.start, end: t.end })));
+// How many pixels of an act's moments fall outside its story panel's edges, so only scrolling inside it would show them.
+const storyHidden = (page, id) => page.$eval(`#${id} .story`, st => {
+  const top = st.getBoundingClientRect().top + st.clientTop;
+  const bottom = top + st.clientHeight;
+  const beats = [...st.querySelectorAll('.beat')].map(b => b.getBoundingClientRect());
+  return Math.round(Math.max(st.scrollHeight - st.clientHeight, ...beats.map(b => Math.max(top - b.top, b.bottom - bottom))));
+});
 
 async function desktop(browser) {
   console.log('\nLaptop, motion on');
@@ -117,11 +132,9 @@ async function desktop(browser) {
     await page.waitForTimeout(900);
     const done = await page.evaluate(([sel, ids]) => {
       const s = document.querySelector(sel);
-      const beltTop = (document.querySelector('.belt') || { getBoundingClientRect: () => ({ top: innerHeight }) }).getBoundingClientRect().top;
       return {
         pill: s.querySelector('.unlock-pill').textContent,
         beatsShown: s.querySelectorAll('.beat:not(.is-locked)').length,
-        beatsInView: [...s.querySelectorAll('.beat')].every(b => b.getBoundingClientRect().bottom <= beltTop + 1),
         skillsLit: s.querySelectorAll('.skill-card.is-on').length,
         inBelt: ids.every(id => document.querySelector(`.belt-slot[data-item="${id}"]`).classList.contains('is-filled')),
         gray: getComputedStyle(s.querySelector('.act-screen')).filter,
@@ -129,7 +142,8 @@ async function desktop(browser) {
     }, [`#${id}`, act.items]);
     const pill = n === 0 ? 'Tutorial complete' : `Level ${n}`;
     check(done.pill === pill && done.skillsLit === act.skills, `${names[n]} levels up and lights its ${act.skills} skills`);
-    check(done.beatsShown === act.beats && done.beatsInView, `${names[n]} shows all ${act.beats} life and work moments without scrolling`);
+    const hidden = await storyHidden(page, id);
+    check(done.beatsShown === act.beats && hidden <= 1, `${names[n]} shows all ${act.beats} life and work moments in its story panel without scrolling (${hidden}px hidden)`);
     check(done.inBelt, `${names[n]} drops its items into the inventory belt`);
     check(!done.gray.includes('grayscale(1)'), `${names[n]} has its color`);
     const next = await page.$eval(`#${id} .act-next`, a => ({ text: a.textContent.trim(), shown: getComputedStyle(a).visibility === 'visible' }));
@@ -138,6 +152,16 @@ async function desktop(browser) {
   check(await page.textContent('.hud-count') === `${items}/${items}`, `the sheet holds all ${items} items`);
   const college = await page.$eval('#act-college', s => ({ num: s.querySelector('.act-num').textContent, title: s.querySelector('.act-title').textContent, color: s.querySelector('.act-screen').style.getPropertyValue('--c2') }));
   check(college.num === 'Act III' && college.title === 'Training arc' && college.color === '#d6449a', `college is Act III, Training arc, in magenta (${college.num}, ${college.title}, ${college.color})`);
+  // A first-time reader who has never opened the sheet selects an item in the belt.
+  check(await page.$('#sheet') === null, 'the sheet has not been opened yet');
+  check(await storyCard(page, '.belt-slot[data-item="hammer"]', ['Hammer', 'Act III', 'Four turns', 'Play hammer throw']),
+    'before the sheet is ever opened, selecting the hammer in the belt opens its story card with Play');
+  await page.click('#card .btn--accent');
+  check(await page.waitForSelector('#game[open]', { timeout: 2000 }).then(() => true, () => false) && await page.textContent('#game .game-title') === 'Hammer throw',
+    'Play on that story card opens the hammer throw');
+  await page.click('#game .game-skip');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#card').open, null, { timeout: 2000 });
 
   await scrollTo(page, 0);
   await page.waitForTimeout(300);
@@ -522,6 +546,11 @@ async function reducedMotion(browser) {
   check(await page.$$eval('section.act.is-unlocked', s => s.length) === 8, 'every act shows already unlocked');
   check(await page.$$eval('.beat.is-locked', b => b.length) === 0, 'every moment is shown');
   check(await page.textContent('.hud-count') === `${items}/${items}` && await page.$$eval('.belt-slot.is-filled', s => s.length) === items, 'the sheet and the belt are already full');
+  // On a fresh page the sheet has never been opened: the item button on a moment still opens its story card.
+  check(await page.$('#sheet') === null && await storyCard(page, '#act-high-school .beat-item[data-item="discus"]', ['Discus', 'Act II', 'let it fly flat']),
+    'before the sheet is ever opened, selecting the discus on its moment opens its story card');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#card').open, null, { timeout: 2000 });
   await page.evaluate(() => Games.open('hammer'));
   await page.keyboard.down('Space');
   await page.waitForTimeout(600);
@@ -535,6 +564,22 @@ async function reducedMotion(browser) {
   check(true, 'a tap skips the throw camera straight to the mark');
   check(errors.length === 0, 'no console errors or warnings');
   await context.close();
+}
+
+// Laptop screens shorter than 1440 x 900, and the room a browser leaves on them: every moment still fits.
+async function shortScreens(browser) {
+  console.log('\nShorter laptop screens, motion turned off');
+  for (const [width, height] of [[1440, 790], [1366, 768], [1366, 657], [1280, 800], [1280, 720], [1280, 680]]) {
+    const { context, page, errors } = await open(browser, { viewport: { width, height }, reducedMotion: 'reduce' });
+    const hidden = [];
+    for (const id of await page.$$eval('section.act', s => s.map(x => x.id))) {
+      const px = await storyHidden(page, id);
+      if (px > 1) hidden.push(`${id} ${px}px`);
+    }
+    check(hidden.length === 0, `at ${width} x ${height} every act shows all its moments in its story panel without scrolling${hidden.length ? ` (hidden: ${hidden.join(', ')})` : ''}`);
+    check(errors.length === 0, `at ${width} x ${height}, no console errors or warnings`);
+    await context.close();
+  }
 }
 
 async function mapPartway(browser) {
@@ -588,6 +633,7 @@ try {
   await desktop(browser);
   await pacing(browser);
   await reducedMotion(browser);
+  await shortScreens(browser);
   await mapPartway(browser);
   await phone(browser);
 } finally {
