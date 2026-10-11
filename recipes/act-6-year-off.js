@@ -1,11 +1,11 @@
 /*
- * Act V recipe. See README.md, "Recipes", for every field.
+ * Act VI recipe. See README.md, "Recipes", for every field.
  * The year off is its own act and the turning point of the story.
  * All words are placeholders to replace with your own.
  */
 Story.addAct({
   id: 'year-off',
-  numeral: 'V',
+  numeral: 'VI',
   title: 'The respec',
   years: 'Year off, 2022',
   quests: [
@@ -21,7 +21,7 @@ Story.addAct({
     { tag: 'work', text: 'From May to December, to focus fully on learning new skills, I taught myself full-stack JavaScript with The Odin Project, building a library app, a weather app, a battleship game and a blog API.', item: 'laptop', cue: 'code', look: { beard: 'full' } },
     { tag: 'work', text: 'And I learned to explain every bug out loud.', item: 'rubber-duck', cue: 'duck', look: { hair: 'bun', beard: 'long' } },
   ],
-  unlock: { banner: 'Level 5', say: 'Turning point: Self-taught developer', pop: 'Turning point!' },
+  unlock: { banner: 'Level 6', say: 'Turning point: Self-taught developer', pop: 'Turning point!' },
   items: [
     {
       id: 'laptop', name: 'Laptop', sprite: 'laptop', tag: 'work',

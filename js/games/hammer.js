@@ -1,5 +1,5 @@
 /*
- * Hammer throw, Act II. Top-down view of the throwing circle and the sector.
+ * Hammer throw, Act III. Top-down view of the throwing circle and the sector.
  *
  * Hold to start: one wind over the head, then the turns. Every turn is faster
  * than the last, and the last two are much faster. The hammer glows as it
@@ -433,7 +433,7 @@
           Pixel.text(ctx, String(m), x - 3, 128, '#ffd56b', 1);
         }
       }
-      // The thrower, in Act II's look, at the front of the circle.
+      // The thrower, in Act III's look, at the front of the circle.
       const tx = Math.round(-camX - 8);
       if (tx > -20) {
         const act = Story.acts.find(a => a.game === 'hammer') || Story.acts[0];

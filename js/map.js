@@ -2,11 +2,11 @@
  * The world map on the character sheet, in place of a skill tree.
  *
  * One road runs through a stop for every act, each with a landmark drawn from
- * its scene: the start gate, the hammer cage, the plant, a mountain, the
- * library and a laptop with a flag. The hero stands beside the furthest stop
- * reached. Select a stop and the hero walks the road to it, and the line
- * under the map shows that act's class and skills with a way to go there.
- * Stops not reached yet are gray.
+ * its scene: the start gate, a goalpost, the hammer cage, the plant, a
+ * mountain, the library and a laptop with a flag. The hero stands beside the
+ * furthest stop reached. Select a stop and the hero walks the road to it, and
+ * the line under the map shows that act's class and skills with a way to go
+ * there. Stops not reached yet are gray.
  */
 (function () {
   'use strict';
@@ -75,6 +75,14 @@
       for (let i = 0; i < 18; i++) rect('#c98a55', x - 10 + i, y - 6 + Math.floor(i / 3), 1, 6 - Math.floor(i / 3));
       rect(N().o, x - 6, y - 22, 1, 16);
       rect(c.base, x - 9, y - 23, 10, 3);
+    },
+    field: (x, y, c) => {
+      rect(c.base, x - 10, y - 6, 20, 3);
+      rect(N().w, x - 10, y - 5, 20, 1);
+      rect(c.light, x, y - 12, 1, 7);
+      rect(c.light, x - 5, y - 12, 11, 1);
+      rect(c.light, x - 5, y - 22, 1, 10);
+      rect(c.light, x + 5, y - 22, 1, 10);
     },
     track: (x, y, c) => {
       rect(c.base, x - 10, y - 6, 20, 3);

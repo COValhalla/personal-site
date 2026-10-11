@@ -1,12 +1,13 @@
 /*
  * The character sheet: an Items tab (stats and inventory), a Map tab (the
- * world map of the six acts, in js/map.js), and the story card that opens
- * when you select an item.
+ * world map of the Tutorial and seven acts, in js/map.js), and the story
+ * card that opens when you select an item.
  */
 (function () {
   'use strict';
 
-  const SLOTS = 18;
+  // Inventory slots: every item and at least one empty slot, in whole rows of 6 (4 on a phone).
+  const slotsFor = n => Math.ceil((n + 1) / 12) * 12;
   const state = { tab: 'items' };
   let sheet;
   let card;
@@ -119,6 +120,7 @@
   function renderInventory(highlightAct) {
     const items = Story.items();
     const owned = items.filter(item => Story.state.owned.has(item.id)).length;
+    const SLOTS = slotsFor(items.length);
     sheet.querySelector('.inv-label').textContent = `Inventory · ${owned} of ${SLOTS} slots`;
     const grid = sheet.querySelector('.inv-grid');
     const slots = [];
