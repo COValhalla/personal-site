@@ -68,11 +68,11 @@ Color is added act by act: an act is drawn in grays until it unlocks, then its c
 | Act | Name | Light | Base | Shade |
 | --- | --- | --- | --- | --- |
 | I · Childhood | Sunny orange, sky-blue accent `#3fa9f5` | `#ffc46b` | `#ff8a1f` | `#c25a0a` |
-| II · School and college | Track red, navy accent `#24366b` | `#f08a75` | `#e0533d` | `#a3352a` |
-| III · First jobs | Blueprint blue | `#7fb0ee` | `#3b7dd8` | `#24539c` |
-| IV · Denver | Pine green | `#7fd09c` | `#3fa66b` | `#286f46` |
-| V · Year off | Amber | `#f5cf66` | `#e5ac1f` | `#a57712` |
-| VI · Now | Purple | `#b69af0` | `#8a63d2` | `#5d3f9a` |
+| II · Training arc | Track red, navy accent `#24366b` | `#f08a75` | `#e0533d` | `#a3352a` |
+| III · High stakes | Blueprint blue | `#7fb0ee` | `#3b7dd8` | `#24539c` |
+| IV · Mountains and factories | Pine green | `#7fd09c` | `#3fa66b` | `#286f46` |
+| V · The respec | Amber | `#f5cf66` | `#e5ac1f` | `#a57712` |
+| VI · Party leader | Purple | `#b69af0` | `#8a63d2` | `#5d3f9a` |
 
 Act VI's own items are purple; its scene and the end of the page use every act's color.
 

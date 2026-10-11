@@ -104,6 +104,7 @@
     return el('section', { class: 'finale hello', id: 'say-hello', 'aria-labelledby': 'hello-title' },
       el('div', { class: 'finale-inner' },
         el('h2', { id: 'hello-title', text: 'Say hello' }),
+        el('p', { class: 'hello-note', text: Story.config.hello }),
         el('ul', { class: 'hello-links' }, links.map(([label, href]) => el('li', {},
           el('a', { class: 'btn', href, text: label, ...linkAttrs(href) }))))));
   }

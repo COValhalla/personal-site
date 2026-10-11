@@ -5,9 +5,9 @@
 Story.addAct({
   id: 'school',
   numeral: 'II',
-  title: 'School and college',
-  years: 'High school and college',
-  summary: 'Hammer throw in track and field, chemical engineering, two oil-and-gas internships in Texas.',
+  title: 'Training arc',
+  years: 'College, 2011 to 2015',
+  summary: 'The hammer throw, chemical engineering at Missouri S&T, and two oil-and-gas internships in Texas.',
   // Varsity colors: track red with a navy accent. Placeholders until Joe names his school colors.
   color: { name: 'Track red', light: '#f08a75', base: '#e0533d', shade: '#a3352a', accent: '#24366b' },
   theme: 'light',
@@ -15,9 +15,9 @@ Story.addAct({
   // Bald with a goatee in college.
   hero: { gear: 'headband', title: 'Hammer thrower', hair: 'bald', beard: 'goatee' },
   beats: [
-    { tag: 'life', text: 'Threw the hammer for high school and college track and field.', item: 'hammer', cue: 'throw' },
-    { tag: 'work', text: 'Studied chemical engineering.', item: 'flask', cue: 'study' },
-    { tag: 'work', text: 'Spent two summers interning in oil and gas in Texas.', cue: 'texas' },
+    { tag: 'life', text: 'Between high school and college I learned a new event, the hammer throw. It became my main event: four years of early lifts and afternoon practice.', item: 'hammer', cue: 'throw' },
+    { tag: 'work', text: 'I chose chemical engineering at Missouri S&T because it was the harder road. My teammates were my study group on long bus rides, and I graduated an Academic All-American.', item: 'flask', cue: 'study' },
+    { tag: 'work', text: 'Two summers interning in oil and gas in Texas taught me how engineers really work: solve a real problem, then sell the fix with cost and ROI models. Each summer ended with a talk to about 50 executives.', cue: 'texas' },
   ],
   unlock: { banner: 'Level 2', say: 'New class: Hammer thrower' },
   items: [

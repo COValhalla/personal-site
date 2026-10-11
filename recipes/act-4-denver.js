@@ -5,17 +5,17 @@
 Story.addAct({
   id: 'denver',
   numeral: 'IV',
-  title: 'Denver',
-  years: 'Mountains and medical devices',
-  summary: 'Moved for the mountains; capital projects at a medical-device company, a new plant in Vietnam, then new product introduction.',
+  title: 'Mountains and factories',
+  years: 'Denver, 2018 to 2022',
+  summary: 'Moved to Denver for the mountains, then capital projects at Terumo BCT, a new plant in Vietnam, and new product introduction.',
   color: { name: 'Pine green', light: '#7fd09c', base: '#3fa66b', shade: '#286f46' },
   theme: 'light',
   scene: 'mountains',
   hero: { gear: 'beanie', title: 'Project engineer', hair: 'bald', beard: 'goatee' },
   beats: [
-    { tag: 'life', text: 'Followed friends to Denver for the mountains: skiing and climbing.', item: 'skis', cue: 'ski' },
-    { tag: 'work', text: 'Joined a medical-device company in capital projects and helped build a new plant in Vietnam.', item: 'passport', cue: 'plane' },
-    { tag: 'work', text: 'Moved into new product introduction: new devices from prototype to production line.', item: 'prototype', cue: 'line' },
+    { tag: 'life', text: 'I followed friends to Denver for the mountains: skiing and climbing.', item: 'skis', cue: 'ski' },
+    { tag: 'work', text: 'At Terumo BCT, a medical-device maker, our capital projects team filled an empty new plant in Vietnam with production lines. I led over $7 million of equipment projects, on time and on budget.', item: 'passport', cue: 'plane' },
+    { tag: 'work', text: 'Promoted into new product introduction, I became the bridge between design and the factory floor, and led 10 engineers moving hundreds of products to new materials.', item: 'prototype', cue: 'line' },
   ],
   unlock: { banner: 'Level 4', say: 'New class: Project engineer' },
   items: [

@@ -5,19 +5,19 @@
 Story.addAct({
   id: 'first-jobs',
   numeral: 'III',
-  title: 'First jobs',
-  years: 'Kansas City, then Sioux City',
-  summary: 'Materials engineer in Kansas City, then plant engineer in Sioux City, Iowa.',
+  title: 'High stakes',
+  years: 'First jobs, 2015 to 2018',
+  summary: 'Materials engineer in Kansas City, a clearance that stalled, then process engineer in Sioux City, Iowa.',
   color: { name: 'Blueprint blue', light: '#7fb0ee', base: '#3b7dd8', shade: '#24539c' },
   theme: 'light',
   scene: 'plant',
-  hero: { gear: 'hardhat', title: 'Plant engineer', hair: 'bald', beard: 'goatee' },
+  hero: { gear: 'hardhat', title: 'Process engineer', hair: 'bald', beard: 'goatee' },
   beats: [
     { tag: 'work', text: 'Materials engineer in Kansas City.', item: 'calipers', cue: 'measure' },
-    { tag: 'work', text: 'Plant engineer in Sioux City, Iowa.', item: 'hard-hat', cue: 'plant' },
-    { tag: 'life', text: 'Traveled a lot and learned on the road.', cue: 'road' },
+    { tag: 'work', text: "That's where I started coding: 3D models and analysis in MATLAB, and my first machine learning model." },
+    { tag: 'work', text: 'My clearance stalled, through nothing on my part, so rather than wait I took a detour to Sioux City as a process engineer at Gelita. It paid off: I trained over 250 operators, and my root-cause study saved a $200,000 equipment project.', item: 'hard-hat', cue: 'plant' },
   ],
-  unlock: { banner: 'Level 3', say: 'New class: Plant engineer' },
+  unlock: { banner: 'Level 3', say: 'New class: Process engineer' },
   items: [
     {
       id: 'calipers', name: 'Calipers', sprite: 'calipers', tag: 'work',
@@ -35,6 +35,7 @@ Story.addAct({
   skills: [
     { id: 'materials', name: 'Materials', parents: ['chemistry'], line: 'Why parts bend, crack or hold.' },
     { id: 'plant-ops', name: 'Plant ops', parents: ['fixing', 'chemistry', 'inventory'], line: 'Keeping a line running, shift after shift.' },
+    { id: 'code', name: 'Code', parents: ['fixing', 'materials'], moment: 2, line: 'Making the computer do the boring part.' },
     { id: 'adapting', name: 'Adapting', parents: ['riding'], moment: 3, line: 'Learned on the road: a new town and a new crew, the same job.' },
   ],
   game: null,
