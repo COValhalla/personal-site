@@ -45,6 +45,22 @@ const storyHidden = (page, id) => page.$eval(`#${id} .story`, st => {
   const beats = [...st.querySelectorAll('.beat')].map(b => b.getBoundingClientRect());
   return Math.round(Math.max(st.scrollHeight - st.clientHeight, ...beats.map(b => Math.max(top - b.top, b.bottom - bottom))));
 });
+// With every act unlocked, how tall each act's story panel is and how much of each moment it shows
+// when that moment is the newest and the panel scrolls to it as the story does.
+const storyRoom = page => page.evaluate(() => Acts.sections.map(({ act, screen }) => {
+  const st = screen.querySelector('.story');
+  const shown = [...st.querySelectorAll('.beat')].map(li => {
+    st.scrollTop = Math.max(0, li.offsetTop - st.offsetTop - 40);
+    const top = st.getBoundingClientRect().top + st.clientTop;
+    const b = li.getBoundingClientRect();
+    const cs = getComputedStyle(li);
+    // The moment's top border and padding, then two lines of its words.
+    const need = parseFloat(cs.borderTopWidth) + parseFloat(cs.paddingTop) + 2 * parseFloat(cs.lineHeight);
+    return Math.min(b.bottom, top + st.clientHeight) - Math.max(b.top, top) - Math.min(need, b.height);
+  });
+  st.scrollTop = 0;
+  return { id: act.id, height: st.clientHeight, short: Math.round(-Math.min(...shown)) };
+}));
 // With every act unlocked, what each act's Next tag covers at the top of its pulse: a button, a skill card,
 // or the bar along the bottom (the belt on laptops and tablets, the bar on phones).
 async function nextCovers(page, bar = '.hud', barName = 'the bar') {
@@ -702,8 +718,18 @@ async function phone(browser) {
   check(errors.length === 0, 'no console errors or warnings');
   await context.close();
   // Narrower phones wrap the skills and buttons differently.
-  for (const name of ['iPhone SE (3rd gen)', 'Galaxy S8']) {
+  for (const name of ['iPhone SE (3rd gen)', 'Galaxy S8', 'iPhone SE']) {
     const { context, page, errors } = await open(browser, { ...devices[name] });
+    if (name === 'iPhone SE') {
+      // The first iPhone SE, 320 x 568: every act's story panel still has room for the newest moment's first lines.
+      await page.evaluate(() => Acts.sections.forEach((_, i) => Acts.unlock(i)));
+      await page.waitForTimeout(300);
+      const room = await storyRoom(page);
+      const low = room.filter(r => r.height < 100);
+      check(low.length === 0, `on the ${name}, every act's story panel is at least 100 px tall (${room.map(r => `${r.id} ${r.height}`).join(', ')})`);
+      const cut = room.filter(r => r.short > 0);
+      check(cut.length === 0, `on the ${name}, every act's story panel shows the newest moment's first two lines${cut.length ? ` (short by: ${cut.map(r => `${r.id} ${r.short}px`).join(', ')})` : ''}`);
+    }
     const covered = await nextCovers(page);
     check(covered.length === 0, `on the ${name}, every act's Next tag sits clear of its buttons, its skills and the bar${covered.length ? ` (covers: ${covered.join(', ')})` : ''}`);
     check(errors.length === 0, `on the ${name}, no console errors or warnings`);

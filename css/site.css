@@ -422,6 +422,19 @@ a { color: inherit; }
   .act-rail { gap: 10px; }
   .rail-label { font-size: 11px; min-width: 0; }
 }
+/* Short phones, such as the first iPhone SE (320 x 568): a smaller heading and scene, skill cards with only their names
+   (the sheet shows what each grew from) and the buttons on one row, so the story panel keeps room for the newest moment. */
+@media (max-width: 759px) and (max-height: 640px) {
+  .act-screen { padding-top: 8px; }
+  .act-num { font-size: 11px; }
+  .act-title { margin-top: 4px; font-size: clamp(22px, 6.8vw, 30px); }
+  .act-title::after { margin-top: 5px; height: 3px; }
+  .scene { width: 82%; }
+  .skill-from { display: none; }
+  .skill-card { padding: 3px 6px 4px; }
+  .unlock-actions { gap: 8px; }
+  .unlock-actions .btn { padding: 7px 9px; font-size: 11px; }
+}
 
 /* ---------- Inventory belt ---------- */
 
