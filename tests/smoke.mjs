@@ -45,8 +45,9 @@ const storyHidden = (page, id) => page.$eval(`#${id} .story`, st => {
   const beats = [...st.querySelectorAll('.beat')].map(b => b.getBoundingClientRect());
   return Math.round(Math.max(st.scrollHeight - st.clientHeight, ...beats.map(b => Math.max(top - b.top, b.bottom - bottom))));
 });
-// On a phone, with every act unlocked, what each act's Next tag covers at the top of its pulse: a button, a skill card or the bar.
-async function nextCovers(page) {
+// With every act unlocked, what each act's Next tag covers at the top of its pulse: a button, a skill card,
+// or the bar along the bottom (the belt on laptops and tablets, the bar on phones).
+async function nextCovers(page, bar = '.hud', barName = 'the bar') {
   // From the top, so scrolling down to each act never rewinds one.
   await scrollTo(page, 0);
   await page.waitForTimeout(300);
@@ -56,7 +57,7 @@ async function nextCovers(page) {
   for (let i = 0; i < where.length; i++) {
     await scrollTo(page, where[i].end - 4);
     await page.waitForTimeout(300);
-    covered.push(...await page.evaluate(i => {
+    covered.push(...await page.evaluate(([i, bar, barName]) => {
       const { act, screen } = Acts.sections[i];
       const tag = screen.querySelector('.act-next');
       if (!screen.classList.contains('is-done') || getComputedStyle(tag).visibility !== 'visible') return [`${act.id} shows no Next tag`];
@@ -67,10 +68,10 @@ async function nextCovers(page) {
         return b.left < t.right && t.left < b.right && b.top < t.bottom && t.top < b.bottom;
       }).map(el => `${act.id} ${(el.querySelector('.skill-name') || el).textContent.trim()}`);
       // The bar covers the bottom of the act's screen, which is one screen tall.
-      const bar = window.innerHeight - document.querySelector('.hud').getBoundingClientRect().top;
-      if (t.bottom > screen.getBoundingClientRect().bottom - bar) hits.push(`${act.id} the bar`);
+      const barH = window.innerHeight - document.querySelector(bar).getBoundingClientRect().top;
+      if (t.bottom > screen.getBoundingClientRect().bottom - barH) hits.push(`${act.id} ${barName}`);
       return hits;
-    }, i));
+    }, [i, bar, barName]));
   }
   return covered;
 }
@@ -641,6 +642,19 @@ async function narrowWindows(browser) {
   }
 }
 
+// Laptops and tablets from 800 x 600 up, motion on: every act's Next tag, held at the top of its pulse,
+// sits clear of its skills, its Open sheet and Play buttons, and the belt.
+async function laptopNext(browser) {
+  console.log('\nThe Next tag on laptops and tablets');
+  for (const [width, height] of [[800, 600], [1024, 768], [1200, 700], [1280, 680], [1280, 720], [1280, 800], [1366, 657], [1366, 768], [1440, 790], [1440, 900], [1920, 1080]]) {
+    const { context, page, errors } = await open(browser, { viewport: { width, height } });
+    const covered = await nextCovers(page, '.belt', 'the belt');
+    check(covered.length === 0, `at ${width} x ${height}, every act's Next tag sits clear of its skills, its buttons and the belt at the top of its pulse${covered.length ? ` (covers: ${covered.join(', ')})` : ''}`);
+    check(errors.length === 0, `at ${width} x ${height}, no console errors or warnings`);
+    await context.close();
+  }
+}
+
 async function mapPartway(browser) {
   console.log('\nThe map, partway through');
   const { context, page, errors } = await open(browser, { viewport: { width: 1280, height: 860 } });
@@ -704,6 +718,7 @@ try {
   await reducedMotion(browser);
   await shortScreens(browser);
   await narrowWindows(browser);
+  await laptopNext(browser);
   await mapPartway(browser);
   await phone(browser);
 } finally {
