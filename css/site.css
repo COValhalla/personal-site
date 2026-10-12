@@ -368,8 +368,9 @@ a { color: inherit; }
 /* Narrow windows and tablets: the skills row can wrap, so the scene takes only the room the skills and buttons leave,
    and the skill cards are compact so the scene stays big. */
 @media (max-width: 1279px) and (min-width: 760px) {
-  /* The bottom padding is tall enough for the Next tag, so it sits between the buttons and the belt. */
-  .act-screen { padding-bottom: calc(var(--belt-h) + 38px); }
+  /* The left column stops 38 px above the belt, room for the Next tag between the buttons and the belt;
+     the story panel beside it keeps its full height. */
+  .act-left { margin-bottom: max(0px, 38px - clamp(16px, 3.4vh, 40px)); }
   .scene-box {
     --rail-h: 24px; container-type: size; flex: 0 1 auto; width: auto; min-height: 0; align-items: flex-start;
     contain-intrinsic-height: calc(100cqw * 72 / 160 + var(--rail-h));

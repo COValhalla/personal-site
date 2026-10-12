@@ -150,6 +150,6 @@ Every word in the recipes is a placeholder until you replace it.
 
 - Each moment and item is tagged `life` or `work`.
 - On a laptop, an act's moments all show in its story panel without scrolling. The panel runs the full height of the act beside the scene, and its moments tighten on screens under 780 px and 700 px tall. The longest act today, Party leader, has four moments and about 650 letters with three items, and it fits down to 1280 × 680, the smallest size `npm test` checks. If new words fail that check, shorten them. On a phone the panel scrolls to the newest moment.
-- In windows 760 to 1279 px wide, the skill cards are compact, the scene takes only the room the skills and buttons leave, and the bottom padding holds the Next tag. Every act's skills and buttons stay above the belt, from 760 × 600 to 1279 × 720 in `npm test`.
+- In windows 760 to 1279 px wide, the skill cards are compact, the scene takes only the room the skills and buttons leave, and the left column leaves room under the buttons for the Next tag. Every act's skills and buttons stay above the belt, from 760 × 600 to 1279 × 720 in `npm test`.
 - An item's line is one sentence in your own voice.
 - Employers and schools are named, with real titles and dates from Joe's resume, in each act's `quests` for the quest log at the end of the page. For anything more exact, the quest log points to LinkedIn.
