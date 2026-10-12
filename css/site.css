@@ -365,6 +365,28 @@ a { color: inherit; }
 @media (max-width: 1023px) and (min-width: 760px) {
   .act-screen { grid-template-columns: minmax(0, 1fr) 300px; }
 }
+/* Narrow windows and tablets: the skills row can wrap, so the scene takes only the room the skills and buttons leave,
+   and the skill cards are compact so the scene stays big. */
+@media (max-width: 1279px) and (min-width: 760px) {
+  /* The left column stops 38 px above the belt, room for the Next tag between the buttons and the belt;
+     the story panel beside it keeps its full height. */
+  .act-left { margin-bottom: max(0px, 38px - clamp(16px, 3.4vh, 40px)); }
+  .scene-box {
+    --rail-h: 24px; container-type: size; flex: 0 1 auto; width: auto; min-height: 0; align-items: flex-start;
+    contain-intrinsic-height: calc(100cqw * 72 / 160 + var(--rail-h));
+  }
+  .scene { width: min(100cqw, calc((100cqh - var(--rail-h)) * 160 / 72)); }
+  .act-rail { width: min(100cqw, calc((100cqh - var(--rail-h)) * 160 / 72)); }
+  .act-foot { gap: 8px 14px; }
+  .skills-new .unlock-label { display: none; }
+  .skill-cards { grid-template-columns: repeat(auto-fit, minmax(94px, 1fr)); gap: 6px; }
+  .skill-card { padding: 4px 7px 5px; gap: 2px; }
+  .skill-new { display: none; }
+  .skill-name { font-size: 13px; }
+  .skill-from { font-size: 9px; gap: 2px; }
+  .skill-chip { padding: 1px 3px; border-left-width: 3px; }
+  .unlock-actions .btn { padding: 8px 12px; font-size: 12px; }
+}
 @media (max-width: 759px) {
   .act-screen { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; padding: 12px 14px calc(var(--hud-h) + 6px); gap: 10px; }
   .act-head, .story { grid-area: auto; }

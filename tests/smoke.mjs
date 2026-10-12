@@ -611,6 +611,36 @@ async function shortScreens(browser) {
   }
 }
 
+// Narrow windows and tablets, 760 to 1279 px wide: with every act unlocked, how far each act's skills and buttons
+// run past its left column and into the belt, and which of them its Next tag covers.
+async function narrowWindows(browser) {
+  console.log('\nNarrow windows and tablets, motion turned off');
+  for (const [width, height] of [[760, 600], [800, 600], [800, 1280], [900, 700], [1024, 600], [1024, 768], [1180, 820], [1200, 700], [1279, 720]]) {
+    const { context, page, errors } = await open(browser, { viewport: { width, height }, reducedMotion: 'reduce' });
+    await page.evaluate(() => Acts.sections.forEach((_, i) => Acts.unlock(i)));
+    await page.waitForTimeout(300);
+    const acts = await page.evaluate(() => Acts.sections.map(({ act, screen }) => {
+      const s = screen.getBoundingClientRect();
+      const belt = s.bottom - document.querySelector('.belt').getBoundingClientRect().height;
+      const left = screen.querySelector('.act-left').getBoundingClientRect().bottom;
+      const els = [...screen.querySelectorAll('.skill-card, .unlock-actions .btn')];
+      const bottom = Math.max(...els.map(el => el.getBoundingClientRect().bottom));
+      const tag = screen.querySelector('.act-next').getBoundingClientRect();
+      const covers = els.filter(el => {
+        const b = el.getBoundingClientRect();
+        return b.left < tag.right && tag.left < b.right && b.top < tag.bottom && tag.top < b.bottom;
+      }).map(el => (el.querySelector('.skill-name') || el).textContent.trim());
+      return { id: act.id, past: Math.round(bottom - left), belt: Math.round(bottom - belt), tagBelt: Math.round(tag.bottom - belt), covers };
+    }));
+    const over = acts.filter(a => a.past > 1 || a.belt > 0);
+    check(over.length === 0, `at ${width} x ${height} every act's skills and buttons sit inside its left column, above the belt${over.length ? ` (past the column: ${over.map(a => `${a.id} ${a.past}px, ${a.belt}px into the belt`).join('; ')})` : ''}`);
+    const covered = acts.filter(a => a.covers.length || a.tagBelt > 0);
+    check(covered.length === 0, `at ${width} x ${height} every act's Next tag sits clear of its skills, its buttons and the belt${covered.length ? ` (covers: ${covered.map(a => `${a.id} ${[...a.covers, ...(a.tagBelt > 0 ? ['the belt'] : [])].join(', ')}`).join('; ')})` : ''}`);
+    check(errors.length === 0, `at ${width} x ${height}, no console errors or warnings`);
+    await context.close();
+  }
+}
+
 async function mapPartway(browser) {
   console.log('\nThe map, partway through');
   const { context, page, errors } = await open(browser, { viewport: { width: 1280, height: 860 } });
@@ -673,6 +703,7 @@ try {
   await pacing(browser);
   await reducedMotion(browser);
   await shortScreens(browser);
+  await narrowWindows(browser);
   await mapPartway(browser);
   await phone(browser);
 } finally {
