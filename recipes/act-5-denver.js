@@ -1,6 +1,5 @@
 /*
  * Act V recipe. See README.md, "Recipes", for every field.
- * All words are placeholders to replace with your own.
  */
 Story.addAct({
   id: 'denver',
@@ -16,7 +15,7 @@ Story.addAct({
   scene: 'mountains',
   hero: { gear: 'beanie', title: 'Project engineer', hair: 'bald', beard: 'goatee' },
   beats: [
-    { tag: 'life', text: 'I followed friends to Denver for the mountains: skiing and climbing.', item: 'skis', cue: 'ski' },
+    { tag: 'life', text: 'In 2018 I moved again, following friends to Denver for the mountains. Skiing and climbing taught me to read terrain and weather, and to turn around in time.', item: 'skis', cue: 'ski' },
     { tag: 'work', text: 'At Terumo BCT, a medical-device maker, our capital projects team filled an empty new plant in Vietnam with production lines. I led over $7 million of equipment projects, on time and on budget.', item: 'passport', cue: 'plane' },
     { tag: 'work', text: 'Promoted into new product introduction, I became the bridge between design and the factory floor, and led 10 engineers moving hundreds of products to new materials.', item: 'prototype', cue: 'line' },
   ],

@@ -112,10 +112,10 @@
   function finale() {
     return el('section', { class: 'finale', id: 'facts', 'aria-labelledby': 'facts-title' },
       el('div', { class: 'finale-inner' },
-        el('p', { class: 'act-num', style: 'color:var(--ink-3)', text: 'To be continued' }),
-        el('h2', { id: 'facts-title', text: 'The sheet so far' }),
+        el('p', { class: 'act-num', style: 'color:var(--ink-3)', text: Story.config.ending.kicker }),
+        el('h2', { id: 'facts-title', text: Story.config.ending.heading }),
         el('div', { class: 'finale-strip', 'aria-hidden': 'true' }, Story.acts.map(act => el('i', { style: `background:${act.color.base}` }))),
-        el('p', {}, `Every act added a color, new items and new skills. There is room to grow.`),
+        el('p', { text: Story.config.ending.line }),
         el('button', { class: 'btn', onclick: () => Sheet.open({ tab: 'items' }) }, 'Open the full sheet ▸'),
         questLog()));
   }

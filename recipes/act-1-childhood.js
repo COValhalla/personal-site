@@ -1,6 +1,5 @@
 /*
  * Act I recipe. See README.md, "Recipes", for every field.
- * All words are placeholders to replace with your own.
  */
 Story.addAct({
   id: 'childhood',
@@ -21,7 +20,7 @@ Story.addAct({
   // Each moment can give one of this act's items (item) and play a scene animation (cue).
   beats: [
     { tag: 'life', text: 'Baseball and basketball, sure, but mostly I roamed town on my scooter with friends: wheelies, staircase jumps, music playing. On weekends I raced BMX.', item: 'bmx-bike', cue: 'race' },
-    { tag: 'work', text: "Middle school: three towns met in one school, and I hadn't found my group yet. But every busy season from 12 to 16, I ran a crew of butchers in the family business, mostly new hires I trained on the fly.", item: 'apron', cue: 'crew' },
+    { tag: 'work', text: "Middle school: three towns met in one school, and I hadn't found my group yet. At the family shop I had a crew: every busy season from 12 to 16, I ran the butchers, mostly new hires I trained on the fly.", item: 'apron', cue: 'crew' },
   ],
   unlock: { banner: 'Level 1', say: 'New class: Crew lead' },
   items: [

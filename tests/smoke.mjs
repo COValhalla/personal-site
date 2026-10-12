@@ -262,6 +262,13 @@ async function desktop(browser) {
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => !document.querySelector('#sheet').open, null, { timeout: 2000 });
   check(await page.$eval('#say-hello .hello-links', ul => [...ul.querySelectorAll('a')].map(a => `${a.textContent} ${a.getAttribute('href')}`).join()) === 'LinkedIn https://www.linkedin.com/in/josephvellella/,Email mailto:connect-with-joe.next036@passmail.net,GitHub https://github.com/COValhalla', 'Say hello lists the links from the recipe');
+  check(await page.textContent('#say-hello .hello-note') === await page.evaluate(() => Story.config.hello), 'Say hello shows the line from recipes/site.js');
+  const ending = await page.evaluate(() => {
+    const f = document.querySelector('#facts');
+    return [f.querySelector('.act-num').textContent, f.querySelector('#facts-title').textContent, f.querySelector('.finale-inner > p:not(.act-num)').textContent];
+  });
+  check(ending.join('|') === await page.evaluate(() => { const e = Story.config.ending; return [e.kicker, e.heading, e.line].join('|'); }) && ending[0] === 'Next level',
+    `the ending reads ${ending[0]}, ${ending[1]}, from recipes/site.js`);
   const hereY = await page.evaluate(() => window.scrollY);
   await page.click('.hud-hello');
   check(await page.$$eval('#hello-menu a', a => a.map(x => x.textContent).join()) === 'LinkedIn,Email,GitHub' && await page.isVisible('#hello-menu')

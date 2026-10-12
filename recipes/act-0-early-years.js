@@ -1,7 +1,6 @@
 /*
  * Tutorial recipe: the act before Act I. See README.md, "Recipes", for every field.
  * label replaces "Act 0" on the page; tutorial: true completes it without a level.
- * All words are placeholders to replace with your own.
  */
 Story.addAct({
   id: 'early-years',

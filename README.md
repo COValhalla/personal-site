@@ -2,8 +2,6 @@
 
 A proof of concept for a playful personal website: Joe's life story told as a game character sheet. Each act fills the screen and tells its story as you scroll: every moment drops an item into your inventory, and the act ends with a level-up and new skills.
 
-Every word on the page is a placeholder for you to replace.
-
 This repository tracks the site from its first version on. Everything the page needs sits at the top level, so a clone of it is a working site.
 
 ## Open it
@@ -78,7 +76,7 @@ Each act is one file in `recipes/`. The fields:
 
 To add a photo, put the file in a `photos/` folder next to `index.html` and set the item's `photo` to `'photos/hammer.jpg'`.
 
-`recipes/site.js` holds the name, the welcome on the title screen, the Say hello `contact` links (a blank address is left out), the stats and `look`: the hero's skin, hair and streak colors, eye color, and today's hair style and beard, drawn from Joe's photos, which are not part of this repository. Each act's `hero` sets the hair and beard for that part of the story: short hair as a kid and under a cap in high school, bald with a goatee from college to Denver, then the beard and the bun grow through the year off. To try other colors, change `look` in `recipes/site.js` and reload.
+`recipes/site.js` holds the name, the welcome on the title screen, the ending's kicker, heading and line, the Say hello line and `contact` links (a blank address is left out), the stats and `look`: the hero's skin, hair and streak colors, eye color, and today's hair style and beard, drawn from Joe's photos, which are not part of this repository. Each act's `hero` sets the hair and beard for that part of the story: short hair as a kid and under a cap in high school, bald with a goatee from college to Denver, then the beard and the bun grow through the year off. To try other colors, change `look` in `recipes/site.js` and reload.
 
 If a recipe has a mistake, such as a skill growing from one that does not exist or a moment giving an item from another act, the page lists it near the top and in the browser console.
 

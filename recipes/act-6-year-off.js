@@ -1,7 +1,6 @@
 /*
  * Act VI recipe. See README.md, "Recipes", for every field.
  * The year off is its own act and the turning point of the story.
- * All words are placeholders to replace with your own.
  */
 Story.addAct({
   id: 'year-off',
@@ -17,9 +16,9 @@ Story.addAct({
   // The beard and the long hair came with the year off: they grow moment by moment (look).
   hero: { gear: 'headphones', title: 'Self-taught developer', hair: 'bun', beard: 'long' },
   beats: [
-    { tag: 'life', text: 'In 2022 I was a senior engineer on a safe path. I left it to respec: in games, that means taking back your skill points and spending them on a new build.', cue: 'fun', look: { hair: 'short', beard: 'stubble' } },
-    { tag: 'work', text: 'From May to December, to focus fully on learning new skills, I taught myself full-stack JavaScript with The Odin Project, building a library app, a weather app, a battleship game and a blog API.', item: 'laptop', cue: 'code', look: { beard: 'full' } },
-    { tag: 'work', text: 'And I learned to explain every bug out loud.', item: 'rubber-duck', cue: 'duck', look: { hair: 'bun', beard: 'long' } },
+    { tag: 'life', text: 'By 2022 I was a senior engineer at a medical-device maker, on a safe path up. But the code I wrote on the side had become the best part of every job. So I quit, with no job lined up, to respec: take back my skill points and spend them on a new build.', cue: 'fun', look: { hair: 'short', beard: 'stubble' } },
+    { tag: 'work', text: 'From May to December I taught myself full-stack JavaScript with The Odin Project: a library app, a weather app, a battleship game and a blog API. No boss, no paycheck, just whether it ran.', item: 'laptop', cue: 'code', look: { beard: 'full' } },
+    { tag: 'work', text: "Had I stayed, I'd probably have moved into engineering leadership: manager, then director. I don't regret the trade: I learned to explain every bug out loud, and to build the thing myself.", item: 'rubber-duck', cue: 'duck', look: { hair: 'bun', beard: 'long' } },
   ],
   unlock: { banner: 'Level 6', say: 'Turning point: Self-taught developer', pop: 'Turning point!' },
   items: [
