@@ -1,6 +1,5 @@
 /*
  * Act III recipe. See README.md, "Recipes", for every field.
- * All words are placeholders to replace with your own.
  */
 Story.addAct({
   id: 'college',

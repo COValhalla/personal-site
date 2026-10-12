@@ -1,6 +1,5 @@
 /*
  * Act IV recipe. See README.md, "Recipes", for every field.
- * All words are placeholders to replace with your own.
  */
 Story.addAct({
   id: 'first-jobs',
@@ -16,7 +15,7 @@ Story.addAct({
   scene: 'plant',
   hero: { gear: 'hardhat', title: 'Process engineer', hair: 'bald', beard: 'goatee' },
   beats: [
-    { tag: 'work', text: 'Materials engineer in Kansas City.', item: 'calipers', cue: 'measure' },
+    { tag: 'work', text: 'My first job out of school: materials engineer at the Kansas City National Security Campus, making sure parts were strong enough for the systems they went into. The work needed a security clearance.', item: 'calipers', cue: 'measure' },
     { tag: 'work', text: "That's where I started coding: 3D models and analysis in MATLAB, and my first machine learning model." },
     { tag: 'work', text: 'My clearance stalled, through nothing on my part, so rather than wait I took a detour to Sioux City as a process engineer at Gelita. It paid off: I trained over 250 operators, and my root-cause study saved a $200,000 equipment project.', item: 'hard-hat', cue: 'plant' },
   ],
