@@ -19,8 +19,8 @@ Story.addAct({
   hero: { gear: 'helmet', title: 'Crew lead', hair: 'short', beard: 'none' },
   // Each moment can give one of this act's items (item) and play a scene animation (cue).
   beats: [
-    { tag: 'life', text: 'Baseball and basketball, sure, but mostly I roamed town on my scooter with friends: wheelies, staircase jumps, music playing. On weekends I raced BMX.', item: 'bmx-bike', cue: 'race' },
-    { tag: 'work', text: "Middle school: three towns met in one school, and I hadn't found my group yet. At the family shop I had a crew: every busy season from 12 to 16, I ran the butchers, mostly new hires I trained on the fly.", item: 'apron', cue: 'crew' },
+    { tag: 'life', text: 'I roamed town on my scooter with friends: wheelies, staircase jumps, music playing. On weekends I raced BMX.', item: 'bmx-bike', cue: 'race' },
+    { tag: 'work', text: "From 12 to 16, every busy season at the family shop, I ran the crew of butchers: mostly new hires and local kids, trained on the fly while the orders kept coming.", item: 'apron', cue: 'crew' },
   ],
   unlock: { banner: 'Level 1', say: 'New class: Crew lead' },
   items: [

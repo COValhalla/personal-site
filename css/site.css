@@ -61,7 +61,7 @@ a { color: inherit; }
 }
 .btn:hover { transform: translateY(-1px); box-shadow: 0 5px 0 rgba(0, 0, 0, 0.28); }
 .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.28); }
-.btn:focus-visible, .beat-item:focus-visible, .pip:focus-visible, .tab:focus-visible { outline: 3px solid var(--c2, #8a63d2); outline-offset: 3px; }
+.btn:focus-visible, .beat-item:focus-visible, .skill-card:focus-visible, .pip:focus-visible, .tab:focus-visible { outline: 3px solid var(--c2, #8a63d2); outline-offset: 3px; }
 .btn--accent { background: var(--c3, var(--ink)); }
 .btn--ghost { background: transparent; color: inherit; box-shadow: inset 0 0 0 2px currentColor; }
 .btn--ghost:hover, .btn--ghost:active { box-shadow: inset 0 0 0 2px currentColor; }
@@ -311,6 +311,8 @@ a { color: inherit; }
   border: 2px solid var(--ink);
   background: var(--c2); color: #fff;
 }
+button.skill-card { font: inherit; text-align: left; cursor: pointer; }
+button.skill-card:disabled { cursor: default; }
 .skill-card.is-locked { border: 2px dashed #b8b3ab; background: transparent; color: #8a8590; }
 .skill-new { font: 700 9px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.85; }
 .skill-name { font: 800 14px/1.15 var(--mono); }
