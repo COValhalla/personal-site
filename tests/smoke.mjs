@@ -100,7 +100,17 @@ async function desktop(browser) {
   const items = await page.evaluate(() => Story.items().length);
   check(ids.length === 8, 'the tutorial and seven acts are on the page');
   check(await page.textContent('.intro-title') === 'Joe' && await page.textContent('.hud-name') === 'Joe', 'the intro and the bar say Joe');
-  check(await page.textContent('.intro-tag') === "Hi, I'm Joe Vellella, a product engineer. I learn it like a game and build it with a team. Press start to play my story. You may find a few levels you played too.", 'the welcome names Joe as a product engineer and leads to Press start');
+  const welcome = await page.textContent('.intro-tag');
+  check(welcome === await page.evaluate(() => Story.config.welcome) && welcome.startsWith("Hi, I'm Joe Vellella.") && welcome.includes('Press start'), 'the title screen shows the welcome from the recipe, which names Joe and leads to Press start');
+  // The early acts describe what Joe did and learned, not brands or rankings.
+  const said = await page.evaluate(() => [Story.config.welcome, ...Story.acts.flatMap(a => a.beats.map(b => b.text))]);
+  const banned = ['Diablo', 'Accelerated Reader', 'by far', '176', 'basketball', 'three towns', 'in shape'].filter(w => said.some(t => t.includes(w)));
+  check(banned.length === 0, `no moment and not the welcome names a game brand, a ranking or a setback with no payoff${banned.length ? ` (found: ${banned.join(', ')})` : ''}`);
+  const callbacks = await page.evaluate(() => [Story.acts[0].beats[1].text, Story.acts[7].beats.at(-1).text, Story.acts[2].beats[0].text, Story.acts[2].beats.at(-1).text]);
+  check(callbacks[0].includes('typing class') && callbacks[1].includes('typing game') && callbacks[2].includes('skipped football') && callbacks[3].includes('skipped football'),
+    "Act VII's last moment calls back to the Tutorial's typing class, and Act II's last moment pays off skipping football");
+  const locked = await page.$eval('#act-high-school .skill-card[data-skill="teamwork"]', b => { b.click(); return b.disabled; });
+  check(locked && await page.$('#card[open]') === null, 'a locked skill card opens nothing');
   check(await page.$$eval('.intro .intro-note a', a => a.map(x => `${x.textContent} ${x.getAttribute('href')}`).join()) === 'Short on time? Read the quest log. #quest-log' && await page.$('.intro .intro-start') !== null, 'the welcome has a Press start button and only the quest-log link');
   check(await page.textContent('.hud-count') === `0/${items}`, 'the sheet starts empty');
   check(await page.$$eval('.belt-slot.is-filled', s => s.length) === 0, 'the inventory belt starts empty');
@@ -206,6 +216,18 @@ async function desktop(browser) {
   check(await page.waitForSelector('#game[open]', { timeout: 2000 }).then(() => true, () => false) && await page.textContent('#game .game-title') === 'Hammer throw',
     'Play on that story card opens the hammer throw');
   await page.click('#game .game-skip');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#card').open, null, { timeout: 2000 });
+  // A lit skill card opens a story card with its line and the skills it grew from, by click or keyboard.
+  check(await storyCard(page, '#act-high-school .skill-card[data-skill="leading"]', ['Leading', 'Act II', 'Finding my party', 'Earning the C by doing the work first.', 'Grew from', 'Teaching', 'Teamwork']),
+    "selecting Act II's lit Leading skill opens its story card with its line and the skills it grew from");
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#card').open, null, { timeout: 2000 });
+  await page.focus('#act-high-school .skill-card[data-skill="teamwork"]');
+  await page.keyboard.press('Enter');
+  const skillOpened = await page.waitForSelector('#card[open]', { timeout: 2000 }).then(() => true, () => false);
+  const skillText = skillOpened ? await page.$eval('#card', c => c.textContent) : '';
+  check(['Teamwork', 'Pick people who make you better, then pull your weight for them.', 'A root skill'].every(w => skillText.includes(w)), 'Enter on the lit Teamwork skill opens its story card with its line');
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => !document.querySelector('#card').open, null, { timeout: 2000 });
 
@@ -714,6 +736,11 @@ async function phone(browser) {
   await page.locator('#act-high-school .unlock-actions .btn--accent').tap();
   await page.waitForSelector('#sheet[open]');
   check(await page.$eval('#sheet', d => d.getBoundingClientRect().width <= window.innerWidth), 'the sheet fits the screen');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#sheet').open, null, { timeout: 2000 });
+  await page.locator('#act-high-school .skill-card[data-skill="teamwork"]').tap();
+  const skillCard = await page.waitForSelector('#card[open]', { timeout: 2000 }).then(() => page.$eval('#card .card-frame', c => ({ text: c.textContent, fits: c.getBoundingClientRect().width <= window.innerWidth })), () => ({ text: '', fits: false }));
+  check(skillCard.text.includes('Pick people who make you better, then pull your weight for them.') && skillCard.fits, 'tapping the lit Teamwork skill opens its story card, which shows its line and fits the screen');
   await page.keyboard.press('Escape');
   await page.evaluate(() => Games.open('discus'));
   await page.waitForSelector('#game[open]');

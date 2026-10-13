@@ -181,9 +181,31 @@
     card.showModal();
   }
 
+  // A lit skill card opens a story card with the skill's line and the skills it grew from.
+  function openSkill(id) {
+    const skill = Story.skill(id);
+    if (!skill) return;
+    if (!card) build();
+    const act = Story.acts[skill.act];
+    const parents = (skill.parents || []).map(pid => Story.skill(pid)).filter(Boolean);
+    card.replaceChildren(el('article', { class: 'frame card-frame', style: colorVars(act) },
+      el('button', { class: 'close', 'aria-label': 'Close the story card', onclick: () => card.close() }, '×'),
+      el('div', { class: 'card-art' }, Pixel.hero(act.hero.gear, act.color, 6, skill.name, Acts.styleOf(act))),
+      el('div', {},
+        el('h3', { class: 'card-name', id: 'card-name', text: skill.name }),
+        el('p', { class: 'card-meta' }, `${Story.name(act)} · ${act.title} · New skill`),
+        el('blockquote', { class: 'card-line', text: `“${skill.line}”` }),
+        el('div', { class: 'card-section' },
+          el('p', { class: 'panel-label', text: parents.length ? 'Grew from' : 'A root skill' }),
+          el('ul', { class: 'card-adds' }, parents.map(p => el('li', { text: `${p.name} (${Story.name(Story.acts[p.act])})` }))))),
+      el('footer', { class: 'card-actions' },
+        el('button', { class: 'btn btn--ghost', onclick: () => card.close() }, 'Close'))));
+    card.showModal();
+  }
+
   function refresh() {
     if (sheet && sheet.open) open({});
   }
 
-  window.Sheet = { open, openItem, refresh, el, colorVars };
+  window.Sheet = { open, openItem, openSkill, refresh, el, colorVars };
 })();

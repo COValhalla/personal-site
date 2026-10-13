@@ -12,7 +12,7 @@ Story.addAct({
   // The quest log at the end of the page: this act's titles, places and dates.
   quests: [
     { what: 'Fastest typist in the computer lab' },
-    { what: 'Accelerated Reader leaderboards' },
+    { what: 'School reading leaderboard' },
   ],
   color: { name: 'Crayon teal', light: '#7fe0d4', base: '#22b3a3', shade: '#157a70' },
   theme: 'light',
@@ -21,9 +21,9 @@ Story.addAct({
   stages: ['early-night', 'computer-lab', 'early-home', 'lab-board'],
   hero: { gear: 'backpack', title: 'Keyboard kid', hair: 'short', beard: 'none' },
   beats: [
-    { tag: 'life', text: 'My older cousins got me playing Diablo II. Trading in its chat rewarded whoever typed fastest, and I spent hours getting at ease on a computer.', item: 'floppy', cue: 'night' },
-    { tag: 'life', text: 'Typing class in the computer lab: a game threw random sentences at us and timed our words per minute. I was by far the fastest in the room.', item: 'keyboard', cue: 'type' },
-    { tag: 'life', text: 'Accelerated Reader turned books into a leaderboard: read one, pass its quiz, earn points. I raced my classmates for the top and became a reader.', item: 'book', cue: 'grow' },
+    { tag: 'life', text: 'My older cousins got me into online games. In their chats the fastest typist made the best trades, so I spent hours at the keyboard and got at home on a computer.', item: 'floppy', cue: 'night' },
+    { tag: 'life', text: 'Then typing class in the computer lab: a game threw random sentences at us and timed our words per minute. All those hours of chat paid off, and I loved racing the clock.', item: 'keyboard', cue: 'type' },
+    { tag: 'life', text: 'Our school turned reading into a game too: read a book, pass its quiz, earn points. I chased the leaderboard and came out a reader for life.', item: 'book', cue: 'grow' },
   ],
   unlock: { banner: 'Tutorial complete', say: 'New class: Keyboard kid', pop: 'Tutorial complete!' },
   items: [

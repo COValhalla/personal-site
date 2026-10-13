@@ -114,7 +114,7 @@
         beat.give ? el('button', { class: 'beat-item', 'data-item': beat.give.id, tabindex: '-1', onclick: () => Sheet.openItem(beat.give.id) },
           Pixel.item(beat.give.sprite, act.color, 2, ''), el('span', { text: '+ ' + beat.give.name })) : null)));
 
-    const skillCards = act.skills.map(skill => el('div', { class: 'skill-card is-locked', 'data-skill': skill.id },
+    const skillCards = act.skills.map(skill => el('button', { type: 'button', class: 'skill-card is-locked', 'data-skill': skill.id, disabled: '', onclick: () => Sheet.openSkill(skill.id) },
       el('span', { class: 'skill-new', text: 'New skill' }),
       el('b', { class: 'skill-name', text: '???' }),
       el('span', { class: 'skill-from' },
@@ -366,6 +366,8 @@
     const skill = Story.skill(card.dataset.skill);
     card.classList.remove('is-locked');
     card.classList.add('is-on');
+    // A lit skill opens its story card; a locked one opens nothing.
+    card.disabled = false;
     card.querySelector('.skill-name').textContent = skill.name;
     if (!Story.state.skills.has(skill.id)) {
       Story.state.skills.add(skill.id);
@@ -536,6 +538,7 @@
     p.skillCards.forEach(card => {
       card.classList.add('is-locked');
       card.classList.remove('is-on');
+      card.disabled = true;
       card.querySelector('.skill-name').textContent = '???';
     });
     story.querySelector('.unlock-pill').textContent = 'Locked';
