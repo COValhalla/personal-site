@@ -59,6 +59,7 @@ Every merge to `main` publishes it there within a minute or two, through GitHub 
 | `js/story.js` | Collects the recipes and checks them for mistakes. |
 | `js/main.js` | The top bar, the intro, the ending with Say hello, and start-up. |
 | `vendor/gsap/` | GSAP 3.15.0 and ScrollTrigger, kept here so the page works offline. |
+| `tests/unit/` | Unit tests for the recipe rules in `js/story.js`. |
 | `tests/smoke.mjs` | An end-to-end check in Chrome. |
 
 ## Recipes
