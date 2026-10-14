@@ -15,7 +15,7 @@ Story.addAct({
   // Short hair under a cap, and no beard yet.
   hero: { gear: 'cap', title: 'Team captain', hair: 'short', beard: 'none' },
   beats: [
-    { tag: 'life', text: "In high school I found friends who made me better. They played football, so I joined them, and by senior year I was the team's captain.", item: 'captain-patch', cue: 'captain' },
+    { tag: 'life', text: "Freshman year my proudest win was a server first on Gruul the Dragonkiller in World of Warcraft. Then I found friends who made me better. They played football, so I joined them, and by senior year I was the team's captain.", item: 'captain-patch', cue: 'captain' },
     { tag: 'life', text: 'A local coach, a former college athlete, taught me how to train. I set the school discus record: 176 feet.', item: 'discus', cue: 'discus' },
     { tag: 'work', text: 'Summers I worked. I built forms and poured concrete basements, where the pour is only as good as the forms you build first. Then I ran painting and shipping at a machine factory, the last hands on every machine before a customer.', item: 'level', cue: 'pour' },
   ],

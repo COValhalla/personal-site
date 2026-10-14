@@ -7,13 +7,13 @@ Story.site({
   fullName: 'Joe Vellella',
   // The welcome on the title screen: one to four sentences that lead to Press start.
   welcome: "I build products. I started as a chemical engineer in factories, taught myself to code, and now I'm a product manager who still builds. Press start to play my story. You may find a few levels you played too.",
-  // The line above the Say hello links, which asks the reader to answer back.
+  // The line above the Say hello links at the end of the page, which asks the reader to answer back.
   hello: "Building something like that? Let's talk. And tell me: what was your typing class?",
-  // The end of the page: a kicker, a heading and the line about what comes next.
+  // The end of the page: a kicker, a heading and the line about what comes next, then Say hello.
   ending: {
     kicker: 'Next level',
     heading: 'What I build next',
-    line: "Every act added a color and new skills, and they all point one way: I'm happiest as a product engineer on a small team, building the tools and platforms a business runs on, end to end, for the people who use them.",
+    line: "Every act added a color and new skills, and they all point one way. I'm happiest as a product engineer on a small team, building the tools a business runs on, end to end, for the people who use them every day.",
   },
   // Say hello links. A blank address leaves its link out.
   contact: {
