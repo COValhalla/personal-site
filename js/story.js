@@ -43,7 +43,6 @@
       story.acts.forEach((act, i) => {
         const where = `Act ${act.numeral || i + 1}`;
         need(act.title, `${where} has no title.`);
-        need(Array.isArray(act.quests) && act.quests.length && act.quests.every(q => q && q.what), `${where} needs quests for the quest log: one or more lines, each with what.`);
         need(act.color && act.color.light && act.color.base && act.color.shade, `${where} needs color.light, color.base and color.shade.`);
         need(known.scenes.includes(act.scene), `${where} uses scene "${act.scene}", which scenes.js does not draw.`);
         const stageNames = act.stages || [act.scene];

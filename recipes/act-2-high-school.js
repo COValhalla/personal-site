@@ -6,10 +6,6 @@ Story.addAct({
   numeral: 'II',
   title: 'Finding my party',
   years: 'High school',
-  quests: [
-    { what: 'School discus record, 176 ft' },
-    { what: 'Football team captain' },
-  ],
   // Varsity colors: red with a navy accent, under the stadium lights.
   color: { name: 'Varsity red', light: '#f08a75', base: '#e0533d', shade: '#a3352a', accent: '#24366b' },
   theme: 'light',
@@ -29,7 +25,6 @@ Story.addAct({
       line: 'Stay low, spin, and let it fly flat.',
       adds: { grit: 2, outdoors: 1 },
       photo: null,
-      game: 'discus',
     },
     {
       id: 'captain-patch', name: "Captain's patch", sprite: 'patch', tag: 'life',
@@ -43,6 +38,6 @@ Story.addAct({
     { id: 'throwing', name: 'Throwing', parents: ['riding'], moment: 3, line: 'Timing, rhythm and one clean release.' },
     { id: 'leading', name: 'Leading', parents: ['teaching', 'teamwork'], moment: 4, line: 'Earning the C by doing the work first.' },
   ],
-  game: 'discus',
+  game: null,
   photos: [],
 });

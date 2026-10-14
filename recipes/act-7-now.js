@@ -7,11 +7,6 @@ Story.addAct({
   numeral: 'VII',
   title: 'Party leader',
   years: 'Since 2023',
-  quests: [
-    { what: 'Software Engineer', where: 'Wavelynx Technologies', when: 'Jan 2023 to Sep 2025' },
-    { what: 'Technical Product Lead, Credentials', where: 'Wavelynx Technologies', when: 'Sep 2025 to Apr 2026' },
-    { what: 'Sr. Product Manager, Credentials', where: 'Wavelynx Technologies', when: 'Apr 2026 to now' },
-  ],
   color: { name: 'Purple', light: '#b69af0', base: '#8a63d2', shade: '#5d3f9a' },
   theme: 'light',
   scene: 'studio',

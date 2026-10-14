@@ -5,18 +5,15 @@
 Story.addAct({
   id: 'year-off',
   numeral: 'VI',
-  title: 'The respec',
+  title: 'The leap',
   years: 'Year off, 2022',
-  quests: [
-    { what: 'Full Stack JavaScript', where: 'The Odin Project', when: 'May to Dec 2022' },
-  ],
   color: { name: 'Amber', light: '#f5cf66', base: '#e5ac1f', shade: '#a57712' },
   theme: 'light',
   scene: 'library',
   // The beard and the long hair came with the year off: they grow moment by moment (look).
   hero: { gear: 'headphones', title: 'Self-taught developer', hair: 'bun', beard: 'long' },
   beats: [
-    { tag: 'life', text: 'By 2022 I was a senior engineer at a medical-device maker, on a safe path up. But the code I wrote on the side had become the best part of every job. So I quit, with no job lined up, to respec: take back my skill points and spend them on a new build.', cue: 'fun', look: { hair: 'short', beard: 'stubble' } },
+    { tag: 'life', text: 'By 2022 I was a senior engineer at a medical-device maker, on a safe path up. But the code I wrote on the side had become the best part of every job. So I quit, with no job lined up, and took the leap: a year to rebuild my skills around code.', cue: 'fun', look: { hair: 'short', beard: 'stubble' } },
     { tag: 'work', text: 'From May to December I taught myself full-stack JavaScript with The Odin Project: a library app, a weather app, a battleship game and a blog API. No boss, no paycheck, just whether it ran.', item: 'laptop', cue: 'code', look: { beard: 'full' } },
     { tag: 'work', text: "Had I stayed, I'd probably have moved into engineering leadership: manager, then director. I don't regret the trade: I learned to explain every bug out loud, and to build the thing myself.", item: 'rubber-duck', cue: 'duck', look: { hair: 'bun', beard: 'long' } },
   ],

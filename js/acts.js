@@ -22,7 +22,7 @@
   // Seconds within each kind of step.
   const BEATS = {
     chapterIn: 0, color: 0.2, walk: 0.3, chapterOut: 1.0,
-    typeRate: 70, itemPop: 0.35, itemFly: 1.0,
+    typeRate: 70, afterText: 0.1, skillAfterItem: 0.4,
     jump: 0, gearSwap: 0.25, skills: 0.75, skillGap: 0.28, button: 0.25,
   };
   // How far to scroll for each step, as a share of the screen height, and how
@@ -147,7 +147,7 @@
 
     const hint = el('p', { class: 'act-hint', 'aria-hidden': 'true' }, 'Scroll to continue the story ', el('span', { class: 'act-hint-arrow', text: '▼' }));
     const after = Story.acts[i + 1];
-    const next = el('a', { class: 'act-next', href: after ? `#act-${after.id}` : '#facts' }, after ? `Next: ${Story.name(after)} ` : 'Next: the quest log ', el('span', { 'aria-hidden': 'true', text: '▼' }));
+    const next = el('a', { class: 'act-next', href: after ? `#act-${after.id}` : '#facts' }, after ? `Next: ${Story.name(after)} ` : 'Next: what I build next ', el('span', { 'aria-hidden': 'true', text: '▼' }));
     const screen = el('div', { class: `act-screen act--${act.theme || 'light'}`, style: colorVars(act) + (act.color.accent ? `;--ca:${act.color.accent}` : '') },
       head,
       el('div', { class: 'act-stage' },
@@ -288,7 +288,8 @@
       p.pop.querySelector('.scene-pop-name').textContent = '+ ' + item.name;
     });
     tl.fromTo(p.pop, { scale: 0, opacity: 0, y: 10 }, { scale: 1, opacity: 1, y: 0, duration: 0.4, ease: 'back.out(3)' });
-    tl.fromTo(p.flash, { opacity: 0.35 }, { opacity: 0, duration: 0.4 }, '<');
+    // The item comes late in a moment, so the flash waits for it instead of washing the scene from the start.
+    tl.fromTo(p.flash, { opacity: 0.35 }, { opacity: 0, duration: 0.4, immediateRender: false }, '<');
     tl.to(p.pop, { y: -4, duration: 0.25, yoyo: true, repeat: 1, ease: 'sine.inOut' });
     // The flight runs on its own, so it can start from wherever the sprite is now.
     tl.call(() => {
@@ -319,22 +320,27 @@
       if (panel.scrollHeight > panel.clientHeight) panel.scrollTo({ top: Math.max(0, li.offsetTop - panel.offsetTop - 40), behavior: reduced() ? 'auto' : 'smooth' });
     });
     tl.fromTo(li, { x: 24, opacity: 0 }, { x: 0, opacity: 1, duration: 0.35, ease: 'power2.out' }, 0);
-    tl.add(typeOut(text), 0.1);
+    const typing = typeOut(text);
+    tl.add(typing, 0.1);
     const cue = step.beat.cue && p.stages[stageOf(p, step)].stage.cue(step.beat.cue);
     if (cue) tl.add(cue, 0);
+    // The item and the skill wait for the whole moment, so the words never push them:
+    // the item pops in, then the skill lights, then the item flies to the belt.
+    const shown = 0.1 + typing.duration() + BEATS.afterText;
+    const lit = shown + (step.beat.give ? BEATS.skillAfterItem : 0);
     p.act.skills.forEach((skill, n) => {
       if (skill.moment !== step.k + 1) return;
       const card = p.skillCards[n];
-      tl.call(() => lightSkill(p, card), null, 0.9);
-      tl.fromTo(card, { scale: 0.85 }, { scale: 1, duration: 0.35, ease: 'back.out(2.5)' }, 0.9);
+      tl.call(() => lightSkill(p, card), null, lit);
+      tl.fromTo(card, { scale: 0.85 }, { scale: 1, duration: 0.35, ease: 'back.out(2.5)', immediateRender: false }, lit);
     });
     if (step.beat.look) {
       tl.call(() => restyle(p, step.beat), null, 0.3);
       tl.fromTo(p.flash, { opacity: 0.3 }, { opacity: 0, duration: 0.35 }, 0.3);
     }
     if (step.beat.give) {
-      tl.add(popItem(p, step.beat.give), BEATS.itemPop);
-      if (chip) tl.fromTo(chip, { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(2.5)', onStart: () => chip.classList.add('is-on') }, BEATS.itemFly + 0.6);
+      tl.add(popItem(p, step.beat.give), shown);
+      if (chip) tl.fromTo(chip, { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(2.5)', onStart: () => chip.classList.add('is-on') }, shown);
     }
     tl.call(() => { li.classList.remove('is-new'); gsap.set([li, chip].filter(Boolean), { clearProps: 'transform,opacity' }); });
     return tl;

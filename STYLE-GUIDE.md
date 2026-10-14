@@ -9,7 +9,7 @@ This guide keeps every act, sprite and animation looking like it came from the s
 | Item sprite | 16 × 16 | 4× in slots, 8× on story cards |
 | Hero sprite | 16 × 24 | 1 scene pixel per sprite pixel; 4× on the sheet |
 | Act scene | 160 × 72, ground at y = 64 | As big as fits the screen above the skills row; in windows 760 px and wider it shrinks to whatever room the skills and buttons leave |
-| Hammer and discus field | 200 × 150, with a 64 × 64 close-up of the circle | Scaled to fit the game window |
+| Hammer field | 200 × 150, with a 64 × 64 close-up of the circle | Scaled to fit the game window |
 | BMX race | 200 × 100, ground at y = 84, lanes 5 pixels apart, overhead view in each berm | Scaled to fit the game window |
 | World map | 320 × 120, a stop per act | The width of the sheet |
 | BMX rider | drawn on a 32 × 32 canvas, then turned with the slope | 1 game pixel per sprite pixel |
@@ -72,7 +72,7 @@ Color is added act by act: an act is drawn in grays until it unlocks, then its c
 | III · Training arc | Magenta | `#f29ad0` | `#d6449a` | `#962d6b` |
 | IV · High stakes | Blueprint blue | `#7fb0ee` | `#3b7dd8` | `#24539c` |
 | V · Mountains and factories | Pine green | `#7fd09c` | `#3fa66b` | `#286f46` |
-| VI · The respec | Amber | `#f5cf66` | `#e5ac1f` | `#a57712` |
+| VI · The leap | Amber | `#f5cf66` | `#e5ac1f` | `#a57712` |
 | VII · Party leader | Purple | `#b69af0` | `#8a63d2` | `#5d3f9a` |
 
 Act VII's own items are purple; its scene and the end of the page use every act's color.
@@ -106,7 +106,7 @@ A scene lives in `js/scenes.js` and has four parts:
 Every act fills one screen. It tells its story in steps, and each step plays once; scrolling back never replays it.
 
 1. **Chapter.** When the act's top is a little past the middle of the screen, a chapter card sweeps across the scene, the title slides in, the color comes in and the hero walks on in the last act's gear.
-2. **Moments.** At the top of the screen the act holds still (it is pinned). Every further 60% of a screen of scrolling tells the next moment, and each moment has its own stop: when scrolling pauses between stops the page glides to the nearest one (after 0.16 s; a nudge of about 30% of a moment past a stop goes on to the next). A moment: it types itself out, plays its scene cue, and its item pops out above the hero and flies into the inventory belt. In between, the scroll itself moves things: the hero walks 34 scene pixels across the scene to `heroX` (in an act with `stages`, across each scene), and the progress rail under the scene fills, with a node per moment and one for the level-up ("Moment 2 of 3").
+2. **Moments.** At the top of the screen the act holds still (it is pinned). Every further 60% of a screen of scrolling tells the next moment, and each moment has its own stop: when scrolling pauses between stops the page glides to the nearest one (after 0.16 s; a nudge of about 30% of a moment past a stop goes on to the next). A moment: it types itself out while its scene cue plays. Only once the words are whole does its item pop in, in the moment and above the hero; then the moment's skill lights, and then the item flies into the inventory belt. Nothing appears mid-sentence, so the words never push the item along. In between, the scroll itself moves things: the hero walks 34 scene pixels across the scene to `heroX` (in an act with `stages`, across each scene), and the progress rail under the scene fills, with a node per moment and one for the level-up ("Moment 2 of 3").
 3. **Level up.** After the last moment the hero jumps, changes gear and bursts in the act's color; then the new skills light one by one, each with the skills it grew from; then Open sheet appears. The act holds still for 70% of a screen more, and a pulsing Next tag points to the next act. On a phone the Next tag, like the scroll hint before it, sits in a row of its own under the buttons.
 
 | Step | Starts at | Length | Ease |
@@ -116,9 +116,11 @@ Every act fills one screen. It tells its story in steps, and each step plays onc
 | Hero walks on | 0.3 s | 0.8 s | `steps(10)` |
 | Chapter card out | 1.0 s | 0.35 s | `power2.in` |
 | Moment types out | 0.1 s | its length ÷ 70 letters a second | linear |
-| Item pops out, then flies to the belt | 0.35 s, flight about 1.25 s later | 0.4 s, then 0.75 s | `back.out(3)`, then `power2.in` |
+| Item pops in, in the moment and above the hero | 0.1 s after the words end (`afterText`) | 0.4 s | `back.out(3)` |
+| The moment's skill lights | 0.4 s after the item (`skillAfterItem`), or with it when there is no item | 0.35 s | `back.out(2.5)` |
+| Item flies to the belt | 0.9 s after the item pops in | 0.75 s | `power2.in` |
 | Hero jumps and changes gear | 0 s, gear at 0.25 s | 0.25 s up, 0.45 s down | `power2.out`, `bounce.out` |
-| Skills light | 0.75 s, then 0.28 s apart | 0.35 s each | `back.out(2.5)` |
+| Level-up skills light | 0.75 s, then 0.28 s apart | 0.35 s each | `back.out(2.5)` |
 | Open sheet appears | after the last skill, plus 0.25 s | 0.3 s | `back.out(2)` |
 
 - Steps queue up. If you scroll past moments faster than they play, the waiting ones play at 1.5x (`CATCH_UP`), and leaving an act finishes it at 3x (`LEAVE_SPEED`).
@@ -136,12 +138,11 @@ Along the bottom of a laptop screen sits the belt: one slot per item, grouped by
 
 - Short, one screen, and skippable at any time with Skip or Escape.
 - Drawn on a small canvas in the act's colors, scaled up with pixels kept sharp.
-- At most two controls, each with a button and a key. The hammer and the discus are one: hold to spin (Space). The BMX race is two: Pedal (hold, or the right arrow) and Jump (tap, or Space; hold to fly bigger).
-- A game should be able to go wrong. The hammer fouls after a fifth turn, the discus after a third, and both on a release in the wind or away from the glow; a BMX rider can case a jump, overshoot it or come up short and crash.
+- At most two controls, each with a button and a key. The hammer is one: hold to spin (Space). The BMX race is two: Pedal (hold, or the right arrow) and Jump (tap, or Space; hold to fly bigger).
+- A game should be able to go wrong. The hammer fouls after a fifth turn, and on a release in the wind or away from the glow; a BMX rider can case a jump, overshoot it or come up short and crash.
 - Show the timing a game judges. The BMX lit strip draws the real windows from `WINDOWS` in `js/games/bmx.js`: green for perfect, amber for good. The roller calls are Perfect pump, Good - a bit early, Good - a bit late, Too early and No pump. A tap on a jump wheelies over it, and a press pulls the front wheel up 22 degrees around the rear wheel (`LIFT`). The hold meter shows, before each jump, the charges that land clean.
 - The hammer's turns run at 4.4, 5.2, 7.2 and 9.2 radians a second (`turnSpeed`), and the glow widens on a fast turn so it never lasts under 0.1 s (`MIN_WINDOW`). A fair release on turn 3 or 4 freezes for 0.08 s (0.11 s for a perfect one), then shakes and flashes; a throw of 70 m or more plays the side-on throw camera at a dusk stadium.
-- The discus throw shares the hammer's code in `js/games/hammer.js`; `MODES` holds what differs. It turns twice, at 5.0 and 7.8 radians a second, and a fair release on the second turn hits. Marks are in feet, rounded down to the tenth, so 176.0 ties Joe's 176-foot school record (`RECORD_FT`) without beating it. The record is a gold line across the sector and a gold flag in the throw camera, which plays from 165 feet.
-- Each game puts its live state on its stage element (`stage.bmx`, `stage.hammer`, `stage.discus`) for tests and playtesting, and the BMX physics is exported as `Games.get('bmx').sim` so it can be tuned without drawing.
+- Each game puts its live state on its stage element (`stage.bmx`, `stage.hammer`) for tests and playtesting, and the BMX physics is exported as `Games.get('bmx').sim` so it can be tuned without drawing.
 - Register with `Games.register(name, { title, help, mount })` in `js/games/`; `mount` returns a function that stops the game.
 
 ## Words
@@ -150,4 +151,4 @@ Along the bottom of a laptop screen sits the belt: one slot per item, grouped by
 - On a laptop, an act's moments all show in its story panel without scrolling. The panel runs the full height of the act beside the scene, and its moments tighten on screens under 780 px and 700 px tall. The longest act today, Party leader, has four moments and about 650 letters with three items, and it fits down to 1280 × 680, the smallest size `npm test` checks. If new words fail that check, shorten them. On a phone the panel scrolls to the newest moment. On phones 640 px tall or shorter, such as the first iPhone SE (320 × 568), the heading and scene are smaller, the skill cards show only their names (selecting one opens its story card, which shows what it grew from) and the buttons share one row, so every act's panel is at least 100 px tall and shows the newest moment's first two lines; `npm test` checks this on that phone.
 - In windows 760 px and wider, the scene takes only the room the skills and buttons leave, and the left column stops 38 px above the belt, room for the Next tag under the buttons. From 760 to 1279 px wide the skill cards are also compact. Every act's skills and buttons stay above the belt from 760 × 600 to 1279 × 720, and the Next tag, at the top of its pulse, sits clear of them from 800 × 600 to 1920 × 1080 in `npm test`.
 - An item's line is one sentence in your own voice.
-- Employers and schools are named, with real titles and dates from Joe's resume, in each act's `quests` for the quest log at the end of the page. For anything more exact, the quest log points to LinkedIn.
+- Employers and schools are named in the moments where they matter. For real titles and dates, the title screen points to LinkedIn ("Short on time? See my work history on LinkedIn.").
