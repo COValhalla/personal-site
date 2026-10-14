@@ -57,7 +57,7 @@ GSAP 3.15.0 and ScrollTrigger drive the motion. `acts.js` pins each act while it
 
 ## Tests
 
-`npm test` runs `tests/smoke.mjs`: it opens `index.html` from disk in an installed Chrome and does what a reader does, at several window and phone sizes. It runs on a developer's machine, not in CI ([ADR 0004](docs/decisions/0004-smoke-test-runs-locally.md)).
+`npm run test:unit` runs `tests/unit/`, which checks each recipe rule in `js/story.js` with `node:test`, and the shipped recipes against the real scenes, art and games. `npm test` runs those first, then `tests/smoke.mjs`: it opens `index.html` from disk in an installed Chrome and does what a reader does, at several window and phone sizes. It runs on a developer's machine, not in CI ([ADR 0004](docs/decisions/0004-smoke-test-runs-locally.md)).
 
 ## Known limits
 

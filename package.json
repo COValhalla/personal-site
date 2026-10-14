@@ -4,7 +4,8 @@
   "description": "Proof of concept: a playful life story told as a game character sheet.",
   "type": "module",
   "scripts": {
-    "test": "node tests/smoke.mjs"
+    "test": "npm run test:unit && node tests/smoke.mjs",
+    "test:unit": "node --test \"tests/unit/*.test.mjs\""
   },
   "devDependencies": {
     "playwright-core": "1.63.0"
