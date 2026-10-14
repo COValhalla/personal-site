@@ -10,6 +10,7 @@ Story.addAct({
   color: { name: 'Purple', light: '#b69af0', base: '#8a63d2', shade: '#5d3f9a' },
   theme: 'light',
   scene: 'studio',
+  stages: ['studio', 'studio', 'studio', 'studio', 'sheet'],
   // No hat now, so the bun shows; a badge on the shirt.
   hero: { gear: 'badge', title: 'Product engineer', hair: 'bun', beard: 'long' },
   beats: [

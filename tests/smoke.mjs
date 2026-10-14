@@ -171,9 +171,9 @@ async function desktop(browser) {
   await page.evaluate(() => { window.__order = []; });
   const names = ['Tutorial', 'Act I', 'Act II', 'Act III', 'Act IV', 'Act V', 'Act VI', 'Act VII'];
   // The Tutorial and Act I dive into a scene per moment, then one for the level-up. Act II tells two moments on the
-  // football field, then dives into the summer jobs for the third and the level-up. Each list is the scene after each moment.
+  // football field, then dives into the summer jobs for the third, then the character screen for the level-up. Each list is the scene after each moment.
   const scenes = { 0: [0, 1, 2], 1: [0, 1], 2: [0, 0, 1] };
-  const lastScene = { 0: [3, 'the high-score board'], 1: [2, 'the character screen'], 2: [1, 'the summer jobs'] };
+  const lastScene = { 0: [3, 'the high-score board'], 1: [2, 'the character screen'], 2: [2, 'the character screen'] };
   // What each act's own moment shows once it has played: night falls in the Tutorial, the crew arrives in Act I,
   // and high school plays out on the football field in Act II. Key n,0 is read after the first moment, before the second starts.
   const shows = {

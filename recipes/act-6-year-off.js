@@ -10,6 +10,7 @@ Story.addAct({
   color: { name: 'Amber', light: '#f5cf66', base: '#e5ac1f', shade: '#a57712' },
   theme: 'light',
   scene: 'library',
+  stages: ['library', 'library', 'library', 'sheet'],
   // The beard and the long hair came with the year off: they grow moment by moment (look).
   hero: { gear: 'headphones', title: 'Self-taught developer', hair: 'bun', beard: 'long' },
   beats: [

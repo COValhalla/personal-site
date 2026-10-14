@@ -734,6 +734,7 @@
     // and concrete pours in level. On the right, at the machine factory, a machine gets its paint and rolls onto a truck.
     'summer-jobs': {
       heroX: 50,
+      door: { x: 145, y: 44 },
       draw(ctx, c) {
         // A summer sky, and the factory's metal wall on the right.
         rect(ctx, '#9fd3f5', 0, 0, W, GROUND);
@@ -830,6 +831,7 @@
     // Act III: a track with the hammer cage, the stands and the scoreboard.
     track: {
       heroX: 52,
+      door: { x: 40, y: 50 },
       draw(ctx, c) {
         const r = rng(22);
         const navy = c.accent || '#24366b';
@@ -844,6 +846,7 @@
         // Track lanes.
         rect(ctx, c.base, 0, 47, W, H - 47);
         for (let y = 50; y < H; y += 5) rect(ctx, mix(c.base, '#ffffff', 0.75), 0, y, W, 1);
+        doorway(ctx, 40, GROUND);
         // Scoreboard on a post.
         rect(ctx, N.o, 98, 0, 30, 12);
         rect(ctx, '#141318', 99, 1, 28, 10);
@@ -922,6 +925,7 @@
     // Act IV: a blueprint of a plant.
     plant: {
       heroX: 26,
+      door: { x: 140, y: 50 },
       draw(ctx, c) {
         rect(ctx, c.shade, 0, 0, W, H);
         const grid = mix(c.shade, c.light, 0.35);
@@ -951,6 +955,7 @@
         line(124, 56, 130, 56);
         line(140, 34, 140, 40);
         line(140, 34, 156, 34);
+        doorway(ctx, 140, GROUND);
         // Ground.
         for (let x = 0; x < W; x += 3) rect(ctx, ink, x, GROUND, 2, 1);
       },
@@ -1003,6 +1008,7 @@
     // Act V: the mountains, a plane to Vietnam, and a production line.
     mountains: {
       heroX: 66,
+      door: { x: 72, y: 50 },
       draw(ctx, c) {
         const bands = ['#e3f1e8', '#e9f4ec', '#eff7f1', '#f4faf5', '#f8fcf9'];
         bands.forEach((b, i) => rect(ctx, b, 0, i * 9, W, 9));
@@ -1018,6 +1024,10 @@
         rect(ctx, N.w, 0, GROUND - 4, W, H - GROUND + 4);
         rect(ctx, '#dfe7e2', 0, GROUND + 2, W, 1);
         [[128, 10], [140, 15], [151, 11]].forEach(([x, h]) => pine(ctx, c.base, c.shade, x, GROUND - 2, h));
+        // A cabin beside the building site, with the door the camera dives through.
+        rect(ctx, '#5b3a22', 57, 32, 30, 4);
+        rect(ctx, '#8a5a36', 60, 36, 24, 28);
+        doorway(ctx, 72, GROUND);
       },
       init: () => ({ ski: -1, plane: -1, build: 0, line: 0 }),
       frame(ctx, c, s, t) {
@@ -1075,6 +1085,7 @@
     // Act VI: the library, the year off and the self-taught year.
     library: {
       heroX: 76,
+      door: { x: 86, y: 36 },
       draw(ctx, c) {
         const r = rng(55);
         rect(ctx, '#f6efdc', 0, 0, W, H);
@@ -1097,6 +1108,7 @@
         rect(ctx, '#bfe3f5', 114, 8, 36, 26);
         rect(ctx, '#8a6640', 131, 8, 2, 26);
         rect(ctx, '#8a6640', 114, 20, 36, 2);
+        doorway(ctx, 86, 50);
         // Long desk with a lamp.
         rect(ctx, '#b48a5a', 66, 50, 88, 3);
         rect(ctx, '#8a6640', 66, 53, 88, 1);
@@ -1170,6 +1182,7 @@
     // Act VII: a studio with a roadmap board, the business and the team.
     studio: {
       heroX: 70,
+      door: { x: 151, y: 50 },
       draw(ctx, c) {
         rect(ctx, '#f1eef7', 0, 0, W, H);
         // Board.
@@ -1184,6 +1197,7 @@
         rect(ctx, '#d6e6f7', 123, 5, 32, 26);
         const r = rng(66);
         for (let x = 123; x < 155; x += 4) { const h = 6 + Math.floor(r() * 14); rect(ctx, '#aebfd6', x, 31 - h, 3, h); }
+        doorway(ctx, 151, GROUND);
         // Floor.
         rect(ctx, '#d9d5e3', 0, GROUND, W, H - GROUND);
         rect(ctx, '#c4bfd2', 0, GROUND, W, 1);
@@ -1266,12 +1280,67 @@
     cues: {},
   };
 
-  const get = name => scenes[name] || blank;
+  // A door 14 wide and 28 tall, standing on the bottom line it is given.
+  function doorway(ctx, x, bottom) {
+    const left = x - 7;
+    const top = bottom - 28;
+    rect(ctx, N.o, left - 1, top - 1, 16, 29);
+    rect(ctx, '#5b4636', left, top, 14, 28);
+    outline(ctx, left + 2, top + 3, 10, 22, '#7a5e48');
+    rect(ctx, '#e8c77a', left + 10, top + 14, 1, 2);
+  }
+
+  // The character screen each act levels up to: its class, the items it earned dropping into rows, and the skills it grew.
+  function characterSheet(act) {
+    const label = s => s.replace(/-/g, ' ');
+    return {
+      heroX: 26,
+      draw(ctx, c) {
+        rect(ctx, '#1f2440', 0, 0, W, H);
+        for (let y = 0; y < H; y += 8) rect(ctx, '#252b4f', 0, y, W, 1);
+        rect(ctx, N.o, 6, 4, 148, 64);
+        rect(ctx, '#2a3a6a', 8, 6, 144, 60);
+        rect(ctx, c.base, 8, 6, 144, 9);
+        text(ctx, label(act.hero.title).toUpperCase(), 12, 8, N.o);
+        rect(ctx, '#1d1b22', 14, 18, 38, 42);
+        outline(ctx, 14, 18, 38, 42, N.n);
+        const names = act.skills.map(sk => label(sk.name).toUpperCase());
+        let line = '';
+        let shown = 0;
+        for (const name of names) {
+          const next = line ? `${line} ${name}` : name;
+          if (next.length > 30) break;
+          line = next;
+          shown += 1;
+        }
+        if (shown < names.length) line += ` +${names.length - shown}`;
+        text(ctx, line, 14, 60, c.light);
+      },
+      init: () => ({ i0: -1, i1: -1, i2: -1 }),
+      frame(ctx, c, s) {
+        act.items.slice(0, 3).forEach((item, k) => {
+          const v = s['i' + k];
+          if (v <= -0.5) return;
+          const y = Math.round(17 + k * 13 - (1 - v) * 30);
+          Pixel.paint(ctx, Pixel.ITEMS[item.sprite], c, 60, y, 1);
+          text(ctx, label(item.name), 80, y + 5, c.light);
+        });
+      },
+      cues: {
+        equip: s => {
+          const tl = gsap.timeline();
+          for (let k = 0; k < 3; k++) tl.fromTo(s, { ['i' + k]: -1 }, { ['i' + k]: 1, duration: 0.6, ease: 'bounce.out' }, k * 0.5);
+          return tl;
+        },
+      },
+    };
+  }
+
+  const get = (name, act) => (name === 'sheet' ? characterSheet(act) : scenes[name] || blank);
 
   // Mount a scene on a canvas. The returned stage draws on demand and runs its
   // loop only while start() has been called, so off-screen acts cost nothing.
-  function mount(name, canvas, ramp, allActs) {
-    const scene = get(name);
+  function mount(scene, canvas, ramp, allActs) {
     const bg = document.createElement('canvas');
     bg.width = W;
     bg.height = H;
@@ -1313,7 +1382,7 @@
 
   window.Scenes = {
     W, H, GROUND,
-    names: Object.keys(scenes),
+    names: [...Object.keys(scenes), 'sheet'],
     cuesOf: name => Object.keys(get(name).cues || {}),
     get, mount, mix, rng,
   };

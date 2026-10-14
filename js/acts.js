@@ -84,10 +84,10 @@
     const stageAt = names.map((name, k) => names.slice(0, k + 1).filter((n, j) => j === 0 || n !== names[j - 1]).length - 1);
     const stages = names.filter((name, k) => k === 0 || name !== names[k - 1]).map((name, s) => {
       const canvas = el('canvas', { class: 'px scene-canvas', width: Scenes.W, height: Scenes.H });
-      const mounted = Scenes.mount(name, canvas, act.color, Story.acts);
+      const drawn = Scenes.get(name, act);
+      const mounted = Scenes.mount(drawn, canvas, act.color, Story.acts);
       mounted.render();
       if (s > 0) canvas.style.visibility = 'hidden';
-      const drawn = Scenes.get(name);
       return { canvas, stage: mounted, heroX: drawn.heroX, walkFrom: Math.max(2, drawn.heroX - WALK), door: drawn.door };
     });
     const scene = stages[0];

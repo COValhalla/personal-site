@@ -63,7 +63,7 @@ Each act is one file in `recipes/`. The fields:
 | `color` | `name` plus `light`, `base` and `shade` colors, and an optional `accent` for the scene |
 | `theme` | `light`, or `dark` for a dark act screen |
 | `scene` | Which scene in `js/scenes.js` to draw |
-| `stages` | Optional: one scene per moment, then one for the level-up (so `beats` plus one names), for an act whose background changes as the story goes on. The camera dives into each next scene. Moments in a row can name the same scene to share it, and the story carries on there without a dive |
+| `stages` | Optional: one scene per moment, then one for the level-up (so `beats` plus one names), for an act whose background changes as the story goes on. The camera dives into each next scene. Moments in a row can name the same scene to share it, and the story carries on there without a dive. The level-up can be `sheet`, the shared character screen drawn from the act's class, items and skills |
 | `hero` | `gear` from `js/pixel.js`, the class `title` shown on level up, and the `hair` and `beard` the hero has in this act |
 | `beats` | The moments of the act, in order. Each has a `tag` (`life` or `work`) and `text`, and optionally the `item` it gives (an item id from this act), a scene `cue` to play and a `look` (`hair`, `beard`) that changes the hero at that moment |
 | `unlock` | `banner` (such as Level 2), `say` (the line beside it) and an optional `pop` (the word over the hero, Level up! by default) |
