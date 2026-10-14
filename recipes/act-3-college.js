@@ -35,7 +35,7 @@ Story.addAct({
   ],
   skills: [
     { id: 'harder-thing', name: 'Harder thing', parents: ['throwing'], moment: 2, line: 'Picking the harder road on purpose, then putting in the reps.' },
-    { id: 'chemistry', name: 'Chemistry', parents: ['reading'], line: 'How things react, and how to make them react on purpose.' },
+    { id: 'chemistry', name: 'Chemistry', parents: ['process'], line: 'How things react, and how to make them react on purpose.' },
     { id: 'pitching', name: 'Pitching', parents: ['leading', 'chemistry'], moment: 3, line: 'Solving the problem, then selling the fix to the room.' },
   ],
   game: 'hammer',

@@ -112,11 +112,17 @@ async function desktop(browser) {
   check(clearance.length === 1 && clearance[0].startsWith('My clearance stalled, so rather than wait I moved to Sioux City'), 'the clearance comes up once, as the reason Joe moved to Sioux City');
   // The early acts describe what Joe did and learned, not brands or rankings.
   const said = await page.evaluate(() => [Story.config.welcome, ...Story.acts.flatMap(a => a.beats.map(b => b.text))]);
-  const banned = ['Diablo', 'Accelerated Reader', 'by far', '176', 'basketball', 'three towns', 'in shape'].filter(w => said.some(t => t.includes(w)));
+  const banned = ['Diablo', 'Accelerated Reader', 'by far', 'basketball', 'three towns', 'in shape'].filter(w => said.some(t => t.includes(w)));
   check(banned.length === 0, `no moment and not the welcome names a game brand, a ranking or a setback with no payoff${banned.length ? ` (found: ${banned.join(', ')})` : ''}`);
   const callbacks = await page.evaluate(() => [Story.acts[0].beats[1].text, Story.acts[7].beats.at(-1).text, Story.acts[2].beats[0].text, Story.acts[2].beats.at(-1).text]);
-  check(callbacks[0].includes('typing class') && callbacks[1].includes('typing game') && callbacks[2].includes('skipped football') && callbacks[3].includes('skipped football'),
-    "Act VII's last moment calls back to the Tutorial's typing class, and Act II's last moment pays off skipping football");
+  check(callbacks[0].includes('typing class') && callbacks[1].includes('typing game') && callbacks[2].includes("team's captain") && callbacks[3].startsWith('Summers I worked') && callbacks[3].includes('only as good as the forms you build first'),
+    "Act VII's last moment calls back to the Tutorial's typing class, and Act II opens on the team's captain and ends on the summer jobs' lesson about forms");
+  // The Tutorial's third moment is the holiday box work at the family business, in place of the reading game.
+  const box = await page.evaluate(() => ({ beat: Story.acts[0].beats[2], skills: Story.acts[0].skills.map(s => s.name), item: Story.item('box') }));
+  check(box.beat.tag === 'work' && box.beat.text.startsWith('Every holiday rush I worked at our family business') && box.beat.item === 'box' && box.item.name === 'Shipping box' && box.skills.join() === 'Gaming,Typing,Process' && !(await page.evaluate(() => Story.skill('reading'))),
+    'the Tutorial\'s third moment is holiday box work: it gives the Shipping box and lights Process, and Reading is gone');
+  check(await page.evaluate(() => Story.skill('chemistry').parents.includes('process') && Story.skill('product').parents.includes('process') && Story.skill('planning').parents.includes('process')),
+    'Chemistry, Product and Planning grow from Process');
   const locked = await page.$eval('#act-high-school .skill-card[data-skill="teamwork"]', b => { b.click(); return b.disabled; });
   check(locked && await page.$('#card[open]') === null, 'a locked skill card opens nothing');
   check(await page.$$eval('.intro .intro-note a', a => a.map(x => `${x.textContent} ${x.getAttribute('href')} ${x.target}`).join()) === 'Short on time? See my work history on LinkedIn. https://www.linkedin.com/in/josephvellella/ _blank' && await page.$('.intro .intro-start') !== null,
@@ -164,18 +170,19 @@ async function desktop(browser) {
   // Scrolling back above the Tutorial rewound it, so the watch starts over for the walk.
   await page.evaluate(() => { window.__order = []; });
   const names = ['Tutorial', 'Act I', 'Act II', 'Act III', 'Act IV', 'Act V', 'Act VI', 'Act VII'];
-  // The Tutorial and Act I dive into a scene per moment, then one for the level-up.
-  const scenes = { 0: 4, 1: 3 };
-  const lastScene = { 0: 'the high-score board', 1: 'the character screen' };
+  // The Tutorial and Act I dive into a scene per moment, then one for the level-up. Act II tells two moments on the
+  // football field, then dives into the summer jobs for the third and the level-up. Each list is the scene after each moment.
+  const scenes = { 0: [0, 1, 2], 1: [0, 1], 2: [0, 0, 1] };
+  const lastScene = { 0: [3, 'the high-score board'], 1: [2, 'the character screen'], 2: [1, 'the summer jobs'] };
   // What each act's own moment shows once it has played: night falls in the Tutorial, the crew arrives in Act I,
   // and high school plays out on the football field in Act II. Key n,0 is read after the first moment, before the second starts.
   const shows = {
     '0,1': ['the Tutorial opens at night, with the computer glowing', () => { const st = Acts.sections[0].stages[0].stage.state; return st.dark === 1 && st.screen === 1; }],
     '1,2': ['Act I: the new hires stand at the table in their aprons', () => { const st = Acts.sections[1].stages[1].stage.state; return st.crew === 1 && st.aprons === 1 && st.work === 1; }],
-    '2,0': ['Act II, freshman year: night falls with the lights off, the team runs drills and hurdles stand on the track', () => { const st = Acts.sections[2].stages[0].stage.state; return st.night === 1 && st.lights === 0 && st.drill === 1 && st.hurdles === 1; }],
-    '2,2': ['Act II, sophomore year: the lights come on, the hurdles go and three friends walk on', () => { const st = Acts.sections[2].stages[0].stage.state; return st.lights === 1 && st.hurdles === 0 && st.crew === 1; }],
-    '2,3': ['Act II: the discus lands and the scoreboard counts to 176 feet', () => { const st = Acts.sections[2].stages[0].stage.state; return st.disc === 1 && st.mark === 176; }],
-    '2,4': ['Act II, senior year: the team walks on and the scoreboard says captain', () => { const st = Acts.sections[2].stages[0].stage.state; return st.team === 1 && st.captain === 1 && st.hop === 1; }],
+    '0,3': ['the Tutorial packs boxes at the family business: eight boxes stack by the door', () => { const st = Acts.sections[0].stages[2].stage.state; return st.packed === 8; }],
+    '2,0': ['Act II, moment 1: night falls, the lights come on, friends and then the team walk on, and the scoreboard says captain', () => { const st = Acts.sections[2].stages[0].stage.state; return st.night === 1 && st.lights === 1 && st.crew === 1 && st.team === 1 && st.captain === 1 && st.hop === 1; }],
+    '2,2': ['Act II: the discus lands and the scoreboard counts to 176 feet', () => { const st = Acts.sections[2].stages[0].stage.state; return st.disc === 1 && st.mark === 176; }],
+    '2,3': ['Act II, the summer jobs: the forms go up, the concrete pours, and a painted machine rolls onto the truck', () => { const st = Acts.sections[2].stages[1].stage.state; return st.forms === 1 && st.pour === 1 && st.paint === 1 && st.ship === 1; }],
   };
   for (const [n, id] of ids.entries()) {
     const { start, end } = where[n];
@@ -208,8 +215,8 @@ async function desktop(browser) {
         const ok = await page.waitForFunction(([sel, want, lit, scope]) => {
           const shown = [...document.querySelectorAll(sel)].findIndex(c => getComputedStyle(c).visibility === 'visible');
           return shown === want && document.querySelectorAll(`${scope} .skill-card.is-on`).length === lit;
-        }, [`#${id} .scene-canvas`, k - 1, k, `#${id}`], { timeout: 8000 }).then(() => true, () => false);
-        check(ok, `${names[n]}: after moment ${k} the scene is ${k} of ${scenes[n]} and ${k} skill(s) are lit`);
+        }, [`#${id} .scene-canvas`, scenes[n][k - 1], k, `#${id}`], { timeout: 8000 }).then(() => true, () => false);
+        check(ok, `${names[n]}: after moment ${k} the scene is ${scenes[n][k - 1] + 1} of ${lastScene[n][0] + 1} and ${k} skill(s) are lit`);
       }
       if (shows[`${n},${k}`]) {
         const [what, test] = shows[`${n},${k}`];
@@ -225,7 +232,7 @@ async function desktop(browser) {
     await scrollTo(page, end - 4);
     await page.waitForFunction(i => Story.state.unlocked.has(i), n, { timeout: 15000 });
     await page.waitForSelector(`#${id} .act-screen.is-ready`, { timeout: 8000 });
-    if (scenes[n]) check((await stageShown(page, id)) === scenes[n] - 1, `${names[n]}: the level-up opens on ${lastScene[n]}`);
+    if (scenes[n]) check((await stageShown(page, id)) === lastScene[n][0], `${names[n]}: the level-up opens on ${lastScene[n][1]}`);
     await page.waitForTimeout(900);
     const done = await page.evaluate(([sel, ids]) => {
       const s = document.querySelector(sel);
@@ -315,7 +322,7 @@ async function desktop(browser) {
   await page.click('#sheet [data-stop="3"]');
   check((await page.textContent('#sheet .map-info')).includes('Act III · Training arc · Hammer thrower. Skills: Harder thing, Chemistry, Pitching.'), 'the college stop shows Act III, its class and skills');
   await page.click('#sheet [data-stop="2"]');
-  check((await page.textContent('#sheet .map-info')).includes('Act II · Finding my party · Team captain. Skills: Teamwork, Throwing, Leading.'), 'the high school stop shows Act II, its class and skills');
+  check((await page.textContent('#sheet .map-info')).includes('Act II · Finding my party · Team captain. Skills: Teamwork, Throwing, Planning, Leading.'), 'the high school stop shows Act II, its class and skills');
   await page.waitForTimeout(400);
   const walking = Number(await page.$eval('#sheet .map', m => m.dataset.at));
   check(walking < 7 && walking > 2, `the hero walks the road toward the selected stop (at ${walking})`);
