@@ -8,3 +8,4 @@ Each file records one decision that is hard to reverse, why it was made and what
 | [0002 Recipes are JavaScript](0002-recipes-as-javascript.md) | Accepted |
 | [0003 Plain scripts share globals](0003-plain-scripts-share-globals.md) | Accepted |
 | [0004 The smoke test runs locally](0004-smoke-test-runs-locally.md) | Accepted |
+| [0005 A workshop page shows each scene, cue, sprite and gear on its own](0005-workshop-page.md) | Accepted |

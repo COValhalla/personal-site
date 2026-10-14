@@ -11,7 +11,7 @@ This is Joe's personal site: his life told as a character sheet, drawn by plain 
 ## Commands
 
 - `npm install` once, for the test's dev dependency.
-- Open `index.html` in a browser to check a change by eye. No server is needed.
+- Open `index.html` in a browser to check a change by eye. No server is needed. `workshop.html` shows every scene, cue, sprite and gear on its own, which is quicker for a scene or sprite change.
 - `npm run test:unit` checks the recipe rules in a second or so.
 - `npm test` runs those unit tests, then the end-to-end check in Chrome, which takes about four minutes. Set `CHROME_PATH` to use another Chrome.
 

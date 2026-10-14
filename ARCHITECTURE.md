@@ -21,6 +21,8 @@ vendor/gsap/      GSAP and ScrollTrigger, kept here so the page works offline
 
 The recipes are the only source of the story. The page modules read them through `Story` and draw with the art in `pixel.js` and `scenes.js`. Nothing is generated.
 
+`workshop.html` is a second page. It loads the art, the scenes and the recipes, but not the story's motion, sheet, games or boot, and draws each scene, cue, sprite and gear piece alone ([ADR 0005](docs/decisions/0005-workshop-page.md)).
+
 ## Load order and globals
 
 Each script attaches one object to `window`: `Story`, `Pixel`, `Scenes`, `Sheet`, `WorldMap`, `Belt`, `Acts`, `Sound`, `Games` and `TypingRace`. A script can use another's global only if `index.html` loads that one first. The order lives only in `index.html` for now. Scripts are not modules because a page opened from a file cannot load modules (see [ADR 0003](docs/decisions/0003-plain-scripts-share-globals.md)).

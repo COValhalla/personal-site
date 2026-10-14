@@ -22,6 +22,10 @@ The site is public at **https://covalhalla.github.io/personal-site/**.
 
 Every merge to `main` publishes it there within a minute or two, through GitHub Pages. The workflow in `.github/workflows/pages.yml` does it: it puts the committed files online as they are, because there is nothing to build. On a pull request the same workflow only packages the site, as a check, and publishes nothing. To publish again without a change, run "Publish to GitHub Pages" from the repository's Actions tab.
 
+## The workshop
+
+[`workshop.html`](workshop.html) draws every scene, animation, item sprite and piece of hero gear on its own, for checking them by eye. It is public at **https://covalhalla.github.io/personal-site/workshop.html**, and the story does not link to it.
+
 ## What to try
 
 1. Press start on the title screen (or press Enter), and the page glides to the Tutorial. Scrolling works too. Each act starts in gray. As it comes into view a chapter card sweeps across, the color comes in and your character walks on.
@@ -39,6 +43,8 @@ Every merge to `main` publishes it there within a minute or two, through GitHub 
 | Path | What it is |
 | --- | --- |
 | `index.html` | The page. It loads everything below in order. |
+| `workshop.html` | The workshop: every scene, animation, sprite and gear on its own. |
+| `js/workshop.js` | Draws the workshop's pieces. Only the workshop loads it. |
 | `ARCHITECTURE.md` | How the pieces fit together, and the limits of the current design. |
 | `docs/decisions/` | Why the site is built this way: one short record per hard-to-reverse decision. |
 | `recipes/` | The story: `site.js` plus one recipe per act. Edit these to change the words. |
