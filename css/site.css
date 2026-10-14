@@ -61,7 +61,7 @@ a { color: inherit; }
 }
 .btn:hover { transform: translateY(-1px); box-shadow: 0 5px 0 rgba(0, 0, 0, 0.28); }
 .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.28); }
-.btn:focus-visible, .beat-item:focus-visible, .skill-card:focus-visible, .pip:focus-visible, .tab:focus-visible { outline: 3px solid var(--c2, #8a63d2); outline-offset: 3px; }
+.btn:focus-visible, .beat-item:focus-visible, .beat-skill:focus-visible, .skill-card:focus-visible, .pip:focus-visible, .tab:focus-visible { outline: 3px solid var(--c2, #8a63d2); outline-offset: 3px; }
 .btn--accent { background: var(--c3, var(--ink)); }
 .btn--ghost { background: transparent; color: inherit; box-shadow: inset 0 0 0 2px currentColor; }
 .btn--ghost:hover, .btn--ghost:active { box-shadow: inset 0 0 0 2px currentColor; }
@@ -161,14 +161,16 @@ a { color: inherit; }
 /* ---------- Acts ---------- */
 
 /* Each act is one screen tall. While its story plays, the screen is pinned in place.
-   The heading sits over the scene and the new skills; the story panel runs the full height beside them. */
+   The heading sits over the scene and the new skills; the story panel beside them ends under its last moment.
+   In a window taller than the act needs, the act sits in the middle of the screen. */
 .act { position: relative; }
 .act-screen {
   --gray: 1;
   position: relative;
   box-sizing: border-box;
   height: 100vh; height: 100svh;
-  display: grid; grid-template-columns: minmax(0, 1fr) clamp(300px, 28vw, 440px); grid-template-rows: auto minmax(0, 1fr);
+  display: grid; grid-template-columns: minmax(0, 1fr) clamp(300px, 28vw, 440px); grid-template-rows: fit-content(0px) minmax(0, auto);
+  align-content: center;
   gap: clamp(10px, 2.2vh, 24px) clamp(14px, 2vw, 28px);
   padding: calc(var(--hud-h) + clamp(14px, 3.4vh, 40px)) max(20px, calc((100vw - 1560px) / 2)) calc(var(--belt-h) + clamp(16px, 3.4vh, 40px));
   background: color-mix(in srgb, var(--c1) 16%, var(--paper-2));
@@ -187,7 +189,7 @@ a { color: inherit; }
 
 .act-stage { display: contents; }
 /* The scene is as big as fits above the skills row. */
-.act-left { grid-area: 2 / 1; container-type: size; display: flex; flex-direction: column; gap: clamp(10px, 2vh, 18px); min-height: 0; }
+.act-left { grid-area: 2 / 1; container-type: inline-size; display: flex; flex-direction: column; gap: clamp(10px, 2vh, 18px); min-height: 0; }
 .scene-box { flex: none; display: flex; flex-direction: column; gap: 8px; width: max-content; max-width: 100%; }
 
 /* The progress rail under the scene: it fills as you scroll through the moments. */
@@ -255,7 +257,8 @@ a { color: inherit; }
 /* The story panel: the class line and the moments. Every moment fits on a laptop screen without scrolling. */
 .story {
   grid-area: 1 / 2 / 3;
-  min-height: 0;
+  align-self: start;
+  min-height: 0; max-height: 100%;
   display: flex; flex-direction: column; gap: clamp(8px, 1.4vh, 14px);
   background: #fffdf9;
   border: 4px solid var(--ink);
@@ -286,14 +289,18 @@ a { color: inherit; }
 .beat.is-locked { border-style: dashed; border-color: #b8b3ab; background: transparent; }
 .beat.is-locked > * { visibility: hidden; }
 .beat.is-locked::after { content: ""; position: absolute; left: 12px; right: 30%; top: 50%; height: 8px; translate: 0 -50%; background: repeating-linear-gradient(90deg, #d3cec6 0 10px, transparent 10px 14px); }
-.beat-item {
-  display: none; align-items: center; gap: 6px;
-  margin: 0; padding: 1px 6px 1px 1px; vertical-align: middle;
+/* The last row of a moment: the item it gives and the skill it lights. Each tag stays hidden, keeping its room, until it appears. */
+.beat-tags { display: flex; flex-wrap: wrap; gap: 6px 8px; margin-top: 6px; }
+.beat-item, .beat-skill {
+  display: inline-flex; align-items: center; gap: 6px; visibility: hidden;
+  margin: 0; padding: 1px 6px 1px 1px; min-height: 26px; box-sizing: border-box;
   font: 700 12px/1 var(--mono); color: var(--ink);
   background: color-mix(in srgb, var(--c1) 30%, #fff); border: 2px solid var(--c2); cursor: pointer;
 }
-.beat-item.is-on { display: inline-flex; }
-.beat-text + .beat-item { margin-left: 8px; }
+.beat-skill { padding: 1px 6px; background: #fff; border-style: dashed; }
+.beat-skill > span:first-child { color: var(--c3); }
+.beat-item.is-on, .beat-skill.is-on { visibility: visible; }
+.beat.is-locked .beat-item, .beat.is-locked .beat-skill { visibility: hidden; }
 .beat-item img { width: 20px; height: 20px; }
 .tag {
   flex: none;
@@ -350,18 +357,25 @@ button.skill-card:disabled { cursor: default; }
 .act--dark .story, .act--dark .beat { background: var(--night-2); border-color: var(--night-4); color: var(--night-ink); }
 .act--dark .btn { background: var(--night-ink); color: var(--night); }
 
-/* Short laptop screens: tighter moments so four of them fit beside the scene. */
-@media (max-height: 780px) and (min-width: 760px) {
+/* Short laptop screens: tighter moments and smaller tags so four of them fit beside the scene. */
+@media (max-height: 820px) and (min-width: 760px) {
   .beat { padding: 6px 9px; font-size: 13.5px; }
   .beat > .tag { padding: 2px 5px; font-size: 10px; }
   .beats { gap: 6px; }
-  .beat-item { font-size: 11px; }
+  .beat-tags { margin-top: 3px; gap: 4px 6px; }
+  .beat-item, .beat-skill { font-size: 11px; min-height: 19px; padding-block: 0; }
+  .beat-item img { width: 15px; height: 15px; }
   .story { gap: 8px; }
 }
-@media (max-height: 700px) and (min-width: 760px) {
-  .beat { padding: 5px 8px; font-size: 13px; line-height: 1.3; }
-  .beats { gap: 5px; }
-  .beat-item img { width: 16px; height: 16px; }
+@media (max-height: 720px) and (min-width: 760px) {
+  .beat { padding: 4px 8px; font-size: 13px; line-height: 1.28; }
+  .beat > .tag { padding: 1px 4px; }
+  .beats { gap: 4px; }
+  .beat-tags { margin-top: 2px; }
+  .beat-item, .beat-skill { min-height: 17px; font-size: 10.5px; }
+  .beat-item img { width: 13px; height: 13px; }
+  .unlock-pill { padding: 3px 6px; }
+  .story { gap: 6px; }
 }
 @media (max-width: 1023px) and (min-width: 760px) {
   .act-screen { grid-template-columns: minmax(0, 1fr) 300px; }
@@ -393,6 +407,7 @@ button.skill-card:disabled { cursor: default; }
 @media (max-width: 759px) {
   .act-screen { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; padding: 12px 14px calc(var(--hud-h) + 6px); gap: 10px; }
   .act-head, .story { grid-area: auto; }
+  .story { align-self: stretch; max-height: none; }
   .act-title { font-size: clamp(24px, 7.4vw, 34px); }
   .act-title::after { margin-top: 6px; height: 4px; }
   .act-years { font-size: 12px; }
@@ -409,7 +424,8 @@ button.skill-card:disabled { cursor: default; }
   .skill-name { font-size: 12px; }
   .skill-from { font-size: 9px; gap: 2px; }
   .skill-chip { padding: 1px 3px; border-left-width: 3px; }
-  .beat-item { font-size: 11px; }
+  .beat-item, .beat-skill { font-size: 11px; min-height: 22px; }
+  .beat-tags { margin-top: 4px; }
   .unlock-actions .btn { padding: 8px 12px; font-size: 12px; }
   .story-state { font-size: 11px; }
   .scene { width: 100%; border-width: 3px; box-shadow: 4px 4px 0 rgba(29, 27, 34, 0.18); }
@@ -500,9 +516,13 @@ button.skill-card:disabled { cursor: default; }
 
 /* ---------- Finale and Say hello ---------- */
 
-.finale { padding: 14vh 20px 22vh; background: var(--paper-2); border-top: 6px solid var(--ink); }
+/* The ending is at least a screen tall, so reaching the end of the page always scrolls past Act VII. */
+.finale { box-sizing: border-box; min-height: 100vh; min-height: 100svh; padding: 14vh 20px 22vh; background: var(--paper-2); border-top: 6px solid var(--ink); }
 .finale-inner { max-width: 760px; margin: 0 auto; }
-.hello-links { margin: 26px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 12px; }
+.hello { margin-top: 36px; }
+.hello-label { margin: 0; font: 700 13px/1 var(--mono); letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); }
+.hello-note { margin: 12px 0 0; }
+.hello-links { margin: 22px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 12px; }
 .site-foot { padding: 22px 20px calc(22px + var(--belt-h)); text-align: center; font: 600 12px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); background: var(--paper-2); border-top: 2px solid var(--ink); }
 @media (max-width: 759px) { .site-foot { padding-bottom: calc(22px + var(--hud-h)); } }
 .finale h2 { margin: 0; font: 800 clamp(30px, 5vw, 48px)/1.05 var(--mono); }

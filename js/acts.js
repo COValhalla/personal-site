@@ -119,12 +119,22 @@
     const railLabel = el('span', { class: 'rail-label', text: `Moment 1 of ${beatCount}` });
     const rail = el('div', { class: 'act-rail', 'aria-hidden': 'true' }, el('div', { class: 'rail-track' }, railFill, railNodes), railLabel);
 
-    const beats = Story.beatsOf(act).map((beat, k) => el('li', { class: 'beat is-locked', 'data-beat': String(k) },
-      el('span', { class: 'tag tag--' + beat.tag, text: beat.tag }),
-      el('span', { class: 'beat-body' },
-        el('span', { class: 'beat-text', 'data-text': beat.text, text: beat.text }),
+    // Each moment ends on a row of its own for the item it gives and the skill it lights.
+    // The row keeps its room from the start, so the panel never grows as the tags appear.
+    const beats = Story.beatsOf(act).map((beat, k) => {
+      const lights = act.skills.filter(skill => skill.moment === k + 1);
+      const tags = [
         beat.give ? el('button', { class: 'beat-item', 'data-item': beat.give.id, tabindex: '-1', onclick: () => Sheet.openItem(beat.give.id) },
-          Pixel.item(beat.give.sprite, act.color, 2, ''), el('span', { text: '+ ' + beat.give.name })) : null)));
+          Pixel.item(beat.give.sprite, act.color, 2, ''), el('span', { text: '+ ' + beat.give.name })) : null,
+        ...lights.map(skill => el('button', { class: 'beat-skill', 'data-skill': skill.id, tabindex: '-1', onclick: () => Sheet.openSkill(skill.id) },
+          el('span', { 'aria-hidden': 'true', text: '★' }), el('span', { text: skill.name }))),
+      ].filter(Boolean);
+      return el('li', { class: 'beat is-locked', 'data-beat': String(k) },
+        el('span', { class: 'tag tag--' + beat.tag, text: beat.tag }),
+        el('span', { class: 'beat-body' },
+          el('span', { class: 'beat-text', 'data-text': beat.text, text: beat.text }),
+          tags.length ? el('span', { class: 'beat-tags' }, tags) : null));
+    });
 
     const skillCards = act.skills.map(skill => el('button', { type: 'button', class: 'skill-card is-locked', 'data-skill': skill.id, disabled: '', onclick: () => Sheet.openSkill(skill.id) },
       el('span', { class: 'skill-new', text: 'New skill' }),
@@ -345,6 +355,8 @@
       const card = p.skillCards[n];
       tl.call(() => lightSkill(p, card), null, lit);
       tl.fromTo(card, { scale: 0.85 }, { scale: 1, duration: 0.35, ease: 'back.out(2.5)', immediateRender: false }, lit);
+      const tag = li.querySelector(`.beat-skill[data-skill="${skill.id}"]`);
+      if (tag) tl.fromTo(tag, { scale: 0.6 }, { scale: 1, duration: 0.3, ease: 'back.out(2.5)', immediateRender: false }, lit);
     });
     if (step.beat.look) {
       tl.call(() => restyle(p, step.beat), null, 0.3);
@@ -354,7 +366,7 @@
       tl.add(popItem(p, step.beat.give), shown);
       if (chip) tl.fromTo(chip, { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(2.5)', onStart: () => chip.classList.add('is-on') }, shown);
     }
-    tl.call(() => { li.classList.remove('is-new'); gsap.set([li, chip].filter(Boolean), { clearProps: 'transform,opacity' }); });
+    tl.call(() => { li.classList.remove('is-new'); gsap.set([li, chip, ...li.querySelectorAll('.beat-skill')].filter(Boolean), { clearProps: 'transform,opacity' }); });
     return tl;
   }
 
@@ -387,6 +399,8 @@
     // A lit skill opens its story card; a locked one opens nothing.
     card.disabled = false;
     card.querySelector('.skill-name').textContent = skill.name;
+    const tag = p.story.querySelector(`.beat-skill[data-skill="${skill.id}"]`);
+    if (tag) tag.classList.add('is-on');
     if (!Story.state.skills.has(skill.id)) {
       Story.state.skills.add(skill.id);
       Story.emit('skill', skill.id);
@@ -550,8 +564,7 @@
       li.classList.remove('is-new');
       const text = li.querySelector('.beat-text');
       text.textContent = text.dataset.text;
-      const chip = li.querySelector('.beat-item');
-      if (chip) chip.classList.remove('is-on');
+      li.querySelectorAll('.beat-item, .beat-skill').forEach(tag => tag.classList.remove('is-on'));
     });
     p.skillCards.forEach(card => {
       card.classList.add('is-locked');

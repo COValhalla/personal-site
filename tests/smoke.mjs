@@ -366,10 +366,15 @@ async function desktop(browser) {
   await context.close();
 }
 
-// The end of the page: What I build next, then Say hello, with no quest log and no discus throw.
+// The end of the page: What I build next with Say hello inside it, with no quest log and no discus throw.
 async function pageEnd(page) {
   check(await page.$('#quest-log') === null && !(await page.evaluate(() => document.body.textContent.toLowerCase().includes('quest log'))), 'the page has no quest log');
-  check(await page.evaluate(() => [...document.querySelectorAll('main > section')].slice(-2).map(s => s.id).join()) === 'facts,say-hello', 'the page ends on What I build next, then Say hello');
+  const end = await page.evaluate(() => {
+    const last = [...document.querySelectorAll('main > section')].at(-1);
+    return { id: last.id, hello: !!last.querySelector('#say-hello .hello-label'), label: last.querySelector('.hello-label')?.textContent, buttons: last.querySelectorAll('button').length };
+  });
+  check(end.id === 'facts' && end.hello && end.label === 'Say hello' && end.buttons === 0,
+    'the page ends on one section, What I build next, with a Say hello label, its question and links, and no sheet button');
   check(!(await page.evaluate(() => Games.names())).includes('discus'), 'there is no discus throw game');
   check((await page.$$eval('#act-high-school .unlock-actions button', b => b.map(x => x.textContent))).join() === 'Open sheet ▸', 'Act II ends with Open sheet and no Play button');
   await page.evaluate(() => Sheet.openItem('discus'));
@@ -621,6 +626,63 @@ async function shortScreens(browser) {
   }
 }
 
+// Laptops and tall windows, motion turned off: each story panel ends under its last moment, the act sits in the middle
+// of a tall window, and every moment ends on its own row for the item it gives and the skill it lights.
+async function panelFit(browser) {
+  console.log('\nStory panels and their last rows, motion turned off');
+  for (const [width, height] of [[1184, 1260], [1440, 900]]) {
+    const { context, page, errors } = await open(browser, { viewport: { width, height }, reducedMotion: 'reduce' });
+    const acts = await page.evaluate(() => Acts.sections.map(({ act, screen, story }) => {
+      const st = story.getBoundingClientRect();
+      const beats = [...story.querySelectorAll('.beat')];
+      const s = screen.getBoundingClientRect();
+      const cs = getComputedStyle(screen);
+      const inner = { top: s.top + parseFloat(cs.paddingTop), bottom: s.bottom - parseFloat(cs.paddingBottom) };
+      const top = Math.min(screen.querySelector('.act-head').getBoundingClientRect().top, st.top);
+      const bottom = Math.max(screen.querySelector('.act-foot').getBoundingClientRect().bottom, st.bottom);
+      // Each moment's last element is its row of tags, below its words, with every tag showing.
+      const rows = beats.map(li => {
+        const body = li.querySelector('.beat-body');
+        const row = body.lastElementChild;
+        const text = li.querySelector('.beat-text').getBoundingClientRect();
+        return row.classList.contains('beat-tags') && row.getBoundingClientRect().top >= text.bottom - 1
+          && [...row.children].every(t => getComputedStyle(t).visibility === 'visible');
+      });
+      // The panel is as tall before its tags appear as after.
+      const tags = [...story.querySelectorAll('.beat-item, .beat-skill')];
+      const after = story.getBoundingClientRect().height;
+      tags.forEach(t => t.classList.remove('is-on'));
+      const before = story.getBoundingClientRect().height;
+      tags.forEach(t => t.classList.add('is-on'));
+      const lights = act.skills.filter(skill => skill.moment).map(skill => skill.id).sort().join();
+      return {
+        id: act.id, gap: Math.round(st.bottom - beats.at(-1).getBoundingClientRect().bottom),
+        above: Math.round(top - inner.top), below: Math.round(inner.bottom - bottom),
+        rows: rows.every(Boolean), same: Math.abs(after - before) < 0.5,
+        skills: [...story.querySelectorAll('.beat-skill')].map(t => t.dataset.skill).sort().join() === lights,
+      };
+    }));
+    const loose = acts.filter(a => a.gap > 24);
+    check(loose.length === 0, `at ${width} x ${height} every story panel ends within 24 px under its last moment (${acts.map(a => `${a.id} ${a.gap}`).join(', ')})`);
+    if (height > 1000) {
+      const off = acts.filter(a => Math.abs(a.above - a.below) >= 40);
+      check(off.length === 0, `at ${width} x ${height} every act sits in the middle of the screen (above / below: ${acts.map(a => `${a.id} ${a.above}/${a.below}`).join(', ')})`);
+    }
+    check(acts.every(a => a.rows), `at ${width} x ${height} every moment ends on a row of its own, below its words, with its item and skill showing`);
+    check(acts.every(a => a.skills), `at ${width} x ${height} each skill a moment lights has a tag on that moment`);
+    check(acts.every(a => a.same), `at ${width} x ${height} every story panel is as tall before its tags appear as after`);
+    if (width === 1184) {
+      check((await page.textContent('#act-high-school .beat[data-beat="0"] .beat-text')).startsWith('Freshman year my proudest win was a server first on Gruul the Dragonkiller in World of Warcraft.'),
+        "Act II's first moment opens with the server first on Gruul the Dragonkiller");
+      check(await storyCard(page, '#act-high-school .beat-skill[data-skill="throwing"]', ['Throwing', 'Timing, rhythm and one clean release.']),
+        "selecting the Throwing tag on Act II's discus moment opens its story card");
+      await page.keyboard.press('Escape');
+    }
+    check(errors.length === 0, `at ${width} x ${height}, no console errors or warnings`);
+    await context.close();
+  }
+}
+
 // Narrow windows and tablets, 760 to 1279 px wide: with every act unlocked, how far each act's skills and buttons
 // run past its left column and into the belt, and which of them its Next tag covers.
 async function narrowWindows(browser) {
@@ -737,6 +799,7 @@ try {
   await pacing(browser);
   await reducedMotion(browser);
   await shortScreens(browser);
+  await panelFit(browser);
   await narrowWindows(browser);
   await laptopNext(browser);
   await mapPartway(browser);

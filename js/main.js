@@ -100,24 +100,20 @@
           el('a', { href: linkedin, text: 'Short on time? See my work history on LinkedIn.', ...linkAttrs(linkedin) })) : null));
   }
 
-  function sayHello() {
-    const links = contactLinks();
-    return el('section', { class: 'finale hello', id: 'say-hello', 'aria-labelledby': 'hello-title' },
-      el('div', { class: 'finale-inner' },
-        el('h2', { id: 'hello-title', text: 'Say hello' }),
-        el('p', { class: 'hello-note', text: Story.config.hello }),
-        el('ul', { class: 'hello-links' }, links.map(([label, href]) => el('li', {},
-          el('a', { class: 'btn', href, text: label, ...linkAttrs(href) }))))));
-  }
-
+  // The end of the page: what Joe builds next, then Say hello with the links to reach him.
   function finale() {
+    const links = contactLinks();
     return el('section', { class: 'finale', id: 'facts', 'aria-labelledby': 'facts-title' },
       el('div', { class: 'finale-inner' },
         el('p', { class: 'act-num', style: 'color:var(--ink-3)', text: Story.config.ending.kicker }),
         el('h2', { id: 'facts-title', text: Story.config.ending.heading }),
         el('div', { class: 'finale-strip', 'aria-hidden': 'true' }, Story.acts.map(act => el('i', { style: `background:${act.color.base}` }))),
-        el('p', { text: Story.config.ending.line }),
-        el('button', { class: 'btn', onclick: () => Sheet.open({ tab: 'items' }) }, 'Open the full sheet ▸')));
+        el('p', { class: 'finale-line', text: Story.config.ending.line }),
+        el('div', { class: 'hello', id: 'say-hello' },
+          el('h3', { class: 'hello-label', text: 'Say hello' }),
+          el('p', { class: 'hello-note', text: Story.config.hello }),
+          el('ul', { class: 'hello-links' }, links.map(([label, href]) => el('li', {},
+            el('a', { class: 'btn', href, text: label, ...linkAttrs(href) })))))));
   }
 
   function markHere() {
@@ -142,7 +138,7 @@
         el('h2', { text: 'A recipe needs fixing' }), el('ul', {}, problems.map(p => el('li', { text: p }))))));
     }
     Story.acts.forEach((act, i) => main.append(Acts.build(act, i)));
-    main.append(finale(), sayHello());
+    main.append(finale());
     ['unlock', 'item', 'skill', 'seen', 'rewind'].forEach(event => Story.on(event, updateHud));
     updateHud();
     if (window.gsap && window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
