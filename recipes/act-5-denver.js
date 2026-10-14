@@ -9,6 +9,7 @@ Story.addAct({
   color: { name: 'Pine green', light: '#7fd09c', base: '#3fa66b', shade: '#286f46' },
   theme: 'light',
   scene: 'mountains',
+  stages: ['mountains', 'mountains', 'mountains', 'sheet'],
   hero: { gear: 'beanie', title: 'Project engineer', hair: 'bald', beard: 'goatee' },
   beats: [
     { tag: 'life', text: 'In 2018 I moved again, following friends to Denver for the mountains. Skiing and climbing taught me to read terrain and weather, and to turn around in time.', item: 'skis', cue: 'ski' },

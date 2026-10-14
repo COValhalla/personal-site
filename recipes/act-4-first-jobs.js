@@ -9,6 +9,7 @@ Story.addAct({
   color: { name: 'Blueprint blue', light: '#7fb0ee', base: '#3b7dd8', shade: '#24539c' },
   theme: 'light',
   scene: 'plant',
+  stages: ['plant', 'plant', 'plant', 'sheet'],
   hero: { gear: 'hardhat', title: 'Process engineer', hair: 'bald', beard: 'goatee' },
   beats: [
     { tag: 'work', text: 'My first job out of school: materials engineer at the Kansas City National Security Campus, making sure parts were strong enough for the systems they went into.', item: 'calipers', cue: 'measure' },

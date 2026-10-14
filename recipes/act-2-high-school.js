@@ -10,8 +10,8 @@ Story.addAct({
   color: { name: 'Varsity red', light: '#f08a75', base: '#e0533d', shade: '#a3352a', accent: '#24366b' },
   theme: 'light',
   scene: 'field',
-  // The first two moments on the football field, then the summer jobs, where the level-up plays too.
-  stages: ['field', 'field', 'summer-jobs', 'summer-jobs'],
+  // The first two moments on the football field, the summer jobs for the third, then the character screen.
+  stages: ['field', 'field', 'summer-jobs', 'sheet'],
   // Short hair under a cap, and no beard yet.
   hero: { gear: 'cap', title: 'Team captain', hair: 'short', beard: 'none' },
   beats: [
