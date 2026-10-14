@@ -62,15 +62,27 @@
     if (!p.section.classList.contains('is-unlocked')) p.hero.src = heroBefore(p);
   }
 
-  // The stage each step plays in: moment k in stage k, the level-up in the last stage.
+  // The stage each step plays in: moment k in the scene stages names for it, the level-up in the last one.
+  // Moments that name the same scene in a row share one stage, so the story there carries on without a dive.
   function stageOf(p, step) {
     if (p.stages.length === 1) return 0;
-    return step.kind === 'beat' ? step.k : p.stages.length - 1;
+    return step.kind === 'beat' ? p.stageAt[step.k] : p.stages.length - 1;
+  }
+
+  // How far the hero has walked across the stage on show: each stage's walk runs over the steps played in it.
+  function stageWalk(p, span) {
+    if (p.stages.length === 1) return null;
+    const first = p.stageAt.indexOf(p.stageIdx);
+    const steps = p.stageAt.filter(s => s === p.stageIdx).length;
+    return Math.min(1, Math.max(0, (span - first) / steps));
   }
 
   function build(act, i) {
     const prev = previous(i);
-    const stages = (act.stages || [act.scene]).map((name, s) => {
+    const names = act.stages || [act.scene];
+    // One stage for each run of moments in the same scene, and which stage each moment and the level-up use.
+    const stageAt = names.map((name, k) => names.slice(0, k + 1).filter((n, j) => j === 0 || n !== names[j - 1]).length - 1);
+    const stages = names.filter((name, k) => k === 0 || name !== names[k - 1]).map((name, s) => {
       const canvas = el('canvas', { class: 'px scene-canvas', width: Scenes.W, height: Scenes.H });
       const mounted = Scenes.mount(name, canvas, act.color, Story.acts);
       mounted.render();
@@ -165,7 +177,7 @@
     }
 
     const steps = [{ kind: 'intro' }, ...Story.beatsOf(act).map((beat, k) => ({ kind: 'beat', beat, k })), { kind: 'level' }];
-    const parts = { act, i, style, startStyle: style, section, screen, head, hero, heroLeft, walkFrom, heroX: scene.heroX, label, pop, flash, chapter, sceneEl, stages, stageIdx: 0, beats, skillCards, story, actions, hint, rail, railFill, railNodes, railLabel, steps, played: 0, target: 0, running: null, walkOn: 1, fill: 1, local: 1, inView: false, heroAt: scene.heroX };
+    const parts = { act, i, style, startStyle: style, section, screen, head, hero, heroLeft, walkFrom, heroX: scene.heroX, label, pop, flash, chapter, sceneEl, stages, stageAt, stageIdx: 0, beats, skillCards, story, actions, hint, rail, railFill, railNodes, railLabel, steps, played: 0, target: 0, running: null, walkOn: 1, fill: 1, local: 1, inView: false, heroAt: scene.heroX };
     sections.push(parts);
     return section;
   }
@@ -637,7 +649,7 @@
           const told = p.played >= p.steps.length ? storySteps : Math.max(0, p.played - 2);
           const span = Math.max(u * storySteps, told);
           const fill = Math.min(1, span / (storySteps - 1));
-          scrub(p, fill, p.stages.length > 1 ? Math.min(1, Math.max(0, span - p.stageIdx)) : fill);
+          scrub(p, fill, p.stages.length > 1 ? stageWalk(p, span) : fill);
         },
         // Moving on before the story is told finishes the act at the leave speed.
         onLeave: () => { p.leaving = true; advance(p, p.steps.length); },

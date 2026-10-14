@@ -286,24 +286,6 @@
       '................',
       '................',
     ],
-    books: [
-      '................',
-      '................',
-      '.....ooooooooo..',
-      '.....o1111111o..',
-      '.....o2w22222o..',
-      '.....o3333333o..',
-      '...ooooooooooooo',
-      '...o111111111wwo',
-      '...o2www222222wo',
-      '...o333333333wwo',
-      '..ooooooooooooo.',
-      '..o11111111111o.',
-      '..o222w2w22222o.',
-      '..o33333333333o.',
-      '..ooooooooooooo.',
-      '................',
-    ],
     hats: [
       '................',
       '................',
@@ -342,7 +324,25 @@
     ],
   };
 
-  // The Tutorial's items: a floppy disk and a school keyboard. Its book is books, above.
+  // The Tutorial's items: a floppy disk, a school keyboard and a taped shipping box from the family business.
+  ITEMS.box = [
+    '................',
+    '................',
+    '................',
+    '.oooooooooooooo.',
+    '.o1w1111mm1111o.',
+    '.o122222mm2223o.',
+    '.oooooooooooooo.',
+    '.o122222mm2223o.',
+    '.o1wwww2mm2223o.',
+    '.o1wnnw2mm2223o.',
+    '.o1wwww2mm2223o.',
+    '.o122222mm2223o.',
+    '.o333333mm3333o.',
+    '.oooooooooooooo.',
+    '................',
+    '................',
+  ];
   ITEMS.keyboard = [
     '................',
     '................',
@@ -400,7 +400,26 @@
     '................',
   ];
 
-  // Act II's items: a discus, a plate with a metal rim and hub, and a captain's patch, a shield with a stitched edge and a C.
+  // Act II's items: a discus, a plate with a metal rim and hub; a captain's patch, a shield with a stitched edge and a C;
+  // and a carpenter's level from the summer building concrete forms, with its bubble in the vial.
+  ITEMS.level = [
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '.oooooooooooooo.',
+    '.o1w1111111111o.',
+    '.o1222oooooo23o.',
+    '.o1222omwwmo23o.',
+    '.o1222oooooo23o.',
+    '.o333333333333o.',
+    '.oooooooooooooo.',
+    '................',
+    '................',
+    '................',
+    '................',
+  ];
   ITEMS.discus = [
     '................',
     '................',
