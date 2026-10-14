@@ -9,11 +9,6 @@ Story.addAct({
   tutorial: true,
   title: 'Press start',
   years: 'Early elementary school',
-  // The quest log at the end of the page: this act's titles, places and dates.
-  quests: [
-    { what: 'Fastest typist in the computer lab' },
-    { what: 'School reading leaderboard' },
-  ],
   color: { name: 'Crayon teal', light: '#7fe0d4', base: '#22b3a3', shade: '#157a70' },
   theme: 'light',
   scene: 'early-night',
@@ -21,7 +16,7 @@ Story.addAct({
   stages: ['early-night', 'computer-lab', 'early-home', 'lab-board'],
   hero: { gear: 'backpack', title: 'Keyboard kid', hair: 'short', beard: 'none' },
   beats: [
-    { tag: 'life', text: 'My older cousins got me into online games. In their chats the fastest typist made the best trades, so I spent hours at the keyboard and got at home on a computer.', item: 'floppy', cue: 'night' },
+    { tag: 'life', text: 'My older cousins got me into online games. In their chats the fastest typist made the best trades, so I spent hours typing on our home computer.', item: 'floppy', cue: 'night' },
     { tag: 'life', text: 'Then typing class in the computer lab: a game threw random sentences at us and timed our words per minute. All those hours of chat paid off, and I loved racing the clock.', item: 'keyboard', cue: 'type' },
     { tag: 'life', text: 'Our school turned reading into a game too: read a book, pass its quiz, earn points. I chased the leaderboard and came out a reader for life.', item: 'book', cue: 'grow' },
   ],

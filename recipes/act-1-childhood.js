@@ -6,9 +6,6 @@ Story.addAct({
   numeral: 'I',
   title: 'Open world',
   years: 'Elementary and middle school',
-  quests: [
-    { what: 'Ran a crew of new-hire butchers in the family business', when: 'Ages 12 to 16' },
-  ],
   // A bright, Saturday-morning scheme: sunny orange with a sky-blue accent.
   color: { name: 'Sunny orange', light: '#ffc46b', base: '#ff8a1f', shade: '#c25a0a', accent: '#3fa9f5' },
   theme: 'light',
@@ -19,8 +16,8 @@ Story.addAct({
   hero: { gear: 'helmet', title: 'Crew lead', hair: 'short', beard: 'none' },
   // Each moment can give one of this act's items (item) and play a scene animation (cue).
   beats: [
-    { tag: 'life', text: 'I roamed town on my scooter with friends: wheelies, staircase jumps, music playing. On weekends I raced BMX.', item: 'bmx-bike', cue: 'race' },
-    { tag: 'work', text: "From 12 to 16, every busy season at the family shop, I ran the crew of butchers: mostly new hires and local kids, trained on the fly while the orders kept coming.", item: 'apron', cue: 'crew' },
+    { tag: 'life', text: 'I rode my bike all over town with friends. It taught me independence, and every jump and wheelie made me more confident, which carried straight into BMX racing.', item: 'bmx-bike', cue: 'race' },
+    { tag: 'work', text: "Every busy season at the family shop, I ran the crew of butchers: mostly new hires and local kids, trained on the fly while the product kept coming in.", item: 'apron', cue: 'crew' },
   ],
   unlock: { banner: 'Level 1', say: 'New class: Crew lead' },
   items: [

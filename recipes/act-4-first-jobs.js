@@ -6,18 +6,14 @@ Story.addAct({
   numeral: 'IV',
   title: 'High stakes',
   years: 'First jobs, 2015 to 2018',
-  quests: [
-    { what: 'Materials Engineer', where: 'Honeywell FM&T, Kansas City National Security Campus', when: 'Jun 2015 to Jul 2016' },
-    { what: 'Process Engineer', where: 'Gelita USA, Sioux City', when: 'Jul 2016 to Mar 2018' },
-  ],
   color: { name: 'Blueprint blue', light: '#7fb0ee', base: '#3b7dd8', shade: '#24539c' },
   theme: 'light',
   scene: 'plant',
   hero: { gear: 'hardhat', title: 'Process engineer', hair: 'bald', beard: 'goatee' },
   beats: [
-    { tag: 'work', text: 'My first job out of school: materials engineer at the Kansas City National Security Campus, making sure parts were strong enough for the systems they went into. The work needed a security clearance.', item: 'calipers', cue: 'measure' },
+    { tag: 'work', text: 'My first job out of school: materials engineer at the Kansas City National Security Campus, making sure parts were strong enough for the systems they went into.', item: 'calipers', cue: 'measure' },
     { tag: 'work', text: "That's where I started coding: 3D models and analysis in MATLAB, and my first machine learning model." },
-    { tag: 'work', text: 'My clearance stalled, so rather than wait I took a detour to Sioux City as a process engineer at Gelita. It paid off: I trained over 250 operators, and my root-cause study saved a $200,000 equipment project.', item: 'hard-hat', cue: 'plant' },
+    { tag: 'work', text: 'My clearance stalled, so rather than wait I moved to Sioux City as a process engineer at Gelita. It paid off: I trained over 250 operators, and my root-cause study saved a $200,000 equipment project.', item: 'hard-hat', cue: 'plant' },
   ],
   unlock: { banner: 'Level 4', say: 'New class: Process engineer' },
   items: [

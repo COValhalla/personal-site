@@ -6,11 +6,6 @@ Story.addAct({
   numeral: 'III',
   title: 'Training arc',
   years: 'College, 2011 to 2015',
-  quests: [
-    { what: 'B.S. Chemical Engineering', where: 'Missouri University of Science and Technology', when: 'Aug 2011 to May 2015' },
-    { what: 'Academic All-American, hammer throw' },
-    { what: 'Two summer internships in oil and gas', where: 'Texas' },
-  ],
   // Magenta for college; the track's stands keep their navy.
   color: { name: 'Magenta', light: '#f29ad0', base: '#d6449a', shade: '#962d6b' },
   theme: 'light',

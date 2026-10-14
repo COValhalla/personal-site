@@ -99,9 +99,17 @@ async function desktop(browser) {
   const ids = await page.$$eval('section.act', s => s.map(x => x.id));
   const items = await page.evaluate(() => Story.items().length);
   check(ids.length === 8, 'the tutorial and seven acts are on the page');
-  check(await page.textContent('.intro-title') === 'Joe' && await page.textContent('.hud-name') === 'Joe', 'the intro and the bar say Joe');
+  check(await page.textContent('.intro-title') === 'Joe Vellella' && await page.textContent('.hud-name') === 'Joe', 'the title screen says Joe Vellella and the bar says Joe');
   const welcome = await page.textContent('.intro-tag');
-  check(welcome === await page.evaluate(() => Story.config.welcome) && welcome.startsWith("Hi, I'm Joe Vellella.") && welcome.includes('Press start'), 'the title screen shows the welcome from the recipe, which names Joe and leads to Press start');
+  check(welcome === await page.evaluate(() => Story.config.welcome) && welcome.startsWith('I build products.') && !welcome.includes('Joe') && welcome.includes('Press start'),
+    'the title screen shows the welcome from the recipe, which starts with what Joe does, does not repeat his name and leads to Press start');
+  // Words only gamers read, and words Joe asked to drop, stay off the page.
+  const page1 = await page.evaluate(() => document.body.textContent + Story.acts.map(a => a.beats.map(b => b.text).join(' ')).join(' '));
+  const dropped = ['classes', 'whatever the work needed next', 'respec', 'Respec', 'quest log', 'Quest log', 'scooter', 'From 12', 'got at home', 'needed a security clearance'].filter(w => page1.includes(w));
+  check(dropped.length === 0, `no page text says classes, respec or quest log, or keeps the old lines${dropped.length ? ` (found: ${dropped.join(', ')})` : ''}`);
+  check(await page.$eval('#act-year-off .act-title', t => t.textContent) === 'The leap', 'Act VI is called The leap');
+  const clearance = await page.evaluate(() => Story.acts.flatMap(a => a.beats.map(b => b.text)).filter(t => t.includes('clearance')));
+  check(clearance.length === 1 && clearance[0].startsWith('My clearance stalled, so rather than wait I moved to Sioux City'), 'the clearance comes up once, as the reason Joe moved to Sioux City');
   // The early acts describe what Joe did and learned, not brands or rankings.
   const said = await page.evaluate(() => [Story.config.welcome, ...Story.acts.flatMap(a => a.beats.map(b => b.text))]);
   const banned = ['Diablo', 'Accelerated Reader', 'by far', '176', 'basketball', 'three towns', 'in shape'].filter(w => said.some(t => t.includes(w)));
@@ -111,17 +119,50 @@ async function desktop(browser) {
     "Act VII's last moment calls back to the Tutorial's typing class, and Act II's last moment pays off skipping football");
   const locked = await page.$eval('#act-high-school .skill-card[data-skill="teamwork"]', b => { b.click(); return b.disabled; });
   check(locked && await page.$('#card[open]') === null, 'a locked skill card opens nothing');
-  check(await page.$$eval('.intro .intro-note a', a => a.map(x => `${x.textContent} ${x.getAttribute('href')}`).join()) === 'Short on time? Read the quest log. #quest-log' && await page.$('.intro .intro-start') !== null, 'the welcome has a Press start button and only the quest-log link');
+  check(await page.$$eval('.intro .intro-note a', a => a.map(x => `${x.textContent} ${x.getAttribute('href')} ${x.target}`).join()) === 'Short on time? See my work history on LinkedIn. https://www.linkedin.com/in/josephvellella/ _blank' && await page.$('.intro .intro-start') !== null,
+    'the welcome has a Press start button and only the LinkedIn work-history link');
   check(await page.textContent('.hud-count') === `0/${items}`, 'the sheet starts empty');
   check(await page.$$eval('.belt-slot.is-filled', s => s.length) === 0, 'the inventory belt starts empty');
   check(await page.$eval('#act-high-school .act-screen', s => getComputedStyle(s).filter.includes('grayscale(1)')), 'acts start in gray');
 
+  // Every moment's item and skill wait for its words: the item pops in once the words are whole, then the skill lights,
+  // then the item flies to the inventory. Watched across the whole walk through the acts below.
+  await page.evaluate(() => {
+    window.__order = [];
+    const note = (what, i, k) => {
+      const li = Acts.sections[i].beats[k];
+      const text = li.querySelector('.beat-text');
+      const chip = li.querySelector('.beat-item');
+      window.__order.push({ what, act: i, k, whole: text.textContent === text.dataset.text, chip: !!chip && chip.classList.contains('is-on') });
+    };
+    Story.acts.forEach((act, i) => {
+      const beats = Story.beatsOf(act);
+      beats.forEach((beat, k) => {
+        const chip = Acts.sections[i].beats[k].querySelector('.beat-item');
+        if (chip) new MutationObserver(() => { if (chip.classList.contains('is-on')) note('chip', i, k); }).observe(chip, { attributeFilter: ['class'] });
+      });
+      act.skills.forEach((skill, n) => {
+        if (!skill.moment) return;
+        const card = Acts.sections[i].skillCards[n];
+        new MutationObserver(() => { if (card.classList.contains('is-on')) note('skill', i, skill.moment - 1); }).observe(card, { attributeFilter: ['class'] });
+      });
+    });
+    Story.on('item', id => Story.acts.forEach((act, i) => Story.beatsOf(act).forEach((beat, k) => {
+      if (beat.give && beat.give.id === id) {
+        note('fly', i, k);
+        const skill = act.skills.find(sk => sk.moment === k + 1);
+        window.__order.at(-1).skill = !skill || Story.state.skills.has(skill.id);
+      }
+    })));
+  });
   const where = await pins(page);
   await page.click('.intro-start');
   await page.waitForTimeout(1500);
   check(Math.abs((await page.evaluate(() => window.scrollY)) - (where[0].start + 2)) < 4, 'Press start glides to the first act');
   await scrollTo(page, 0);
   await page.waitForTimeout(300);
+  // Scrolling back above the Tutorial rewound it, so the watch starts over for the walk.
+  await page.evaluate(() => { window.__order = []; });
   const names = ['Tutorial', 'Act I', 'Act II', 'Act III', 'Act IV', 'Act V', 'Act VI', 'Act VII'];
   // The Tutorial and Act I dive into a scene per moment, then one for the level-up.
   const scenes = { 0: 4, 1: 3 };
@@ -203,8 +244,17 @@ async function desktop(browser) {
     check(done.inBelt, `${names[n]} drops its items into the inventory belt`);
     check(!done.gray.includes('grayscale(1)'), `${names[n]} has its color`);
     const next = await page.$eval(`#${id} .act-next`, a => ({ text: a.textContent.trim(), shown: getComputedStyle(a).visibility === 'visible' }));
-    check(next.shown && next.text.startsWith(n < ids.length - 1 ? `Next: ${names[n + 1]}` : 'Next: the quest log'), `${names[n]} ends with a Next tag (${next.text})`);
+    check(next.shown && next.text.startsWith(n < ids.length - 1 ? `Next: ${names[n + 1]}` : 'Next: what I build next'), `${names[n]} ends with a Next tag (${next.text})`);
   }
+  const order = await page.evaluate(() => window.__order);
+  const chips = order.filter(o => o.what === 'chip');
+  const gives = await page.evaluate(() => Story.acts.reduce((sum, act) => sum + Story.beatsOf(act).filter(b => b.give).length, 0));
+  check(chips.length === gives && chips.every(o => o.whole), `in every act, each moment's item pops in only once its words are whole (${chips.filter(o => o.whole).length} of ${gives})`);
+  const skillsLit = order.filter(o => o.what === 'skill');
+  const early = skillsLit.filter(o => !o.whole || (!o.chip && chips.some(c => c.act === o.act && c.k === o.k)));
+  check(skillsLit.length > 0 && early.length === 0, `each moment's skill lights after its words and its item (${skillsLit.length} skills${early.length ? `, early: ${early.map(o => `${o.act},${o.k}`).join(' ')}` : ''})`);
+  const flights = order.filter(o => o.what === 'fly');
+  check(flights.length === gives && flights.every(o => o.whole && o.chip && o.skill), "each moment's item flies to the inventory after it pops in and after the moment's skill lights");
   check(await page.textContent('.hud-count') === `${items}/${items}`, `the sheet holds all ${items} items`);
   const college = await page.$eval('#act-college', s => ({ num: s.querySelector('.act-num').textContent, title: s.querySelector('.act-title').textContent, color: s.querySelector('.act-screen').style.getPropertyValue('--c2') }));
   check(college.num === 'Act III' && college.title === 'Training arc' && college.color === '#d6449a', `college is Act III, Training arc, in magenta (${college.num}, ${college.title}, ${college.color})`);
@@ -297,54 +347,30 @@ async function desktop(browser) {
     && await page.evaluate(() => window.scrollY) === hereY, 'the top bar opens a small menu of the three links without jumping');
   await page.keyboard.press('Escape');
   check(!(await page.isVisible('#hello-menu')), 'Escape closes the Say hello menu');
-  await questLog(page, ids);
+  await pageEnd(page);
   check(await page.title() === 'Joe Vellella · Product engineer', 'the tab says the full name and role');
   check(await page.textContent('.site-foot') === 'Joe Vellella', 'the footer says the full name');
   await page.keyboard.press('Escape');
 
   await hammer(page);
-  await discus(page);
   await bmx(page);
   await typing(page);
   check(errors.length === 0, 'no console errors or warnings' + (errors.length ? ': ' + errors.join(' | ') : ''));
   await context.close();
 }
 
-// The quest log at the end of the page: each act's real titles, places and dates, and LinkedIn for the rest.
-async function questLog(page, ids) {
-  const log = await page.$eval('#quest-log', s => ({
-    kicker: s.querySelector('.quest-kicker').textContent,
-    title: s.querySelector('h3').textContent,
-    rows: [...s.querySelectorAll('.quest')].map(q => ({
-      href: q.querySelector('.quest-act').getAttribute('href'),
-      head: q.querySelector('.quest-act b').textContent,
-      lines: [...q.querySelectorAll('.quest-lines li')].map(li => [...li.children].map(c => c.textContent).join(' | ')),
-    })),
-    more: s.querySelector('.quest-more a').getAttribute('href'),
-  }));
-  check(log.kicker === 'The short version, with dates' && log.title === 'Quest log', 'the end of the page has the quest log, headed The short version, with dates');
-  check(log.rows.length === ids.length && log.rows.every((r, i) => r.href === `#${ids[i]}` && r.lines.length > 0), 'the quest log has one row per act, each linking to its act');
-  const lines = log.rows.flatMap(r => r.lines);
-  const want = [
-    'School discus record, 176 ft',
-    'Football team captain',
-    'B.S. Chemical Engineering, Missouri University of Science and Technology | Aug 2011 to May 2015',
-    'Materials Engineer, Honeywell FM&T, Kansas City National Security Campus | Jun 2015 to Jul 2016',
-    'Process Engineer, Gelita USA, Sioux City | Jul 2016 to Mar 2018',
-    'Manufacturing Project Engineer, Terumo BCT | Mar 2018 to May 2020',
-    'Sr. Process Development Engineer, New Product Introduction, Terumo BCT | Jun 2020 to Mar 2022',
-    'Full Stack JavaScript, The Odin Project | May to Dec 2022',
-    'Software Engineer, Wavelynx Technologies | Jan 2023 to Sep 2025',
-    'Technical Product Lead, Credentials, Wavelynx Technologies | Sep 2025 to Apr 2026',
-    'Sr. Product Manager, Credentials, Wavelynx Technologies | Apr 2026 to now',
-  ];
-  const missing = want.filter(w => !lines.includes(w));
-  check(missing.length === 0, 'the quest log lists every title, employer and date' + (missing.length ? ': missing ' + missing.join('; ') : ''));
-  check(log.more === await page.evaluate(() => Story.config.contact.linkedin), 'the quest log points to LinkedIn for the exact details');
-  // A row takes you to its act.
-  await page.click('#quest-log .quest-act[href="#act-denver"]');
-  await page.waitForFunction(() => Math.abs(document.querySelector('#act-denver').getBoundingClientRect().top) < 4, null, { timeout: 4000 }).catch(() => {});
-  check(await page.$eval('#act-denver', s => Math.abs(s.getBoundingClientRect().top) < 4), 'selecting Act V in the quest log goes to Act V');
+// The end of the page: What I build next, then Say hello, with no quest log and no discus throw.
+async function pageEnd(page) {
+  check(await page.$('#quest-log') === null && !(await page.evaluate(() => document.body.textContent.toLowerCase().includes('quest log'))), 'the page has no quest log');
+  check(await page.evaluate(() => [...document.querySelectorAll('main > section')].slice(-2).map(s => s.id).join()) === 'facts,say-hello', 'the page ends on What I build next, then Say hello');
+  check(!(await page.evaluate(() => Games.names())).includes('discus'), 'there is no discus throw game');
+  check((await page.$$eval('#act-high-school .unlock-actions button', b => b.map(x => x.textContent))).join() === 'Open sheet ▸', 'Act II ends with Open sheet and no Play button');
+  await page.evaluate(() => Sheet.openItem('discus'));
+  await page.waitForSelector('#card[open]');
+  const disc = await page.$eval('#card', c => ({ text: c.textContent, play: c.querySelectorAll('.card-actions .btn--accent').length }));
+  check(disc.text.includes('Discus') && disc.text.includes('let it fly flat') && !disc.text.includes('Play') && disc.play === 0, 'the discus is still an item, and its story card offers no game');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#card').open, null, { timeout: 2000 });
 }
 
 async function hammer(page) {
@@ -392,75 +418,6 @@ async function hammer(page) {
   check((await page.$$eval('#game .sb-throw', b => b.map(x => x.textContent))).join(' ') === `${mark} X X`, 'the scoreboard lists the mark and the two fouls');
   await page.click('#game .game-skip');
   check(!(await page.$('#game[open]')), 'Skip closes the game');
-}
-
-// The discus throw in Act II: the hammer's turns, glow and throw camera, scored in feet against my 176-foot school record.
-async function discus(page) {
-  const st = '#game .game-stage';
-  check((await page.$$eval('#act-high-school .unlock-actions button', b => b.map(x => x.textContent))).includes('▶ Play discus throw'), 'Act II ends with Play discus throw');
-  // A reader opens the discus story card from the sheet and plays from there.
-  await page.evaluate(() => Sheet.open({ tab: 'items' }));
-  await page.waitForSelector('#sheet[open]');
-  await page.click('#sheet .inv-slot[data-item="discus"]');
-  await page.waitForSelector('#card[open]');
-  const play = page.locator('#card .card-actions .btn--accent');
-  check(await play.textContent() === '▶ Play discus throw', 'the discus story card offers Play discus throw');
-  await play.click();
-  await page.waitForSelector('#game[open]');
-  check(await page.textContent('#game .game-title') === 'Discus throw' && (await page.textContent('#game .game-help')).includes('My school record is 176 feet.'), 'Play opens the discus throw, with my 176-foot record to beat');
-  check(await page.$eval('#game .sb-record', b => b.textContent) === '176.0', 'the scoreboard shows the record to beat, 176.0');
-  const ready = () => page.waitForFunction(s => document.querySelector(s).dataset.state === 'ready', st, { timeout: 8000 });
-  await ready();
-  // The record line crosses the middle of the sector in gold at 176 feet, two pixels thick. One read, after a frame is drawn.
-  await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
-  const gold = await page.$eval('#game .game-canvas', c => { const d = c.getContext('2d').getImageData(100, Math.round(134 - 176 * 0.66) - 1, 1, 2).data; return [d[0], d[1], d[2], d[4], d[5], d[6]].join() === '255,213,107,255,213,107'; });
-  check(gold, 'the field draws the 176-foot record line in gold');
-  const lastTurn = await page.$eval(st, s => s.discus.mode.turnSpeed.length);
-  check(lastTurn === 2, 'the discus gets two turns');
-  // A centered release on the last turn hits, plays the throw camera and beats the record.
-  await page.keyboard.down('Space');
-  await page.waitForFunction(s => { const h = document.querySelector(s).discus; return h.s.turn === 2 && Math.abs(Math.atan2(Math.sin(h.s.theta), Math.cos(h.s.theta))) < 0.06; }, st, { polling: 'raf', timeout: 12000 });
-  await page.keyboard.up('Space');
-  check(await page.$eval(st, s => s.dataset.hit) === 'perfect', 'a centered release on the second turn hits');
-  await page.waitForFunction(s => document.querySelector(s).dataset.camera === 'on', st, { timeout: 2000 }).then(() => check(true, 'a big discus throw cuts to the throw camera'), () => check(false, 'a big discus throw cuts to the throw camera'));
-  await page.waitForFunction(s => document.querySelector(s).dataset.last, st, { timeout: 8000 });
-  const best = await page.$eval(st, s => ({ mark: s.dataset.last, record: s.dataset.record }));
-  const msg1 = await page.textContent('#game .game-msg');
-  check(/^\d+\.\d$/.test(best.mark) && Number(best.mark) > 176 && Number(best.mark) < 190 && best.record === 'beaten' && msg1 === `${best.mark} ft. You beat my 176-foot school record.`,
-    `a clean second-turn release scores in feet and beats the 176-foot record (${best.mark} ft: ${msg1})`);
-  // A release on the first turn lands in feet, short of the record.
-  await ready();
-  await page.keyboard.down('Space');
-  await page.waitForFunction(s => { const h = document.querySelector(s).discus; return h.s.phase === 'turns' && h.s.turn === 1 && Math.abs(Math.atan2(Math.sin(h.s.theta), Math.cos(h.s.theta))) < 0.06; }, st, { polling: 'raf', timeout: 12000 });
-  await page.keyboard.up('Space');
-  await page.waitForFunction(s => document.querySelector(s).dataset.state === 'landed', st, { timeout: 9000 });
-  const short = await page.$eval(st, s => ({ mark: s.dataset.last, record: s.dataset.record }));
-  check(/^\d+\.\d$/.test(short.mark) && Number(short.mark) < 176 && short.record === 'short' && (await page.textContent('#game .game-msg')) === `${short.mark} ft. Hold on for the second turn to throw further.`,
-    `a first-turn release lands short of the record (${short.mark} ft)`);
-  // Holding on past the second turn is a foul.
-  await ready();
-  await page.keyboard.down('Space');
-  let most = 0;
-  for (let i = 0; i < 60; i++) {
-    const d = await page.$eval(st, s => ({ turn: Number(s.dataset.turn), state: s.dataset.state }));
-    most = Math.max(most, d.turn);
-    if (d.state === 'landed') break;
-    await page.waitForTimeout(150);
-  }
-  await page.keyboard.up('Space');
-  check(most === 2 && await page.$eval(st, s => s.dataset.last) === 'foul', 'holding on past two turns is a foul');
-  await page.waitForFunction(s => document.querySelector(s).dataset.state === 'done', st, { timeout: 4000 });
-  check((await page.$$eval('#game .sb-throw', b => b.map(x => x.textContent))).join(' ') === `${best.mark} ${short.mark} X` && await page.$eval('#game .sb-best', b => b.textContent === document.querySelector('#game .sb-throw').textContent && b.classList.contains('is-record')),
-    'the scoreboard lists both marks and the foul, and the best mark shows as a record');
-  check(await page.textContent('#game .game-msg') === `Final: ${best.mark} ft. You beat my 176-foot school record.`, 'the final word says the record fell');
-  // What a throw short of the record says, and a tie at 176.0 does not beat it.
-  const words = await page.$eval(st, s => { const m = s.discus.mode; return [m.landed('170.0', 170, 2, 2).say, m.final('176.0', m.round(176.09)).say]; });
-  check(words[0] === '170.0 ft, 6.0 ft short of my 176-foot record.' && words[1] === 'Final: 176.0 ft ties my 176-foot school record.', `a last-turn mark short of the record says by how much, and 176.09 rounds down to a tie (${words.join(' / ')})`);
-  await page.click('#game .game-skip');
-  check(!(await page.$('#game[open]')), 'Skip closes the discus throw');
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('Escape');
-  await page.waitForFunction(() => !document.querySelector('#sheet').open && !document.querySelector('#card').open, null, { timeout: 2000 });
 }
 
 async function bmx(page) {
@@ -723,7 +680,8 @@ async function phone(browser) {
   check(await page.$eval('.hud', h => Math.abs(h.getBoundingClientRect().bottom - window.innerHeight) < 1), 'the bar sits along the bottom');
   check(await page.isVisible('.hud-hello .hud-at') && !(await page.isVisible('.hud-hello .hud-label')), 'the bar shows an @ for Say hello');
   check(await page.$eval('.hud', h => h.scrollWidth <= h.clientWidth), 'the bar fits the phone width');
-  check(await page.$eval('#quest-log', s => s.scrollWidth <= s.clientWidth && document.documentElement.scrollWidth <= window.innerWidth), 'the quest log fits the phone width');
+  check(await page.$eval('#facts', s => s.scrollWidth <= s.clientWidth && document.documentElement.scrollWidth <= window.innerWidth), 'the ending fits the phone width');
+  check(await page.$eval('.intro-title', h => h.scrollWidth <= h.clientWidth && h.getBoundingClientRect().height < 100), 'the title screen heading fits the phone width');
   const where = await pins(page);
   await scrollTo(page, where[2].start - 300);
   await page.waitForFunction(() => Acts.sections[2].played >= 1, null, { timeout: 5000 });
@@ -742,11 +700,6 @@ async function phone(browser) {
   const skillCard = await page.waitForSelector('#card[open]', { timeout: 2000 }).then(() => page.$eval('#card .card-frame', c => ({ text: c.textContent, fits: c.getBoundingClientRect().width <= window.innerWidth })), () => ({ text: '', fits: false }));
   check(skillCard.text.includes('Pick people who make you better, then pull your weight for them.') && skillCard.fits, 'tapping the lit Teamwork skill opens its story card, which shows its line and fits the screen');
   await page.keyboard.press('Escape');
-  await page.evaluate(() => Games.open('discus'));
-  await page.waitForSelector('#game[open]');
-  const board = await page.$eval('#game .scoreboard', b => { b.querySelectorAll('.sb-throw, .sb-best').forEach(x => { x.textContent = '185.9'; }); return [b.scrollWidth, b.clientWidth]; });
-  check(board[0] <= board[1], `the discus scoreboard's five cells fit the phone width (${board.join(' in ')} px)`);
-  await page.click('#game .game-skip');
   const covered = await nextCovers(page);
   check(covered.length === 0, `every act's Next tag sits clear of its Open sheet and Play buttons, its skills and the bar${covered.length ? ` (covers: ${covered.join(', ')})` : ''}`);
   check(errors.length === 0, 'no console errors or warnings');

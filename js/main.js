@@ -80,6 +80,7 @@
   }
 
   function intro() {
+    const { linkedin } = Story.config.contact;
     const press = el('button', { class: 'btn btn--start intro-start', onclick: start },
       el('span', { class: 'intro-start-arrow', 'aria-hidden': 'true', text: '▶' }), 'Press start');
     // Enter starts the story from the title screen, like a game.
@@ -89,14 +90,14 @@
     });
     return el('section', { class: 'intro', id: 'top' },
       el('div', { class: 'intro-inner' },
-        el('h1', { class: 'intro-title', text: Story.config.name }),
+        el('h1', { class: 'intro-title', text: Story.config.fullName || Story.config.name }),
         el('p', { class: 'intro-tag', text: Story.config.welcome }),
         el('div', { class: 'intro-hero' }, Pixel.hero('none', Pixel.GRAY, 6, `${Story.config.name}, before the story starts`)),
         el('div', { class: 'intro-ground' }),
         press,
         el('p', { class: 'intro-hint', text: 'or scroll ▼' }),
-        el('p', { class: 'intro-note' },
-          el('a', { href: '#quest-log', text: 'Short on time? Read the quest log.' }))));
+        linkedin ? el('p', { class: 'intro-note' },
+          el('a', { href: linkedin, text: 'Short on time? See my work history on LinkedIn.', ...linkAttrs(linkedin) })) : null));
   }
 
   function sayHello() {
@@ -116,25 +117,7 @@
         el('h2', { id: 'facts-title', text: Story.config.ending.heading }),
         el('div', { class: 'finale-strip', 'aria-hidden': 'true' }, Story.acts.map(act => el('i', { style: `background:${act.color.base}` }))),
         el('p', { text: Story.config.ending.line }),
-        el('button', { class: 'btn', onclick: () => Sheet.open({ tab: 'items' }) }, 'Open the full sheet ▸'),
-        questLog()));
-  }
-
-  // The short version, with dates: each act's real titles, places and dates, from its recipe's quests.
-  function questLog() {
-    const { linkedin } = Story.config.contact;
-    return el('section', { class: 'quest-log', id: 'quest-log', 'aria-labelledby': 'quest-title' },
-      el('p', { class: 'quest-kicker', text: 'The short version, with dates' }),
-      el('h3', { class: 'quest-title', id: 'quest-title', text: 'Quest log' }),
-      el('p', { class: 'facts-note', text: 'Every school and job, with real titles and dates. Select an act to go back to it.' }),
-      el('ol', { class: 'quests' }, Story.acts.map(act => el('li', { class: 'quest', style: colorVars(act) },
-        el('a', { class: 'quest-act', href: `#act-${act.id}` },
-          el('b', { text: `${Story.name(act)} · ${act.title}` }), ' ', el('span', { class: 'quest-years', text: act.years })),
-        el('ul', { class: 'quest-lines' }, (act.quests || []).map(q => el('li', {},
-          el('span', {}, el('b', { text: q.what }), q.where ? el('span', { class: 'quest-where', text: `, ${q.where}` }) : null),
-          q.when ? el('span', { class: 'quest-when', text: q.when }) : null)))))),
-      linkedin ? el('p', { class: 'quest-more' }, 'Want the full patch notes? The exact professional details are on my LinkedIn.',
-        el('a', { class: 'btn', href: linkedin, ...linkAttrs(linkedin) }, 'Full details on LinkedIn ▸')) : null);
+        el('button', { class: 'btn', onclick: () => Sheet.open({ tab: 'items' }) }, 'Open the full sheet ▸')));
   }
 
   function markHere() {

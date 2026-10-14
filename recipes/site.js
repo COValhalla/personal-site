@@ -3,8 +3,10 @@
  */
 Story.site({
   name: 'Joe',
+  // The heading on the title screen. The top bar and the sheet use name.
+  fullName: 'Joe Vellella',
   // The welcome on the title screen: one to four sentences that lead to Press start.
-  welcome: "Hi, I'm Joe Vellella. I build products, and I've played a few classes to get here: engineer, product manager, and whatever the work needed next. Press start to play my story. You may find a few levels you played too.",
+  welcome: "I build products. I started as a chemical engineer in factories, taught myself to code, and now I'm a product manager who still builds. Press start to play my story. You may find a few levels you played too.",
   // The line above the Say hello links, which asks the reader to answer back.
   hello: "Building something like that? Let's talk. And tell me: what was your typing class?",
   // The end of the page: a kicker, a heading and the line about what comes next.

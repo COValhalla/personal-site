@@ -6,10 +6,6 @@ Story.addAct({
   numeral: 'V',
   title: 'Mountains and factories',
   years: 'Denver, 2018 to 2022',
-  quests: [
-    { what: 'Manufacturing Project Engineer', where: 'Terumo BCT', when: 'Mar 2018 to May 2020' },
-    { what: 'Sr. Process Development Engineer, New Product Introduction', where: 'Terumo BCT', when: 'Jun 2020 to Mar 2022' },
-  ],
   color: { name: 'Pine green', light: '#7fd09c', base: '#3fa66b', shade: '#286f46' },
   theme: 'light',
   scene: 'mountains',

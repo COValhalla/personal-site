@@ -1,23 +1,17 @@
 /*
- * The throws: the hammer throw in Act III and the discus throw in Act II.
- * Both are a top-down view of the throwing circle and the sector, and they
- * share the turns, the release timing, the hit and the throw camera. MODES
- * below holds what differs.
+ * The hammer throw in Act III: a top-down view of the throwing circle and the
+ * sector. MODES below holds the throw's turns, scale and words.
  *
  * Hold to start: one wind, then the turns. Every turn is faster than the last,
- * and the last ones are much faster. The hammer or the discus glows as it
- * passes the front of the circle. Let go while it glows to throw. The hammer
- * gets four turns and the discus two: hold on past the last and you spin out of
- * the circle. Let go during the wind, or away from the glow, and it is a foul.
- * Three attempts; your best fair mark counts.
+ * and the last ones are much faster. The hammer glows as it passes the front of
+ * the circle. Let go while it glows to throw. The hammer gets four turns: hold
+ * on past the last and you spin out of the circle. Let go during the wind, or
+ * away from the glow, and it is a foul. Three attempts; your best fair mark counts.
  *
  * A fair release on a fast turn hits: the picture freezes for a moment, shakes
  * and flashes, and a phone buzzes where it can. A throw of the mode's
  * cameraFrom or more cuts to a side-on camera in slow motion that follows the
- * throw out, then cuts back to the mark. A tap skips it.
- *
- * The hammer scores in meters. The discus scores in feet against Joe's 176-foot
- * school record, which is drawn on the field and in the throw camera.
+ * throw out, then cuts back to the mark. A tap skips it. Marks are in meters.
  */
 (function () {
   'use strict';
@@ -36,8 +30,6 @@
   // The camera runs slow at first, then follows the throw at full speed.
   const CAM = { slow: 0.3, slowFor: 0.55, flight: 2.0, after: 0.9 };
   const GOLD = '#ffd56b';
-  // Joe's school discus record, from Act II's words.
-  const RECORD_FT = 176;
   const TAU = Math.PI * 2;
 
   const MODES = {
@@ -50,7 +42,6 @@
       words: { turns: 'four', Turns: 'Four', over: 'fifth' },
       orbit: 9, // the hammer's path around the thrower: on the field
       reach: 22, // and in the close-up
-      wire: true,
       unit: 'm',
       decimals: 2,
       pxPerUnit: 1.45,
@@ -65,40 +56,6 @@
         say: d > 70 ? `${mark} m. A big one.` : d > 50 ? `${mark} m. Nice throw.` : `${mark} m. Hold on for more turns to throw further.`,
       }),
       final: mark => ({ say: `Final: your best mark is ${mark} m.` }),
-    },
-    discus: {
-      title: 'Discus throw',
-      help: `Hold to wind up and spin. You get two turns, and the second is fast. Let go while the discus glows to land it in the sector; hold past the second turn and it is a foul. My school record is ${RECORD_FT} feet. Beat it.`,
-      thing: 'discus',
-      turnSpeed: [5.0, 7.8],
-      fastFrom: 2,
-      words: { turns: 'two', Turns: 'Two', over: 'third' },
-      orbit: 6, // the discus is held at arm's length, not on a wire
-      reach: 15,
-      wire: false,
-      unit: 'ft',
-      decimals: 1,
-      // A mark in feet rounds down to the tenth, so 176.0 ties the record and does not beat it.
-      round: d => Math.floor(d * 10) / 10,
-      pxPerUnit: 0.66,
-      rings: [50, 100, 150],
-      best: 186,
-      cap: 189,
-      cameraFrom: 165,
-      cam: { pxPerUnit: 1.3, tick: 25, board: 50, pole: 75, peak: 40 },
-      toBeat: RECORD_FT,
-      landed: (mark, d, turn, last) => {
-        if (d > RECORD_FT) return { sub: 'NEW SCHOOL RECORD', say: `${mark} ft. You beat my ${RECORD_FT}-foot school record.` };
-        if (d === RECORD_FT) return { sub: 'TIES THE RECORD', say: `${mark} ft ties my ${RECORD_FT}-foot record. A tenth more beats it.` };
-        if (turn < last) return { sub: `TURN ${turn}: WAIT FOR TURN ${last}`, say: `${mark} ft. Hold on for the second turn to throw further.` };
-        const short = (RECORD_FT - d).toFixed(1);
-        return { sub: `${short} FT SHORT`, say: `${mark} ft, ${short} ft short of my ${RECORD_FT}-foot record.` };
-      },
-      final: (mark, d) => {
-        if (d > RECORD_FT) return { sub: 'RECORD BROKEN', say: `Final: ${mark} ft. You beat my ${RECORD_FT}-foot school record.` };
-        if (d === RECORD_FT) return { sub: 'TIED THE RECORD', say: `Final: ${mark} ft ties my ${RECORD_FT}-foot school record.` };
-        return { say: `Final: your best is ${mark} ft, ${(RECORD_FT - d).toFixed(1)} ft short of my ${RECORD_FT}-foot record.` };
-      },
     },
   };
 
@@ -136,9 +93,8 @@
     const READY = `Hold to wind up. ${mode.words.Turns} turns, then let go while the ${mode.thing} glows.`;
     const canvas = Sheet.el('canvas', { class: 'game-canvas px', width: W, height: H, role: 'img', 'aria-label': `${mode.title} field seen from above` });
     const cells = Array.from({ length: ATTEMPTS }, (_, k) => Sheet.el('div', {}, Sheet.el('span', { text: `Throw ${k + 1}` }), Sheet.el('b', { class: 'sb-throw', text: '--' })));
-    const extra = mode.toBeat ? [Sheet.el('div', {}, Sheet.el('span', { text: 'Record' }), Sheet.el('b', { class: 'sb-record', text: mode.toBeat.toFixed(mode.decimals) }))] : [];
-    const board = Sheet.el('div', { class: extra.length ? 'scoreboard scoreboard--fit' : 'scoreboard', style: `grid-template-columns:repeat(${ATTEMPTS + 1 + extra.length},1fr)`, 'aria-live': 'polite' },
-      cells, Sheet.el('div', {}, Sheet.el('span', { text: 'Best' }), Sheet.el('b', { class: 'sb-best', text: '--' })), extra);
+    const board = Sheet.el('div', { class: 'scoreboard', style: `grid-template-columns:repeat(${ATTEMPTS + 1},1fr)`, 'aria-live': 'polite' },
+      cells, Sheet.el('div', {}, Sheet.el('span', { text: 'Best' }), Sheet.el('b', { class: 'sb-best', text: '--' })));
     const msg = Sheet.el('p', { class: 'game-msg', 'aria-live': 'polite', text: READY });
     const hold = Sheet.el('button', { class: 'btn btn--accent hold' }, 'Hold to spin ', Sheet.el('kbd', { text: 'Space' }));
     const again = Sheet.el('button', { class: 'btn', hidden: '' }, 'Throw again');
@@ -201,12 +157,6 @@
         for (let a = -SECTOR; a <= SECTOR; a += 0.6 / r) px(C.x + Math.sin(a) * r, C.y - Math.cos(a) * r, ramp.light);
         Pixel.digits(ctx, m, Math.round(C.x + Math.sin(SECTOR) * r) + 3, Math.round(C.y - Math.cos(SECTOR) * r) - 2, '#a9bfae', 1);
       });
-      // The record to beat: a solid gold line across the sector.
-      if (mode.toBeat) {
-        const r = mode.toBeat * PX;
-        for (let a = -SECTOR; a <= SECTOR; a += 0.4 / r) { px(C.x + Math.sin(a) * r, C.y - Math.cos(a) * r, GOLD); px(C.x + Math.sin(a) * (r + 1), C.y - Math.cos(a) * (r + 1), GOLD); }
-        say(`${mode.toBeat} RECORD`, Math.round(C.x + Math.sin(SECTOR) * r) + 3, Math.round(C.y - Math.cos(SECTOR) * r) - 3, GOLD);
-      }
       // The cage, open toward the sector.
       for (let a = 0; a < TAU; a += 0.05) {
         const off = Math.abs(Math.atan2(Math.sin(a - Math.PI / 2), Math.cos(a - Math.PI / 2)));
@@ -240,7 +190,7 @@
       const bx = C.x + Math.cos(theta) * ORBIT;
       const by = C.y + Math.sin(theta) * ORBIT;
       if (s.phase !== 'flying' && s.phase !== 'landed' && s.phase !== 'done') {
-        line(C.x, C.y, bx, by, mode.wire ? '#c3c6cc' : N.s);
+        line(C.x, C.y, bx, by, '#c3c6cc');
         disc(bx, by, 1, N.o);
         const glow = glowing();
         px(bx, by, glow ? '#ffffff' : ramp.base);
@@ -324,18 +274,17 @@
       if (holdingHammer) {
         const bx = cx + Math.cos(theta) * R;
         const by = cy + Math.sin(theta) * R;
-        // The hammer hangs from both hands on its wire; the discus sits in one hand at the end of a straight arm.
-        if (mode.wire) line(hx, hy, bx, by, '#c3c6cc');
-        else line(cx + ux * 4, cy + uy * 4, bx, by, N.s);
+        // The hammer hangs from both hands on its wire.
+        line(hx, hy, bx, by, '#c3c6cc');
         disc(bx, by, 2, N.o);
         const glow = glowing();
         disc(bx, by, 1, glow ? '#ffffff' : ramp.base);
         if (glow) [[-4, 0], [4, 0], [0, -4], [0, 4]].forEach(([dx, dy]) => px(bx + dx, by + dy, '#ffffff'));
       }
-      // The thrower from above: shoulders, arms to the handle (or one across the chest), head.
+      // The thrower from above: shoulders, arms to the handle, head.
       for (let k = -1; k <= 0; k++) line(cx - ux * 5 + Math.cos(theta) * k, cy - uy * 5 + Math.sin(theta) * k, cx + ux * 5 + Math.cos(theta) * k, cy + uy * 5 + Math.sin(theta) * k, ramp.base);
       line(cx - ux * 4, cy - uy * 4, hx, hy, N.s);
-      if (mode.wire || !holdingHammer) line(cx + ux * 4, cy + uy * 4, hx, hy, N.s);
+      line(cx + ux * 4, cy + uy * 4, hx, hy, N.s);
       disc(cx - Math.cos(theta), cy - Math.sin(theta), 2, N.h);
     }
 
@@ -430,8 +379,7 @@
       const clamped = Math.max(-SECTOR, Math.min(SECTOR, off));
       const speed = s.omega / REACH;
       const centered = Math.min(1, Math.abs(off) / zone());
-      const raw = Math.min(mode.cap, mode.best * speed * speed * (1 - 0.15 * centered ** 2));
-      const dist = mode.round ? mode.round(raw) : raw;
+      const dist = Math.min(mode.cap, mode.best * speed * speed * (1 - 0.15 * centered ** 2));
       const bx = C.x + Math.cos(s.theta) * ORBIT;
       const by = C.y + Math.sin(s.theta) * ORBIT;
       const far = dist * PX;
@@ -522,42 +470,24 @@
           Pixel.text(ctx, String(m), x - Math.floor((String(m).length * 4 - 1) / 2), 128, GOLD, 1);
         }
       }
-      // The record to beat: a gold flag on the line.
-      if (mode.toBeat) {
-        const x = Math.round(mode.toBeat * P - camX);
-        const label = `${mode.toBeat} RECORD`;
-        const w = label.length * 4 + 3;
-        if (x > -w - 4 && x < W + 2) {
-          rect(GOLD, x, GROUND_Y - 30, 1, 33);
-          rect(N.o, x + 1, GROUND_Y - 31, w + 2, 11);
-          rect(GOLD, x + 2, GROUND_Y - 30, w, 9);
-          say(label, x + 4, GROUND_Y - 28, N.o);
-        }
-      }
       // The thrower, in the act's look, at the front of the circle.
       const tx = Math.round(-camX - 8);
       if (tx > -20) {
         const act = Story.acts.find(a => a.game === name) || Story.acts[0];
         Pixel.paint(ctx, Pixel.heroGrid(act.hero.gear, Acts.styleOf(act)), ramp, tx, GROUND_Y - 22, 1, false);
       }
-      // The hammer and its wire, or the spinning discus, with a dotted trail.
+      // The hammer and its wire, with a dotted trail.
       const bx = Math.round(xm * P - camX);
       for (let k = 1; k < 10; k++) {
         const q = Math.max(0, p - k * 0.02);
         if (k % 2) px(f.dist * q * P - camX, heightAt(q), 'rgba(255,255,255,0.7)');
       }
-      if (c.landed < 0 && mode.wire) {
+      if (c.landed < 0) {
         line(bx, hy, bx - 3, hy - 2, '#c3c6cc');
         rect('#1d1b22', bx - 3, hy - 3, 2, 2);
         disc(bx, hy, 2, N.o);
         disc(bx, hy, 1, ramp.base);
         px(bx - 1, hy - 1, N.w);
-      } else if (c.landed < 0) {
-        // Flat and spinning: a light rim pixel runs around it.
-        const y = Math.round(hy);
-        rect(N.o, bx - 3, y - 1, 7, 3);
-        rect(ramp.base, bx - 2, y, 5, 1);
-        px(bx - 2 + (Math.floor(c.real * 24) % 5), y, N.w);
       } else {
         disc(bx, GROUND_Y, 2, '#2a2420');
       }
@@ -571,7 +501,7 @@
       if (c.landed >= 0) {
         const big = `${fmt(f.dist)} ${UNIT}`;
         rect('rgba(20,26,22,0.85)', W / 2 - big.length * 6 - 4, 44, big.length * 12 + 6, 22);
-        sayCenter(big, 48, beats(f.dist) ? '#9be36c' : GOLD, 3);
+        sayCenter(big, 48, GOLD, 3);
       } else {
         say('TAP TO SKIP', W - 47, 140, 'rgba(255,255,255,0.75)');
       }
@@ -596,19 +526,13 @@
       }
     }
 
-    const beats = d => mode.toBeat && d > mode.toBeat;
-
     function record(mark) {
       const cell = cells[s.attempt - 1].querySelector('b');
       cell.textContent = mark === null ? 'X' : fmt(mark);
       cell.classList.toggle('is-foul', mark === null);
       s.results.push(mark);
       if (mark !== null && (s.best === null || mark > s.best)) s.best = mark;
-      if (s.best !== null) {
-        const best = board.querySelector('.sb-best');
-        best.textContent = fmt(s.best);
-        best.classList.toggle('is-record', beats(s.best));
-      }
+      if (s.best !== null) board.querySelector('.sb-best').textContent = fmt(s.best);
     }
 
     function land() {
@@ -619,10 +543,9 @@
       Sound.play('fair');
       s.flag = 'fair';
       const told = mode.landed(fmt(f.dist), f.dist, f.turn, TURNS);
-      banner(`${fmt(f.dist)} ${UNIT}`, beats(f.dist) ? '#9be36c' : GOLD, told.sub, 1.8);
+      banner(`${fmt(f.dist)} ${UNIT}`, GOLD, told.sub, 1.8);
       msg.textContent = told.say;
       stage.dataset.last = fmt(f.dist);
-      if (mode.toBeat) stage.dataset.record = beats(f.dist) ? 'beaten' : 'short';
       setPhase('landed');
       setTimeout(nextAttempt, 1700);
     }
@@ -635,9 +558,8 @@
         setPhase('done');
         const fouls = s.results.filter(m => m === null).length;
         const told = s.best === null ? { say: 'Three fouls. It happens to everyone. Throw again?' } : mode.final(fmt(s.best), s.best);
-        banner(s.best === null ? 'NO MARK' : `BEST ${fmt(s.best)} ${UNIT}`, s.best === null ? '#f08a75' : beats(s.best) ? '#9be36c' : GOLD, told.sub || (fouls ? `${fouls} FOUL${fouls > 1 ? 'S' : ''}` : 'NO FOULS'), 99);
+        banner(s.best === null ? 'NO MARK' : `BEST ${fmt(s.best)} ${UNIT}`, s.best === null ? '#f08a75' : GOLD, told.sub || (fouls ? `${fouls} FOUL${fouls > 1 ? 'S' : ''}` : 'NO FOULS'), 99);
         msg.textContent = told.say;
-        if (mode.toBeat) stage.dataset.record = s.best !== null && beats(s.best) ? 'beaten' : 'short';
         hold.hidden = true;
         again.hidden = false;
         again.focus();
