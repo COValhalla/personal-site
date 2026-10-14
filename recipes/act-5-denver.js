@@ -38,9 +38,9 @@ Story.addAct({
     },
   ],
   skills: [
-    { id: 'mountains', name: 'Mountains', parents: ['riding', 'throwing'], line: 'Reading terrain and weather, and turning around in time.' },
-    { id: 'capital-projects', name: 'Capital projects', parents: ['plant-ops', 'materials'], line: 'Building a plant from an empty lot, across an ocean.' },
-    { id: 'new-products', name: 'New products', parents: ['capital-projects', 'materials', 'pitching'], line: 'Getting a new device from the bench to the line.' },
+    { id: 'mountains', name: 'Mountains', parents: ['riding', 'throwing'], moment: 1, line: 'Reading terrain and weather, and turning around in time.' },
+    { id: 'capital-projects', name: 'Capital projects', parents: ['plant-ops', 'materials'], moment: 2, line: 'Building a plant from an empty lot, across an ocean.' },
+    { id: 'new-products', name: 'New products', parents: ['capital-projects', 'materials', 'pitching'], moment: 3, line: 'Getting a new device from the bench to the line.' },
   ],
   game: null,
   photos: [],
