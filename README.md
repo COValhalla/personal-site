@@ -39,6 +39,8 @@ Every merge to `main` publishes it there within a minute or two, through GitHub 
 | Path | What it is |
 | --- | --- |
 | `index.html` | The page. It loads everything below in order. |
+| `ARCHITECTURE.md` | How the pieces fit together, and the limits of the current design. |
+| `docs/decisions/` | Why the site is built this way: one short record per hard-to-reverse decision. |
 | `recipes/` | The story: `site.js` plus one recipe per act. Edit these to change the words. |
 | `STYLE-GUIDE.md` | Sprite sizes, palettes, outline rules and animation timing. |
 | `js/pixel.js` | Item sprites, the hero and his gear per act. |
