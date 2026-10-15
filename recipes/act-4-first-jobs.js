@@ -32,7 +32,7 @@ Story.addAct({
     },
   ],
   skills: [
-    { id: 'materials', name: 'Materials', parents: ['chemistry'], line: 'Why parts bend, crack or hold.' },
+    { id: 'materials', name: 'Materials', parents: ['chemistry'], moment: 1, line: 'Why parts bend, crack or hold.' },
     { id: 'plant-ops', name: 'Plant ops', parents: ['teaching', 'chemistry', 'harder-thing'], line: 'Keeping a line running, shift after shift.' },
     { id: 'code', name: 'Code', parents: ['gaming', 'typing', 'materials'], moment: 2, line: 'Making the computer do the boring part.' },
     { id: 'adapting', name: 'Adapting', parents: ['riding'], moment: 3, line: 'Learned on the road: a new town and a new crew, the same job.' },

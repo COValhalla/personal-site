@@ -34,7 +34,7 @@ Story.addAct({
     },
   ],
   skills: [
-    { id: 'debugging', name: 'Debugging', parents: ['code', 'plant-ops'], line: 'Troubleshooting, the same way as on the plant floor.' },
+    { id: 'debugging', name: 'Debugging', parents: ['code', 'plant-ops'], moment: 3, line: 'Troubleshooting, the same way as on the plant floor.' },
     { id: 'curiosity', name: 'Curiosity', parents: [], moment: 1, line: 'A whole year of following what I wanted to learn.' },
   ],
   game: null,

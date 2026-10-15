@@ -229,6 +229,12 @@ async function desktop(browser) {
         check(/^Moment 2 of \d$/.test(mid.label), `${names[n]}: the rail says ${mid.label}`);
       }
     }
+    // Before the level-up, every skill a moment lights is on and the skills the level-up lights are not yet.
+    const onMoments = await page.evaluate(i => Story.acts[i].skills.filter(s => s.moment).map(s => s.name).sort().join(', '), n);
+    const litBefore = await page.waitForFunction(([scope, want]) => !document.querySelector(`${scope} .act-screen.is-unlocked, ${scope}.is-unlocked`)
+      && [...document.querySelectorAll(`${scope} .skill-card.is-on .skill-name`)].map(s => s.textContent.trim()).sort().join(', ') === want && want,
+    [`#${id}`, onMoments], { timeout: 12000 }).then(h => h.jsonValue(), () => '');
+    check(litBefore === onMoments, `${names[n]}: before the level-up, its moments have lit ${onMoments}${litBefore === onMoments ? '' : ' (they did not)'}`);
     await scrollTo(page, end - 4);
     await page.waitForFunction(i => Story.state.unlocked.has(i), n, { timeout: 15000 });
     await page.waitForSelector(`#${id} .act-screen.is-ready`, { timeout: 8000 });
