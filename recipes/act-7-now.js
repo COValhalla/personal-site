@@ -1,6 +1,7 @@
 /*
  * Act VII recipe. See README.md, "Recipes", for every field.
  * Purple is for this act's own items; the sheet ends in every color.
+ * Needs: Story
  */
 Story.addAct({
   id: 'now',

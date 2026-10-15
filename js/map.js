@@ -7,11 +7,13 @@
  * furthest stop reached. Select a stop and the hero walks the road to it, and
  * the line under the map shows that act's class and skills with a way to go
  * there. Stops not reached yet are gray.
+ * Needs: Dom, Pixel, Draw, Story
+ * Needs after start-up: Acts
  */
 (function () {
   'use strict';
 
-  const { el, colorVars } = Sheet;
+  const { el, colorVars } = Dom;
   const W = 320;
   const H = 120;
   const SPEED = 70; // the hero's walking speed, map pixels a second
@@ -47,12 +49,12 @@
 
   // ---------- Drawing ----------
 
-  const rect = (c, x, y, w, h) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
+  const rect = (c, x, y, w, h) => Draw.rect(ctx, c, x, y, w, h);
   const ramp = i => (reached(i) ? Story.acts[i].color : Pixel.GRAY);
 
   function ground() {
     rect('#79c06a', 0, 0, W, H);
-    const r = Scenes.rng(5);
+    const r = Draw.rng(5);
     for (let k = 0; k < 160; k++) rect(r() < 0.5 ? '#8bcf7a' : '#6aae5c', r() * W, r() * (H - 14), 1, 1);
     rect('#6fb3e8', 0, H - 12, W, 12);
     for (let x = 2; x < W; x += 8) rect('#d6ecff', x, H - 8, 4, 1);

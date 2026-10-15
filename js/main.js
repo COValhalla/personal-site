@@ -1,10 +1,11 @@
 /*
  * Boot: check the recipes, build the page, then start watching the scroll.
+ * Needs: gsap, ScrollTrigger, Dom, Pixel, Story, Scenes, Sheet, Games, Belt, Acts
  */
 (function () {
   'use strict';
 
-  const { el, colorVars } = Sheet;
+  const { el, colorVars } = Dom;
 
   function hud() {
     const pips = Story.acts.map((act, i) => el('a', {

@@ -83,7 +83,7 @@ Open world is bright on purpose: a Saturday at the track, then the white-tiled f
 
 ## Scenes
 
-A scene lives in `js/scenes.js` and has four parts:
+A scene lives in `js/scenes.js`. It opens with a `// Needs:` line naming the helpers, props and globals it uses (`npm test` checks it), and has four parts:
 
 | Part | What it does |
 | --- | --- |
@@ -93,8 +93,9 @@ A scene lives in `js/scenes.js` and has four parts:
 | `cues` | One function per animation: `name: state => gsap.timeline()` that tweens the state |
 
 - The ground is at y = 64. `heroX` says where the hero stands; keep the area around it clear.
-- Use the act's three colors, the neutrals, and tints mixed from them with `Scenes.mix`.
-- Use `Scenes.rng(seed)` for crowds, stars and code lines, so a scene looks the same every time.
+- Draw with the kit in `js/draw.js`: `rect`, `text`, `sprite`, `outline` and `puff` for shapes, `steps4` and `blink` for chunky timing.
+- Use the act's three colors, the neutrals, and tints mixed from them with `mix`.
+- Use `rng(seed)` for crowds, stars and code lines, so a scene looks the same every time.
 - A moment in a recipe names a cue (`cue: 'plane'`). Played to its end, a cue must leave the scene in its final state: with motion turned off the page jumps every cue to its end.
 - Move things in whole pixels or GSAP `steps()` eases, so motion stays chunky like the art.
 - Every moment names a cue, and the cue plays for most of the time its words type out, as Act I's do: at least 0.8 of the typing time (letters ÷ 70 a second) and never under 0.8 s, so the scene keeps moving until the words are nearly whole. Tell it in two or three parts (something arrives, it changes, a result shows) and leave the scene visibly changed at the end. `npm test` checks every moment for this.

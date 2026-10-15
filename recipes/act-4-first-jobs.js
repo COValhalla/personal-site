@@ -1,5 +1,6 @@
 /*
  * Act IV recipe. See README.md, "Recipes", for every field.
+ * Needs: Story
  */
 Story.addAct({
   id: 'first-jobs',

@@ -1,4 +1,5 @@
 // Draws every scene, cue, item sprite and gear piece on its own. Loaded by workshop.html only.
+// Needs: Dom, Pixel, Story, Scenes
 (function () {
   'use strict';
 
@@ -7,15 +8,7 @@
   const SPRITE_SCALE = 4;
   const GEAR_SCALE = 3;
 
-  function el(tag, attrs, ...kids) {
-    const node = document.createElement(tag);
-    Object.entries(attrs || {}).forEach(([key, value]) => {
-      if (key === 'text') node.textContent = value;
-      else node.setAttribute(key, value);
-    });
-    node.append(...kids);
-    return node;
-  }
+  const { el } = Dom;
 
   function card(label, art, ...more) {
     return el('figure', { class: 'ws-card' },
