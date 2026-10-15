@@ -1,5 +1,5 @@
 /*
- * The story registry. Recipe files in recipes/ call Story.site(...) once and
+ * The story registry. Recipe files in story/recipes/ call Story.site(...) once and
  * Story.addAct(...) once per act. The page is built from what they register.
  * Needs: nothing
  *
@@ -68,7 +68,7 @@
     validate(known) {
       const problems = [];
       const need = (ok, msg) => { if (!ok) problems.push(msg); };
-      need(story.config, 'recipes/site.js did not call Story.site().');
+      need(story.config, 'story/recipes/site.js did not call Story.site().');
       const statIds = new Set(((story.config && story.config.stats) || []).map(s => s.id));
       const seen = new Set();
       const skillAct = new Map();
@@ -76,11 +76,11 @@
         const where = `Act ${act.numeral || i + 1}`;
         need(act.title, `${where} has no title.`);
         need(act.color && act.color.light && act.color.base && act.color.shade, `${where} needs color.light, color.base and color.shade.`);
-        need(known.scenes.includes(act.scene), `${where} uses scene "${act.scene}", which no file in js/scenes/ draws.`);
+        need(known.scenes.includes(act.scene), `${where} uses scene "${act.scene}", which no file in story/scenes/ draws.`);
         const stageNames = act.stages || [act.scene];
         if (act.stages) {
           need(act.stages.length === (act.beats || []).length + 1, `${where} needs ${(act.beats || []).length + 1} stages: one for each moment, then one for the level-up.`);
-          act.stages.forEach(name => need(known.scenes.includes(name), `${where} uses stage scene "${name}", which no file in js/scenes/ draws.`));
+          act.stages.forEach(name => need(known.scenes.includes(name), `${where} uses stage scene "${name}", which no file in story/scenes/ draws.`));
           act.stages.forEach((name, k) => need(k === 0 || name === act.stages[k - 1] || !act.stages.slice(0, k).includes(name), `${where} goes back to stage scene "${name}": moments in the same scene must come one after another.`));
         }
         need(known.gear.includes(act.hero && act.hero.gear), `${where} uses hero gear "${act.hero && act.hero.gear}", which pixel.js does not have.`);
@@ -92,7 +92,7 @@
         (act.items || []).forEach(item => {
           need(!seen.has(item.id), `${where}: item id "${item.id}" is used twice.`);
           seen.add(item.id);
-          need(known.sprites.includes(item.sprite), `${where}: item "${item.id}" uses sprite "${item.sprite}", which pixel.js does not have.`);
+          need(known.sprites.includes(item.sprite), `${where}: item "${item.id}" uses sprite "${item.sprite}", which story/sprites.js does not have.`);
           need(item.tag === 'life' || item.tag === 'work', `${where}: item "${item.id}" needs tag "life" or "work".`);
           Object.keys(item.adds || {}).forEach(stat => need(statIds.has(stat), `${where}: item "${item.id}" adds unknown stat "${stat}".`));
           if (item.game) need(known.games.includes(item.game), `${where}: item "${item.id}" opens game "${item.game}", which is not registered.`);

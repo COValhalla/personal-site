@@ -1,4 +1,4 @@
-// Unit tests for the visit counter's rule in js/addons/visits.js: who is counted.
+// Unit tests for the visit counter's rule in engine/addons/visits.js: who is counted.
 // The add-on runs without a page here, so it only defines the rule. Run with `npm test`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -8,7 +8,7 @@ import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const file = 'js/addons/visits.js';
+const file = 'engine/addons/visits.js';
 const ctx = vm.createContext({});
 ctx.window = ctx;
 vm.runInContext(readFileSync(path.join(root, file), 'utf8'), ctx, { filename: file });

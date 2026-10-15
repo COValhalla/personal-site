@@ -1,6 +1,6 @@
 /*
  * The character sheet: an Items tab (stats and inventory), a Map tab (the
- * world map of the Tutorial and seven acts, in js/map.js), and the story
+ * world map of the Tutorial and seven acts, in engine/map.js), and the story
  * card that opens when you select an item.
  * Needs: Dom, Pixel, Story
  * Needs after start-up: WorldMap, Games, Acts

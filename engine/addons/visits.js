@@ -73,7 +73,7 @@
   watch(document.getElementById('facts'), 'ending', 'Reached the ending');
   Story.on('sheet', () => count('sheet', 'Opened the character sheet'));
 
-  // The contact links from recipes/site.js, wherever the page shows them.
+  // The contact links from story/recipes/site.js, wherever the page shows them.
   const contact = Object.entries((Story.config && Story.config.contact) || {})
     .map(([name, value]) => [name, name === 'email' ? `mailto:${value}` : value]);
   document.addEventListener('click', event => {

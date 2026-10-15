@@ -13,7 +13,7 @@ Story.addAct({
   scene: 'bmx-track',
   // One scene per moment, then the level-up: the camera dives through a door into each next place.
   stages: ['bmx-track', 'bmx-shop', 'bmx-sheet'],
-  // The hero's hair and beard for this act (styles in js/pixel.js: HAIR and BEARD).
+  // The hero's hair and beard for this act (styles in engine/pixel.js: HAIR and BEARD).
   hero: { gear: 'helmet', title: 'Crew lead', hair: 'short', beard: 'none' },
   // Each moment can give one of this act's items (item) and play a scene animation (cue).
   beats: [
