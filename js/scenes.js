@@ -172,7 +172,7 @@
         }
       },
       cues: {
-        night: s => gsap.timeline().to(s, { dark: 1, duration: 1, ease: 'steps(4)' }).to(s, { screen: 1, duration: 0.5, ease: 'steps(2)' }, 0.9),
+        night: s => gsap.timeline().to(s, { dark: 1, duration: 1.2, ease: 'steps(4)' }).to(s, { screen: 1, duration: 0.6, ease: 'steps(2)' }, 1.2),
       },
     },
 
@@ -234,8 +234,8 @@
       cues: {
         type: s => gsap.timeline()
           .to(s, { screens: 1, duration: 0.5, ease: 'steps(4)' })
-          .to(s, { race: 1, duration: 1.4, ease: 'none' }, 0.4)
-          .to(s, { star: 1, duration: 0.01 }, 1.8),
+          .to(s, { race: 1, duration: 1.7, ease: 'none' }, 0.4)
+          .to(s, { star: 1, duration: 0.01 }, 2.1),
       },
     },
 
@@ -857,7 +857,7 @@
         rect(ctx, '#3a3744', 116, 32, 37, 1);
         for (let a = 0; a < Math.PI * 2; a += 0.08) rect(ctx, N.w, Math.round(134 + Math.cos(a) * 8), Math.round(59 + Math.sin(a) * 2), 1, 1);
       },
-      init: () => ({ ham: -1, mark: 0, cheer: 0, board: 0, flask: 0, texas: 0, sun: 0 }),
+      init: () => ({ ham: -1, mark: 0, cheer: 0, board: 0, flask: 0, chalk: 0, boil: 0, texas: 0, roi: 0, sun: 0 }),
       frame(ctx, c, s, t) {
         // The crowd stands up and cheers.
         if (s.cheer > 0.05) {
@@ -865,7 +865,11 @@
           for (let i = 0; i < 40 * s.cheer; i++) rect(ctx, [c.light, N.w, c.base][i % 3], Math.floor(r() * W), 14 + Math.floor(r() * 5) * 5, 1, 1);
         }
         // Scoreboard text.
-        if (s.texas > 0.5) text(ctx, 'TEXAS', 103, 4, '#ffb347');
+        if (s.roi > 0) {
+          // The fix sold on its return: ROI and three bars that climb.
+          text(ctx, 'ROI', 101, 4, '#ffb347');
+          for (let i = 0; i < Math.round(3 * Math.min(1, s.roi)); i++) rect(ctx, '#ffb347', 116 + i * 3, 9 - i * 2, 2, 2 + i * 2);
+        } else if (s.texas > 0.5) text(ctx, 'TEXAS', 103, 4, '#ffb347');
         else if (s.board > 0.5) text(ctx, 'CHEM E', 101, 4, '#ffb347');
         else if (s.mark > 0) Pixel.text(ctx, s.mark.toFixed(1) + 'm', 101, 4, '#ffb347', 1);
         // The hammer flies out of the cage and lands on the infield.
@@ -883,17 +887,21 @@
             puff(ctx, 28, 46, 1, '#9b8f7a');
           }
         }
-        // A chalkboard rolls in with a flask that bubbles.
+        // A chalkboard rolls in, the notes write themselves, then the flask fills and bubbles.
         if (s.flask > 0) {
           const x = Math.round(-30 + s.flask * 36);
           rect(ctx, N.o, x, 48, 26, 13);
           rect(ctx, '#2f4a3a', x + 1, 49, 24, 11);
-          rect(ctx, N.w, x + 3, 51, 6, 1); rect(ctx, N.w, x + 11, 51, 4, 1); rect(ctx, N.w, x + 3, 54, 9, 1); rect(ctx, N.w, x + 14, 54, 7, 1); rect(ctx, N.w, x + 3, 57, 5, 1);
+          const notes = [[3, 51, 6], [11, 51, 4], [3, 54, 9], [14, 54, 7], [3, 57, 5]];
+          notes.slice(0, Math.round(notes.length * Math.min(1, s.chalk))).forEach(([nx, ny, w]) => rect(ctx, N.w, x + nx, ny, w, 1));
           rect(ctx, N.o, x + 2, 61, 1, 3); rect(ctx, N.o, x + 23, 61, 1, 3);
-          sprite(ctx, ['.oo.', '.ww.', 'owwo', 'o11o', 'o22o', '.oo.'], x + 18, 54, { o: N.o, w: N.w, 1: c.light, 2: c.base });
-          for (let i = 0; i < 3; i++) {
-            const by = 53 - ((t * 6 + i * 3) % 8);
-            rect(ctx, c.light, x + 19 + (i % 2), Math.round(by), 1, 1);
+          const fill = steps4(s.boil);
+          sprite(ctx, ['.oo.', '.ww.', 'owwo', fill >= 0.5 ? 'o11o' : 'owwo', fill > 0 ? 'o22o' : 'owwo', '.oo.'], x + 18, 54, { o: N.o, w: N.w, 1: c.light, 2: c.base });
+          if (fill >= 1) {
+            for (let i = 0; i < 3; i++) {
+              const by = 53 - ((t * 6 + i * 3) % 8);
+              rect(ctx, c.light, x + 19 + (i % 2), Math.round(by), 1, 1);
+            }
           }
         }
         // Texas: a pumpjack nods on the horizon at sunset.
@@ -917,8 +925,18 @@
           .to(s, { cheer: 1, duration: 0.2 }, 1.1)
           .set(s, { mark: 62.4 }, 1.3)
           .to(s, { cheer: 0, duration: 0.8 }, 2.2),
-        study: s => gsap.timeline().to(s, { flask: 1, duration: 0.9, ease: 'power2.out' }).set(s, { board: 1 }, 0.4),
-        texas: s => gsap.timeline().to(s, { texas: 1, duration: 1, ease: 'none' }),
+        // The board rolls in, the notes write themselves line by line, and the flask fills until it bubbles.
+        study: s => gsap.timeline()
+          .to(s, { flask: 1, duration: 0.9, ease: 'power2.out' })
+          .set(s, { board: 1 }, 0.4)
+          .to(s, { chalk: 1, duration: 1, ease: 'steps(5)' }, 0.8)
+          .to(s, { boil: 1, duration: 0.6, ease: 'steps(4)' }, 1.6),
+        // The sun sets on a Texas oil field, the scoreboard sells the fix on its ROI, and the crowd cheers the talk.
+        texas: s => gsap.timeline()
+          .to(s, { texas: 1, duration: 1.2, ease: 'none' })
+          .to(s, { roi: 1, duration: 0.6, ease: 'steps(3)' }, 1.4)
+          .to(s, { cheer: 1, duration: 0.2 }, 1.9)
+          .to(s, { cheer: 0, duration: 0.6 }, 2.2),
       },
     },
 
@@ -959,17 +977,52 @@
         // Ground.
         for (let x = 0; x < W; x += 3) rect(ctx, ink, x, GROUND, 2, 1);
       },
-      init: () => ({ dim: 0, smoke: 0, lights: 0, truck: -1 }),
+      init: () => ({ dim: 0, read: 0, ok: 0, screen: 0, model: 0, fit: 0, smoke: 0, lights: 0, truck: -1, saved: 0 }),
       frame(ctx, c, s, t) {
-        // A dimension line draws itself across the building, then the measurement appears.
+        // A dimension line draws itself across the building, the reading counts up to the measurement, and it checks out.
         if (s.dim > 0) {
           const x2 = Math.round(56 + 56 * Math.min(1, s.dim));
           rect(ctx, N.w, 56, 22, x2 - 56, 1);
           rect(ctx, N.w, 56, 20, 1, 5);
           if (s.dim >= 1) {
             rect(ctx, N.w, 112, 20, 1, 5);
-            rect(ctx, c.shade, 74, 19, 21, 7);
-            text(ctx, '25.40', 75, 20, c.light);
+            rect(ctx, c.shade, 74, 19, s.ok > 0 ? 28 : 21, 7);
+            text(ctx, (25.4 * Math.min(1, s.read)).toFixed(2).padStart(5, '0'), 75, 20, c.light);
+            if (s.ok > 0) sprite(ctx, ['....w', '...w.', 'w.w..', '.w...'], 96, 20, { w: c.light });
+          }
+        }
+        // A screen on the wall: a 3D model of a part turns, then data points land and a model's line fits them.
+        if (s.screen > 0) {
+          const h = Math.round(22 * Math.min(1, s.screen));
+          outline(ctx, 6, 4, 42, h, N.w);
+          if (s.screen >= 1) {
+            rect(ctx, N.w, 26, 26, 1, 3);
+            rect(ctx, N.w, 21, 29, 11, 1);
+          }
+          if (s.model > 0) {
+            // A wireframe box, drawn edge by edge, that keeps turning.
+            const a = t * 1.2;
+            const pts = [[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]].map(([x, y, z]) => {
+              const rx = x * Math.cos(a) - z * Math.sin(a);
+              const rz = x * Math.sin(a) + z * Math.cos(a);
+              return [16 + rx * 5, 15 + y * 4 + rz * 1.5];
+            });
+            const edges = [[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]];
+            edges.slice(0, Math.round(edges.length * Math.min(1, s.model))).forEach(([i, j]) => {
+              const [x1, y1] = pts[i];
+              const [x2, y2] = pts[j];
+              const n = Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1), 1);
+              for (let k = 0; k <= n; k++) rect(ctx, N.w, x1 + ((x2 - x1) * k) / n, y1 + ((y2 - y1) * k) / n, 1, 1);
+            });
+          }
+          if (s.fit > 0) {
+            // Axes, then the points, then the fitted line.
+            rect(ctx, N.w, 28, 8, 1, 15);
+            rect(ctx, N.w, 28, 22, 17, 1);
+            const dots = [[31, 19], [33, 18], [35, 17], [37, 14], [39, 14], [42, 11]];
+            dots.slice(0, Math.round(dots.length * Math.min(1, s.fit * 2))).forEach(([x, y]) => rect(ctx, c.light, x, y, 1, 1));
+            const len = Math.round(13 * Math.max(0, Math.min(1, s.fit * 2 - 1)));
+            for (let k = 0; k < len; k++) rect(ctx, c.light, 30 + k, Math.round(20 - k * 0.7), 1, 1);
           }
         }
         // Windows light up and the stack smokes.
@@ -980,6 +1033,11 @@
             const y = 12 - k * 14;
             if (y > -3) puff(ctx, Math.round(121 + k * 10 + Math.sin(t + i) * 1.5), Math.round(y), k > 0.5 ? 2 : 1, mix(N.w, c.shade, k * 0.6));
           }
+        }
+        // The savings the root-cause study found.
+        if (s.saved > 0) {
+          rect(ctx, c.shade, 62, 6, 25, 7);
+          text(ctx, '$200K', 63, 7, c.light);
         }
         // A truck drives the road between Kansas City and Sioux City.
         if (s.truck >= 0) {
@@ -999,8 +1057,20 @@
         }
       },
       cues: {
-        measure: s => gsap.timeline().to(s, { dim: 1, duration: 0.9, ease: 'steps(14)' }),
-        plant: s => gsap.timeline().to(s, { lights: 1, duration: 0.8, ease: 'steps(5)' }).set(s, { smoke: 1 }, 0.2),
+        measure: s => gsap.timeline()
+          .to(s, { dim: 1, duration: 1, ease: 'steps(14)' })
+          .to(s, { read: 1, duration: 0.7, ease: 'steps(8)' }, 1)
+          .to(s, { ok: 1, duration: 0.01 }, 2),
+        model: s => gsap.timeline()
+          .to(s, { screen: 1, duration: 0.3, ease: 'steps(3)' })
+          .to(s, { model: 1, duration: 0.5, ease: 'steps(12)' }, 0.3)
+          .to(s, { fit: 1, duration: 0.8, ease: 'steps(12)' }, 0.8),
+        // The move to Sioux City: the truck drives up, the operators' windows light one by one, the stack smokes, and the savings show.
+        plant: s => gsap.timeline()
+          .fromTo(s, { truck: 0 }, { truck: 0.55, duration: 1.2, ease: 'power1.out' })
+          .to(s, { lights: 1, duration: 0.8, ease: 'steps(5)' }, 1.1)
+          .set(s, { smoke: 1 }, 1.3)
+          .to(s, { saved: 1, duration: 0.01 }, 2.5),
         road: s => gsap.timeline().fromTo(s, { truck: 0 }, { truck: 0.55, duration: 1.5, ease: 'power1.out' }),
       },
     },
@@ -1029,7 +1099,7 @@
         rect(ctx, '#8a5a36', 60, 36, 24, 28);
         doorway(ctx, 72, GROUND);
       },
-      init: () => ({ ski: -1, plane: -1, build: 0, line: 0 }),
+      init: () => ({ ski: -1, plane: -1, build: 0, line: 0, made: 0, mat: 0 }),
       frame(ctx, c, s, t) {
         // A skier carves down the big peak.
         if (s.ski >= 0) {
@@ -1066,19 +1136,23 @@
           rect(ctx, N.o, 2, GROUND - 3, len, 1);
           rect(ctx, N.n, 2, GROUND - 2, len, 2);
           for (let x = 4; x < len; x += 4) rect(ctx, N.m, x + Math.floor(t * 8) % 4, GROUND - 2, 1, 1);
-          if (s.line >= 1) {
-            for (let i = 0; i < 4; i++) {
-              const x = Math.round(((t * 9 + i * 14) % 52) + 2);
-              sprite(ctx, ['oooo', 'owwo', 'o2no', 'oooo'], x, GROUND - 7, { o: N.o, w: N.w, 2: c.base, n: N.n });
-            }
-            sprite(ctx, ['....2', '...2.', '2.2..', '.2...'], 52, GROUND - 13, { 2: c.base });
+          // Prototypes join the line one by one, pass the check, then all move to the new material.
+          const made = Math.round(4 * Math.min(1, s.made));
+          for (let i = 0; i < made; i++) {
+            const x = Math.round(((t * 9 + i * 14) % 52) + 2);
+            const fresh = s.mat > 0;
+            sprite(ctx, ['oooo', 'owwo', 'o2no', 'oooo'], x, GROUND - 7, { o: N.o, w: N.w, 2: fresh ? c.light : c.base, n: fresh ? c.shade : N.n });
           }
+          if (s.made >= 1) sprite(ctx, ['....2', '...2.', '2.2..', '.2...'], 52, GROUND - 13, { 2: c.base });
         }
       },
       cues: {
         ski: s => gsap.timeline().fromTo(s, { ski: 0 }, { ski: 1, duration: 1.8, ease: 'none' }),
-        plane: s => gsap.timeline().fromTo(s, { plane: 0 }, { plane: 1, duration: 1.6, ease: 'none' }).to(s, { build: 1, duration: 0.9, ease: 'steps(8)' }, 1.2),
-        line: s => gsap.timeline().to(s, { line: 1, duration: 0.8, ease: 'steps(10)' }),
+        plane: s => gsap.timeline().fromTo(s, { plane: 0 }, { plane: 1, duration: 1.8, ease: 'none' }).to(s, { build: 1, duration: 1, ease: 'steps(8)' }, 1.4),
+        line: s => gsap.timeline()
+          .to(s, { line: 1, duration: 0.8, ease: 'steps(10)' })
+          .to(s, { made: 1, duration: 0.8, ease: 'steps(4)' }, 0.8)
+          .to(s, { mat: 1, duration: 0.01 }, 2),
       },
     },
 
@@ -1121,7 +1195,7 @@
         rect(ctx, '#b48a5a', 0, GROUND, W, H - GROUND);
         rect(ctx, '#8a6640', 0, GROUND, W, 1);
       },
-      init: () => ({ sun: 0, kite: -1, books: 0, lamp: 0, laptop: 0, code: 0, duck: 0, aha: 0 }),
+      init: () => ({ sun: 0, kite: -1, books: 0, lamp: 0, laptop: 0, code: 0, ran: 0, duck: 0, aha: 0, bug: 0 }),
       frame(ctx, c, s, t) {
         // A fun year: the sun comes up and a kite flies past the window.
         if (s.sun > 0) {
@@ -1160,8 +1234,17 @@
             rect(ctx, N.o, 90, 48 - lid, 14, lid);
             rect(ctx, '#1d1b22', 91, 49 - lid, 12, lid - 1);
             const lines = Math.floor(s.code * 6);
-            for (let i = 0; i < Math.min(lines, lid - 2); i++) rect(ctx, [c.light, N.w, c.base, '#9c97a6'][i % 4], 92 + (i % 3 === 1 ? 2 : 0), 40 + i, 3 + ((i * 5) % 7), 1);
-            if (s.code >= 1 && blink(t, 2)) rect(ctx, c.light, 99, 46, 1, 1);
+            for (let i = 0; i < Math.min(lines, lid - 2); i++) {
+              // Line 3 is the bug: it blinks red until the duck helps, then it runs green.
+              let ink = [c.light, N.w, c.base, '#9c97a6'][i % 4];
+              if (i === 2 && s.bug >= 1) ink = '#3fa66b';
+              else if (i === 2 && s.bug > 0) ink = blink(t, 4) ? '#e0533d' : '#1d1b22';
+              rect(ctx, ink, 92 + (i % 3 === 1 ? 2 : 0), 40 + i, 3 + ((i * 5) % 7), 1);
+            }
+            // It ran: the four projects light along the bottom of the screen.
+            const apps = Math.round(4 * Math.min(1, s.ran));
+            for (let i = 0; i < apps; i++) rect(ctx, [c.light, '#3b7dd8', '#3fa66b', '#e0533d'][i], 92 + i * 3, 46, 2, 1);
+            if (s.code >= 1 && apps === 0 && blink(t, 2)) rect(ctx, c.light, 99, 46, 1, 1);
           }
         }
         // The rubber duck, and the moment the bug makes sense.
@@ -1172,10 +1255,18 @@
         }
       },
       cues: {
-        fun: s => gsap.timeline().to(s, { sun: 1, duration: 1, ease: 'steps(6)' }).fromTo(s, { kite: 0 }, { kite: 1, duration: 1.4, ease: 'none' }, 0.4),
+        fun: s => gsap.timeline().to(s, { sun: 1, duration: 1.2, ease: 'steps(6)' }).fromTo(s, { kite: 0 }, { kite: 1, duration: 2.4, ease: 'none' }, 0.5),
         study: s => gsap.timeline().to(s, { books: 1, duration: 0.9, ease: 'none' }).set(s, { lamp: 1 }, 0.9),
-        code: s => gsap.timeline().to(s, { laptop: 1, duration: 0.4, ease: 'steps(4)' }).to(s, { code: 1, duration: 1.1, ease: 'none' }),
-        duck: s => gsap.timeline().to(s, { duck: 1, duration: 0.4, ease: 'bounce.out' }).set(s, { aha: 0.5 }, 0.5).set(s, { aha: 1 }, 1.3),
+        code: s => gsap.timeline()
+          .to(s, { laptop: 1, duration: 0.4, ease: 'steps(4)' })
+          .to(s, { code: 1, duration: 1.2, ease: 'none' })
+          .to(s, { ran: 1, duration: 0.6, ease: 'steps(4)' }, 1.7),
+        // The duck lands, the bug blinks while he explains it out loud, then it makes sense and the line runs green.
+        duck: s => gsap.timeline()
+          .to(s, { duck: 1, duration: 0.4, ease: 'bounce.out' })
+          .set(s, { aha: 0.5, bug: 0.5 }, 0.5)
+          .set(s, { aha: 1 }, 1.6)
+          .to(s, { bug: 1, duration: 0.01 }, 2.3),
       },
     },
 
@@ -1202,7 +1293,7 @@
         rect(ctx, '#d9d5e3', 0, GROUND, W, H - GROUND);
         rect(ctx, '#c4bfd2', 0, GROUND, W, 1);
       },
-      init: () => ({ biz: 0, talk: 0, notes: 0, loop: 0, team: 0, plan: 0, shine: 0 }),
+      init: () => ({ biz: 0, talk: 0, notes: 0, loop: 0, award: 0, team: 0, plan: 0, card: 0, shine: 0, first: 0 }),
       frame(ctx, c, s, t, all) {
         const colors = (all || []).map(a => a.color.base);
         // Sticky notes: first all in Now, then spread into a roadmap.
@@ -1237,6 +1328,11 @@
           puff(ctx, Math.round(dx), Math.round(dy), 1, c.shade);
           ctx.globalAlpha = 1;
         }
+        // The award drops onto the Later column of the board.
+        if (s.award > 0) {
+          const y = Math.round(31 - (1 - Math.min(1, s.award)) * 8);
+          sprite(ctx, ['.oooooo.', 'oo1111oo', 'o.1221.o', '.o1221o.', '..o22o..', '...oo...', '...22...', '..o22o..', '.oooooo.'], 107, y, { o: N.o, 1: '#f5cf66', 2: '#e5ac1f' });
+        }
         // The business: two people with questions.
         if (s.biz > 0) {
           const x = Math.round(-20 + 30 * Math.min(1, s.biz));
@@ -1253,17 +1349,35 @@
             person(ctx, x + k * 4, GROUND, ramp, k + 2, true);
           });
         }
+        // The prototype card that reached a customer a week later, held up over the team.
+        if (s.card > 0) {
+          const y = Math.round(28 - 4 * Math.min(1, s.card));
+          sprite(ctx, ['ooooooooo', 'owwwwwwwo', 'ow22wwwwo', 'ow22w111o', 'owwwwwwwo', 'ooooooooo'], 111, y, { o: N.o, w: N.w, 1: c.light, 2: '#e5ac1f' });
+        }
         if (s.shine > 0) {
           const r = rng(Math.floor(t * 6));
-          for (let i = 0; i < 10; i++) rect(ctx, [c.light, N.w, c.base][i % 3], 60 + Math.floor(r() * 40), 30 + Math.floor(r() * 30), 1, 1);
+          for (let i = 0; i < Math.round(16 * Math.min(1, s.shine)); i++) rect(ctx, [c.light, N.w, c.base][i % 3], 60 + Math.floor(r() * 40), 30 + Math.floor(r() * 30), 1, 1);
+        }
+        // The typing race's 1ST comes back, on the Later column.
+        if (s.first > 0.5) {
+          text(ctx, '1ST', 84, 32, c.base);
+          rect(ctx, c.base, 98, 33, 1, 3);
         }
       },
       cues: {
         listen: s => gsap.timeline().to(s, { biz: 1, duration: 0.9, ease: 'steps(9)' }).to(s, { talk: 0.5, duration: 0.01 }, 0.9).to(s, { talk: 1, duration: 0.01 }, 1.6).to(s, { notes: 0.5, duration: 0.6, ease: 'none' }, 1.6),
-        loop: s => gsap.timeline().to(s, { loop: 1, duration: 0.8, ease: 'steps(4)' }).to(s, { notes: 1, duration: 0.6, ease: 'none' }, 0.6),
-        // The team arrives, the loop gives way to a roadmap the whole team can follow.
-        team: s => gsap.timeline().to(s, { team: 1, duration: 1.2, ease: 'steps(12)' }).to(s, { loop: 0, duration: 0.4, ease: 'steps(3)' }, 0.8).to(s, { plan: 1, duration: 0.8, ease: 'power2.inOut' }, 1),
-        shine: s => gsap.timeline().to(s, { shine: 1, duration: 0.3 }),
+        // The loop he ran on his own fills the board, then the award drops in.
+        loop: s => gsap.timeline()
+          .to(s, { loop: 1, duration: 0.8, ease: 'steps(4)' })
+          .to(s, { notes: 1, duration: 0.6, ease: 'none' }, 0.6)
+          .to(s, { award: 1, duration: 0.7, ease: 'bounce.out' }, 1.3),
+        // The team arrives, the loop gives way to a roadmap the whole team can follow, and the prototype card goes up.
+        team: s => gsap.timeline()
+          .to(s, { team: 1, duration: 1.6, ease: 'steps(16)' })
+          .to(s, { loop: 0, duration: 0.4, ease: 'steps(3)' }, 1)
+          .to(s, { plan: 1, duration: 1.2, ease: 'power2.inOut' }, 1.3)
+          .to(s, { card: 1, duration: 0.3, ease: 'steps(3)' }, 2.5),
+        shine: s => gsap.timeline().to(s, { shine: 1, duration: 0.8, ease: 'steps(4)' }).to(s, { first: 1, duration: 0.01 }, 1.4),
       },
     },
   };
