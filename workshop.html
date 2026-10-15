@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Workshop · Joe Vellella</title>
+  <meta name="description" content="Every scene, animation, item sprite and piece of hero gear from the story, each on its own.">
+  <link rel="stylesheet" href="css/site.css">
+  <style>
+    .ws { max-width: 1040px; margin: 0 auto; padding: 32px 20px 64px; }
+    .ws h1 { font-size: 28px; margin: 12px 0 8px; }
+    .ws h2 { font-size: 20px; margin: 40px 0 12px; }
+    .ws-lede { color: var(--ink-2); max-width: 60ch; margin: 0 0 8px; }
+    .ws-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+    .ws-card { margin: 0; padding: 12px; border: 1px solid var(--line); background: var(--paper-2); }
+    .ws-card figcaption { font: 14px var(--mono); margin-top: 8px; }
+    .ws-art { display: flex; align-items: center; justify-content: center; min-height: 120px; }
+    .ws-canvas { display: block; width: 100%; height: auto; aspect-ratio: 160 / 72; }
+    .ws-controls { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .ws-controls button { border: 1px solid var(--line); background: var(--paper); padding: 4px 10px; font: 14px var(--mono); cursor: pointer; }
+    .ws-controls button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <main class="ws">
+    <p><a href="index.html">Back to the story</a></p>
+    <h1>Workshop</h1>
+    <p class="ws-lede">Every scene, animation, item sprite and piece of hero gear from the story, each on its own. A scene animates while it is on screen. Press a button under a scene to play its animation again.</p>
+    <p class="ws-lede">The story itself is in <a href="index.html">index.html</a>; the recipes it draws from are in <code>recipes/</code>.</p>
+
+    <h2 id="scenes">Scenes</h2>
+    <div class="ws-grid" id="scenes-grid"></div>
+
+    <h2 id="sprites">Item sprites</h2>
+    <div class="ws-grid" id="sprites-grid"></div>
+
+    <h2 id="gear">Hero gear</h2>
+    <div class="ws-grid" id="gear-grid"></div>
+  </main>
+
+  <noscript><p style="padding:80px 20px;text-align:center">The workshop needs JavaScript to draw its scenes.</p></noscript>
+
+  <script src="vendor/gsap/gsap.min.js"></script>
+
+  <script src="js/pixel.js"></script>
+  <script src="js/story.js"></script>
+
+  <script src="recipes/site.js"></script>
+  <script src="recipes/act-0-early-years.js"></script>
+  <script src="recipes/act-1-childhood.js"></script>
+  <script src="recipes/act-2-high-school.js"></script>
+  <script src="recipes/act-3-college.js"></script>
+  <script src="recipes/act-4-first-jobs.js"></script>
+  <script src="recipes/act-5-denver.js"></script>
+  <script src="recipes/act-6-year-off.js"></script>
+  <script src="recipes/act-7-now.js"></script>
+
+  <script src="js/scenes.js"></script>
+  <script src="js/workshop.js"></script>
+</body>
+</html>

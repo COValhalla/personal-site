@@ -22,6 +22,10 @@ The site is public at **https://covalhalla.github.io/personal-site/**.
 
 Every merge to `main` publishes it there within a minute or two, through GitHub Pages. The workflow in `.github/workflows/pages.yml` does it: it puts the committed files online as they are, because there is nothing to build. On a pull request the same workflow only packages the site, as a check, and publishes nothing. To publish again without a change, run "Publish to GitHub Pages" from the repository's Actions tab.
 
+## The workshop
+
+[`workshop.html`](workshop.html) draws every scene, animation, item sprite and piece of hero gear on its own, for checking them by eye. It is public at **https://covalhalla.github.io/personal-site/workshop.html**, and the story does not link to it.
+
 ## What to try
 
 1. Press start on the title screen (or press Enter), and the page glides to the Tutorial. Scrolling works too. Each act starts in gray. As it comes into view a chapter card sweeps across, the color comes in and your character walks on.
@@ -39,6 +43,10 @@ Every merge to `main` publishes it there within a minute or two, through GitHub 
 | Path | What it is |
 | --- | --- |
 | `index.html` | The page. It loads everything below in order. |
+| `workshop.html` | The workshop: every scene, animation, sprite and gear on its own. |
+| `js/workshop.js` | Draws the workshop's pieces. Only the workshop loads it. |
+| `ARCHITECTURE.md` | How the pieces fit together, and the limits of the current design. |
+| `docs/decisions/` | Why the site is built this way: one short record per hard-to-reverse decision. |
 | `recipes/` | The story: `site.js` plus one recipe per act. Edit these to change the words. |
 | `STYLE-GUIDE.md` | Sprite sizes, palettes, outline rules and animation timing. |
 | `js/pixel.js` | Item sprites, the hero and his gear per act. |
@@ -51,6 +59,7 @@ Every merge to `main` publishes it there within a minute or two, through GitHub 
 | `js/story.js` | Collects the recipes and checks them for mistakes. |
 | `js/main.js` | The top bar, the intro, the ending with Say hello, and start-up. |
 | `vendor/gsap/` | GSAP 3.15.0 and ScrollTrigger, kept here so the page works offline. |
+| `tests/unit/` | Unit tests for the recipe rules in `js/story.js`. |
 | `tests/smoke.mjs` | An end-to-end check in Chrome. |
 
 ## Recipes
@@ -87,6 +96,8 @@ Ask an AI coding agent for one act at a time. A prompt that works:
 ## Tests
 
 The smoke test opens the page in Google Chrome and does what a reader does: it scrolls through every act step by step (in the Tutorial, packed boxes stack by the shipping door; in high school, the lights come on and the team walks on, the discus lands at 176 feet, and at the summer jobs the forms go up, the concrete pours and a painted machine rolls onto a truck), checks in every act that each moment's item pops in only once its words are whole, then its skill lights, then the item flies to the inventory, opens the sheet, reads a story card, opens a lit skill's story card by click and by keyboard (and a locked one opens nothing), checks that the page ends on one section, What I build next with Say hello inside it and no sheet button, with no quest log and no discus game, checks that scrolling walks the hero and fills the progress rail, walks the map, throws the hammer (a centered fourth-turn release with its hit and throw camera, a skipped camera, a fifth-turn foul and a foul in the wind), checks every pump call, the wheelie, the flight and the wheel lift, and races the BMX track with a bot that pumps the rollers and jumps, with motion on, with motion off and on a phone-sized screen. It also checks that every act's moments fit in its story panel without scrolling, at 1440 × 900 and on shorter laptop screens down to 1280 × 680. At 1184 × 1260 and 1440 × 900 it checks that every story panel ends within 24 px under its last moment, that every moment ends on its own row for its item and skill with the panel no taller once they appear, and, in the tall window, that every act sits in the middle of the screen; it reads the World of Warcraft line in Act II and opens a story card from a skill on its moment. In narrow windows and tablets from 760 × 600 to 1279 × 720 it checks that every act's skills and buttons sit above the inventory belt and that its Next tag covers none of them. On laptops and tablets from 800 × 600 to 1920 × 1080, with motion on, it holds every act's Next tag at the top of its pulse and checks that it sits clear of the skills, the Open sheet and Play buttons and the belt. On an iPhone 13 it taps a lit skill and reads its story card. On an iPhone 13, an iPhone SE (3rd generation), a Galaxy S8 and the first iPhone SE it checks that every act's Next tag sits clear of its buttons and skills. On the first iPhone SE (320 × 568) it also checks that every act's story panel is at least 100 px tall and shows the newest moment's first two lines.
+
+`npm test` runs two checks. First the unit tests in `tests/unit/`, which check every recipe rule in `js/story.js` and that the shipped recipes pass them. Then the smoke test above. `npm run test:unit` runs only the unit tests, in a second or so.
 
 ```sh
 npm install
