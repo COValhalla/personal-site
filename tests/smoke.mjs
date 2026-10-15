@@ -197,9 +197,13 @@ async function desktop(browser) {
   await page.evaluate(() => { window.__order = []; });
   const names = ['Tutorial', 'Act I', 'Act II', 'Act III', 'Act IV', 'Act V', 'Act VI', 'Act VII'];
   // The Tutorial and Act I dive into a scene per moment, then one for the level-up. Act II tells two moments on the
-  // football field, then dives into the summer jobs for the third, then the character screen for the level-up. Each list is the scene after each moment.
-  const scenes = { 0: [0, 1, 2], 1: [0, 1], 2: [0, 0, 1] };
-  const lastScene = { 0: [3, 'the high-score board'], 1: [2, 'the character screen'], 2: [2, 'the character screen'] };
+  // football field, then dives into the summer jobs for the third, then the character screen for the level-up.
+  // Acts III and IV dive into a new place for their third moment (the office in Texas, the plant in Sioux City), and
+  // Act V into the factory for its second and third. Each list is the scene after each moment.
+  const scenes = { 0: [0, 1, 2], 1: [0, 1], 2: [0, 0, 1], 3: [0, 0, 1], 4: [0, 0, 1], 5: [0, 1, 1] };
+  const lastScene = { 0: [3, 'the high-score board'], 1: [2, 'the character screen'], 2: [2, 'the character screen'], 3: [2, 'the character screen'], 4: [2, 'the character screen'], 5: [2, 'the character screen'] };
+  // In the Tutorial and Acts I and II every moment lights one skill.
+  const litEach = new Set([0, 1, 2]);
   // What each act's own moment shows once it has played: night falls in the Tutorial, the crew arrives in Act I,
   // and high school plays out on the football field in Act II. Key n,0 is read after the first moment, before the second starts.
   const shows = {
@@ -209,6 +213,10 @@ async function desktop(browser) {
     '2,0': ['Act II, moment 1: night falls, the lights come on, friends and then the team walk on, and the scoreboard says captain', () => { const st = Acts.sections[2].stages[0].stage.state; return st.night === 1 && st.lights === 1 && st.crew === 1 && st.team === 1 && st.captain === 1 && st.hop === 1; }],
     '2,2': ['Act II: the discus lands and the scoreboard counts to 176 feet', () => { const st = Acts.sections[2].stages[0].stage.state; return st.disc === 1 && st.mark === 176; }],
     '2,3': ['Act II, the summer jobs: the forms go up, the concrete pours, and a painted machine rolls onto the truck', () => { const st = Acts.sections[2].stages[1].stage.state; return st.forms === 1 && st.pour === 1 && st.paint === 1 && st.ship === 1; }],
+    '3,3': ['Act III, the office in Texas: the sun sets, the executives sit down, the cost and ROI model builds and the room applauds', () => { const st = Acts.sections[3].stages[1].stage.state; return st.sun === 1 && st.seats === 1 && st.bars === 1 && st.roi === 1 && st.clap === 1; }],
+    '4,3': ['Act IV, the plant in Sioux City: five crews are trained, the fishbone finds the root cause and the savings show', () => { const st = Acts.sections[4].stages[1].stage.state; return st.train === 1 && st.fish === 1 && st.cause === 1 && st.saved === 1; }],
+    '5,2': ['Act V, the factory: the plane flies over, three lines are lowered in and the budget fills on time', () => { const st = Acts.sections[5].stages[1].stage.state; return st.plane === 1 && st.build === 1 && st.budget === 1 && st.ontime === 1; }],
+    '5,3': ['Act V, the factory: the design office lights, ten engineers cross the bridge and the line runs', () => { const st = Acts.sections[5].stages[1].stage.state; return st.cad === 1 && st.bridge === 1 && st.eng === 1 && st.line === 1; }],
   };
   for (const [n, id] of ids.entries()) {
     const { start, end } = where[n];
@@ -237,12 +245,13 @@ async function desktop(browser) {
       await scrollTo(page, start + room * k + 2);
       await page.waitForTimeout(700);
       if (scenes[n]) {
-        // Each moment dives into its own scene, and the skills light with the moment they belong to.
+        // Each moment plays in its own scene, and where every moment lights a skill, the skills light with their moments.
+        const lit = litEach.has(n) ? k : -1;
         const ok = await page.waitForFunction(([sel, want, lit, scope]) => {
           const shown = [...document.querySelectorAll(sel)].findIndex(c => getComputedStyle(c).visibility === 'visible');
-          return shown === want && document.querySelectorAll(`${scope} .skill-card.is-on`).length === lit;
-        }, [`#${id} .scene-canvas`, scenes[n][k - 1], k, `#${id}`], { timeout: 8000 }).then(() => true, () => false);
-        check(ok, `${names[n]}: after moment ${k} the scene is ${scenes[n][k - 1] + 1} of ${lastScene[n][0] + 1} and ${k} skill(s) are lit`);
+          return shown === want && (lit < 0 || document.querySelectorAll(`${scope} .skill-card.is-on`).length === lit);
+        }, [`#${id} .scene-canvas`, scenes[n][k - 1], lit, `#${id}`], { timeout: 8000 }).then(() => true, () => false);
+        check(ok, `${names[n]}: after moment ${k} the scene is ${scenes[n][k - 1] + 1} of ${lastScene[n][0] + 1}${lit < 0 ? '' : ` and ${k} skill(s) are lit`}`);
       }
       if (shows[`${n},${k}`]) {
         const [what, test] = shows[`${n},${k}`];

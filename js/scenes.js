@@ -857,7 +857,7 @@
         rect(ctx, '#3a3744', 116, 32, 37, 1);
         for (let a = 0; a < Math.PI * 2; a += 0.08) rect(ctx, N.w, Math.round(134 + Math.cos(a) * 8), Math.round(59 + Math.sin(a) * 2), 1, 1);
       },
-      init: () => ({ ham: -1, mark: 0, cheer: 0, board: 0, flask: 0, chalk: 0, boil: 0, texas: 0, roi: 0, sun: 0 }),
+      init: () => ({ ham: -1, mark: 0, cheer: 0, board: 0, flask: 0, chalk: 0, boil: 0 }),
       frame(ctx, c, s, t) {
         // The crowd stands up and cheers.
         if (s.cheer > 0.05) {
@@ -865,12 +865,7 @@
           for (let i = 0; i < 40 * s.cheer; i++) rect(ctx, [c.light, N.w, c.base][i % 3], Math.floor(r() * W), 14 + Math.floor(r() * 5) * 5, 1, 1);
         }
         // Scoreboard text.
-        if (s.roi > 0) {
-          // The fix sold on its return: ROI and three bars that climb.
-          text(ctx, 'ROI', 101, 4, '#ffb347');
-          for (let i = 0; i < Math.round(3 * Math.min(1, s.roi)); i++) rect(ctx, '#ffb347', 116 + i * 3, 9 - i * 2, 2, 2 + i * 2);
-        } else if (s.texas > 0.5) text(ctx, 'TEXAS', 103, 4, '#ffb347');
-        else if (s.board > 0.5) text(ctx, 'CHEM E', 101, 4, '#ffb347');
+        if (s.board > 0.5) text(ctx, 'CHEM E', 101, 4, '#ffb347');
         else if (s.mark > 0) Pixel.text(ctx, s.mark.toFixed(1) + 'm', 101, 4, '#ffb347', 1);
         // The hammer flies out of the cage and lands on the infield.
         if (s.ham >= 0) {
@@ -904,20 +899,6 @@
             }
           }
         }
-        // Texas: a pumpjack nods on the horizon at sunset.
-        if (s.texas > 0) {
-          rect(ctx, mix('#fbf6f1', '#ffb36b', steps4(s.texas)), 0, 0, 96, 13);
-          if (s.texas > 0.5) {
-            puff(ctx, 84, 9, 3, '#ffd56b');
-            const nod = Math.sin(t * 3) * 1.5;
-            rect(ctx, N.o, 14, 4, 1, 9);
-            rect(ctx, N.o, 8, 12, 14, 1);
-            rect(ctx, N.o, 6, Math.round(4 + nod), 16, 1);
-            rect(ctx, N.o, 5, Math.round(4 + nod), 2, 3);
-            rect(ctx, N.o, 6, Math.round(6 + nod), 1, Math.round(6 - nod));
-            rect(ctx, N.o, 20, Math.round(4 - nod), 2, 3);
-          }
-        }
       },
       cues: {
         throw: s => gsap.timeline()
@@ -931,12 +912,114 @@
           .set(s, { board: 1 }, 0.4)
           .to(s, { chalk: 1, duration: 1, ease: 'steps(5)' }, 0.8)
           .to(s, { boil: 1, duration: 0.6, ease: 'steps(4)' }, 1.6),
-        // The sun sets on a Texas oil field, the scoreboard sells the fix on its ROI, and the crowd cheers the talk.
+      },
+    },
+
+    // Act III, moment 3: the office in Texas where each internship summer ended. The sun sets over the oil field,
+    // the executives take their seats, and the cost and ROI model builds on the screen until the room applauds.
+    'texas-office': {
+      heroX: 64,
+      door: { x: 150, y: 50 },
+      draw(ctx, c) {
+        // A cream office wall over a wood wainscot, and carpet in the school color.
+        rect(ctx, '#f1e6d4', 0, 0, W, GROUND);
+        rect(ctx, '#d8c3a2', 0, 42, W, GROUND - 42);
+        rect(ctx, '#c4ab86', 0, 42, W, 1);
+        for (let x = 6; x < W; x += 12) rect(ctx, '#ccb592', x, 44, 1, GROUND - 46);
+        rect(ctx, '#8c5a32', 0, GROUND - 2, W, 2);
+        const carpet = mix(c.shade, '#3a3744', 0.55);
+        rect(ctx, carpet, 0, GROUND, W, H - GROUND);
+        const r = rng(33);
+        for (let i = 0; i < 24; i++) rect(ctx, mix(carpet, c.base, 0.4), Math.floor(r() * W), GROUND + 1 + Math.floor(r() * 7), 1, 1);
+        // The window frame and its sill; frame() paints the view.
+        rect(ctx, N.o, 3, 5, 52, 34);
+        rect(ctx, '#c4ab86', 2, 39, 54, 2);
+        // The projector screen, with the chart's axes.
+        rect(ctx, N.n, 71, 3, 66, 3);
+        rect(ctx, N.o, 73, 6, 62, 31);
+        rect(ctx, N.w, 74, 6, 60, 30);
+        text(ctx, 'COST + ROI', 85, 8, c.shade);
+        rect(ctx, N.n, 80, 15, 1, 18);
+        rect(ctx, N.n, 80, 32, 50, 1);
+        doorway(ctx, 150, GROUND);
+      },
+      init: () => ({ sun: 0, seats: 0, bars: 0, roi: 0, clap: 0 }),
+      frame(ctx, c, s, t) {
+        // The view: the sky turns to sunset in four steps and the sun sinks behind a flat horizon.
+        const sun = steps4(s.sun);
+        rect(ctx, mix('#9fd3f5', '#ff9f5a', sun), 4, 6, 50, 14);
+        rect(ctx, mix('#c4e6f7', '#ffd08a', sun), 4, 20, 50, 10);
+        puff(ctx, 47, Math.round(12 + sun * 17), 3, mix('#fff1a8', '#ffd56b', sun));
+        rect(ctx, mix('#d9b77a', '#a8743f', sun), 4, 30, 50, 8);
+        rect(ctx, mix('#c9a464', '#8c5a32', sun), 4, 30, 50, 1);
+        // An oil derrick and a pumpjack that nods all day.
+        for (let y = 0; y < 15; y++) {
+          const w = 1 + Math.floor(y / 2) * 2;
+          rect(ctx, N.o, 37 - Math.floor(w / 2), 15 + y, 1, 1);
+          rect(ctx, N.o, 37 + Math.floor(w / 2), 15 + y, 1, 1);
+          if (y % 4 === 3) rect(ctx, N.o, 37 - Math.floor(w / 2), 15 + y, w, 1);
+        }
+        // The walking beam rocks on its A-frame: the horse head dips on the left, the counterweight swings on the right.
+        const tilt = Math.round(Math.sin(t * 3) * 2);
+        const beam = i => Math.round(22 + ((i - 9) / 8) * tilt);
+        for (let i = 0; i <= 16; i++) rect(ctx, N.o, 7 + i, beam(i), 1, 1);
+        rect(ctx, N.o, 6, beam(0) - 1, 2, 4);
+        rect(ctx, N.o, 7, beam(0) + 3, 1, 29 - beam(0) - 3);
+        rect(ctx, N.o, 21, beam(16) + 1, 3, 3);
+        for (let y = 23; y < 29; y++) {
+          rect(ctx, N.o, 16 - Math.floor((y - 22) / 2), y, 1, 1);
+          rect(ctx, N.o, 16 + Math.floor((y - 22) / 2), y, 1, 1);
+        }
+        rect(ctx, N.o, 6, 29, 19, 1);
+        rect(ctx, N.o, 29, 6, 1, 32);
+        // The executives fill two rows of chairs, the front row first, seen from behind.
+        const suits = ['#3a3744', '#24366b', '#5f5b6b', '#6b4226'];
+        const seated = Math.round(Math.max(0, Math.min(1, s.seats)) * 16);
+        const clap = s.clap >= 1;
+        [[78, 44, 8], [82, 51, 0]].forEach(([x0, y, first]) => {
+          for (let i = 0; i < 8; i++) {
+            if (first + i >= seated) continue;
+            const x = x0 + i * 7;
+            const k = first + i;
+            sprite(ctx, ['.oooo.', 'ohhhho', 'ohhhho', '.oSSo.', 'oJJJJo', 'JJJJJJ'], x, y,
+              { o: N.o, h: PERSON_LOOKS[k % PERSON_LOOKS.length].h, S: N.S, J: suits[k % suits.length] });
+            rect(ctx, '#4d4958', x, y + 6, 6, GROUND - y - 6);
+            rect(ctx, '#5f5b6b', x, y + 6, 6, 1);
+            // Applause: hands up over the heads, in turn.
+            if (clap) {
+              const up = blink(t + k * 0.37, 4) ? 0 : 1;
+              rect(ctx, N.s, x - 1, y - 2 + up, 1, 2);
+              rect(ctx, N.s, x + 6, y - 2 + up, 1, 2);
+            }
+          }
+        });
+        // The cost model: bars that shrink year by year, then the return climbing over them.
+        const bars = Math.round(Math.max(0, Math.min(1, s.bars)) * 4);
+        [16, 12, 9, 6].slice(0, bars).forEach((h, i) => {
+          rect(ctx, c.light, 84 + i * 10, 32 - h, 6, h);
+          rect(ctx, c.shade, 84 + i * 10, 32 - h, 6, 1);
+        });
+        const roi = Math.max(0, Math.min(1, s.roi));
+        if (roi > 0) {
+          const pts = [[85, 29], [95, 25], [105, 20], [115, 16], [127, 11]];
+          const path = [];
+          for (let j = 1; j < pts.length; j++) {
+            const [x1, y1] = pts[j - 1];
+            const [x2, y2] = pts[j];
+            const n = Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1));
+            for (let q = 0; q < n; q++) path.push([Math.round(x1 + ((x2 - x1) * q) / n), Math.round(y1 + ((y2 - y1) * q) / n)]);
+          }
+          path.slice(0, Math.round(path.length * roi)).forEach(([x, y]) => rect(ctx, c.base, x, y, 2, 2));
+          if (roi >= 1) text(ctx, '$', 130, 9, c.shade);
+        }
+      },
+      cues: {
         texas: s => gsap.timeline()
-          .to(s, { texas: 1, duration: 1.2, ease: 'none' })
-          .to(s, { roi: 1, duration: 0.6, ease: 'steps(3)' }, 1.4)
-          .to(s, { cheer: 1, duration: 0.2 }, 1.9)
-          .to(s, { cheer: 0, duration: 0.6 }, 2.2),
+          .to(s, { sun: 1, duration: 1.2, ease: 'steps(4)' })
+          .to(s, { seats: 1, duration: 1.2, ease: 'steps(16)' }, 0.2)
+          .to(s, { bars: 1, duration: 0.8, ease: 'steps(4)' }, 1.1)
+          .to(s, { roi: 1, duration: 0.8, ease: 'steps(8)' }, 1.9)
+          .set(s, { clap: 1 }, 2.8),
       },
     },
 
@@ -977,7 +1060,7 @@
         // Ground.
         for (let x = 0; x < W; x += 3) rect(ctx, ink, x, GROUND, 2, 1);
       },
-      init: () => ({ dim: 0, read: 0, ok: 0, screen: 0, model: 0, fit: 0, smoke: 0, lights: 0, truck: -1, saved: 0 }),
+      init: () => ({ dim: 0, read: 0, ok: 0, screen: 0, model: 0, fit: 0, truck: -1 }),
       frame(ctx, c, s, t) {
         // A dimension line draws itself across the building, the reading counts up to the measurement, and it checks out.
         if (s.dim > 0) {
@@ -1025,20 +1108,6 @@
             for (let k = 0; k < len; k++) rect(ctx, c.light, 30 + k, Math.round(20 - k * 0.7), 1, 1);
           }
         }
-        // Windows light up and the stack smokes.
-        for (let i = 0; i < 5; i++) if (s.lights * 5 > i) rect(ctx, c.light, 62 + i * 10, 45, 4, 4);
-        if (s.smoke > 0) {
-          for (let i = 0; i < 6; i++) {
-            const k = ((t * 0.5 + i / 6) % 1);
-            const y = 12 - k * 14;
-            if (y > -3) puff(ctx, Math.round(121 + k * 10 + Math.sin(t + i) * 1.5), Math.round(y), k > 0.5 ? 2 : 1, mix(N.w, c.shade, k * 0.6));
-          }
-        }
-        // The savings the root-cause study found.
-        if (s.saved > 0) {
-          rect(ctx, c.shade, 62, 6, 25, 7);
-          text(ctx, '$200K', 63, 7, c.light);
-        }
         // A truck drives the road between Kansas City and Sioux City.
         if (s.truck >= 0) {
           rect(ctx, N.w, 6, 50, 13, 7);
@@ -1065,17 +1134,108 @@
           .to(s, { screen: 1, duration: 0.3, ease: 'steps(3)' })
           .to(s, { model: 1, duration: 0.5, ease: 'steps(12)' }, 0.3)
           .to(s, { fit: 1, duration: 0.8, ease: 'steps(12)' }, 0.8),
-        // The move to Sioux City: the truck drives up, the operators' windows light one by one, the stack smokes, and the savings show.
-        plant: s => gsap.timeline()
-          .fromTo(s, { truck: 0 }, { truck: 0.55, duration: 1.2, ease: 'power1.out' })
-          .to(s, { lights: 1, duration: 0.8, ease: 'steps(5)' }, 1.1)
-          .set(s, { smoke: 1 }, 1.3)
-          .to(s, { saved: 1, duration: 0.01 }, 2.5),
         road: s => gsap.timeline().fromTo(s, { truck: 0 }, { truck: 0.55, duration: 1.5, ease: 'power1.out' }),
       },
     },
 
-    // Act V: the mountains, a plane to Vietnam, and a production line.
+    // Act IV, moment 3: the plant floor in Sioux City. Operators in hard hats come through in waves to be trained
+    // while the count climbs to 250, and a root-cause fishbone draws itself on the whiteboard until the savings show.
+    'sioux-city': {
+      heroX: 42,
+      door: { x: 151, y: 50 },
+      draw(ctx, c) {
+        // A corrugated metal wall, and a concrete floor with a yellow safety line.
+        rect(ctx, '#c9ced3', 0, 0, W, GROUND);
+        for (let x = 1; x < W; x += 3) rect(ctx, '#b7bdc3', x, 4, 1, GROUND - 4);
+        rect(ctx, '#7d808a', 0, 0, W, 4);
+        rect(ctx, N.o, 0, 4, W, 1);
+        rect(ctx, '#9a9da3', 0, GROUND, W, H - GROUND);
+        rect(ctx, '#f2c94c', 0, GROUND + 1, W, 1);
+        const r = rng(44);
+        for (let i = 0; i < 20; i++) rect(ctx, '#8d9096', Math.floor(r() * W), GROUND + 3 + Math.floor(r() * 5), 1, 1);
+        // Two stainless tanks on legs, piped together along the ceiling.
+        [3, 19].forEach(x => {
+          rect(ctx, N.o, x - 1, 12, 15, 46);
+          rect(ctx, '#d5d8dd', x, 14, 13, 43);
+          rect(ctx, '#d5d8dd', x + 2, 12, 9, 2);
+          rect(ctx, '#eef0f2', x + 3, 15, 2, 40);
+          rect(ctx, '#a9adb5', x + 10, 15, 2, 42);
+          rect(ctx, N.n, x, 30, 13, 1);
+          rect(ctx, N.o, x + 1, 58, 2, GROUND - 58);
+          rect(ctx, N.o, x + 10, 58, 2, GROUND - 58);
+        });
+        rect(ctx, N.n, 9, 7, 1, 5);
+        rect(ctx, N.n, 25, 7, 1, 5);
+        rect(ctx, N.n, 9, 7, 30, 1);
+        // The town's name over the floor.
+        rect(ctx, N.o, 52, 6, 48, 9);
+        rect(ctx, c.shade, 53, 7, 46, 7);
+        text(ctx, 'SIOUX CITY', 57, 8, N.w);
+        // The whiteboard where the root-cause study takes shape.
+        rect(ctx, N.n, 51, 18, 50, 28);
+        rect(ctx, N.w, 52, 19, 48, 26);
+        rect(ctx, N.n, 54, 45, 44, 1);
+        // The training count, over the spot where each crew stands.
+        rect(ctx, N.o, 104, 10, 38, 24);
+        rect(ctx, '#2a3a6a', 105, 11, 36, 22);
+        text(ctx, 'TRAINED', 110, 13, c.light);
+        doorway(ctx, 151, GROUND);
+      },
+      init: () => ({ train: 0, fish: 0, cause: 0, saved: 0 }),
+      frame(ctx, c, s) {
+        // Crews of three walk in, get trained and step aside for the next: five crews, 50 operators each.
+        const train = Math.max(0, Math.min(1, s.train));
+        const wave = Math.min(4, Math.floor(train * 5));
+        const walk = Math.min(1, (train * 5 - wave) * 2.5);
+        const shirts = [
+          { light: '#8fb3e0', base: '#4a73b0', shade: '#2f4d7a' },
+          { light: '#8fc79a', base: '#4f8f5e', shade: '#33603e' },
+          { light: '#e8786a', base: '#c0392b', shade: '#8a2a20' },
+        ];
+        if (train > 0) {
+          [103, 115, 127].forEach((spot, k) => {
+            const x = Math.round(spot + 50 * (1 - walk) + k * 6 * (1 - walk));
+            const top = GROUND - 22;
+            person(ctx, x, GROUND, shirts[(wave + k) % 3], wave * 3 + k, true);
+            // A hard hat on every operator.
+            rect(ctx, N.o, x + 4, top, 8, 1);
+            rect(ctx, N.o, x + 3, top + 1, 10, 3);
+            rect(ctx, '#f2c94c', x + 4, top + 1, 8, 3);
+            rect(ctx, '#fff1a8', x + 5, top + 1, 3, 1);
+            rect(ctx, N.o, x + 1, top + 4, 14, 1);
+            rect(ctx, '#f2c94c', x + 2, top + 4, 12, 1);
+          });
+        }
+        const count = Math.round(train * 10) * 25;
+        Pixel.text(ctx, String(count), Math.round(123 - (String(count).length * 8 - 2) / 2), 21, N.w, 2);
+        // The fishbone: the spine, then the causes branching off it, and the problem at its head.
+        const fish = Math.round(Math.max(0, Math.min(1, s.fish)) * 6);
+        const ink = '#24539c';
+        if (fish >= 1) rect(ctx, ink, 56, 28, 30, 1);
+        if (fish >= 2) { rect(ctx, N.o, 86, 24, 10, 9); rect(ctx, c.light, 87, 25, 8, 7); text(ctx, '?', 89, 26, N.o); }
+        [[60, 21, 1], [72, 21, 1], [60, 35, -1], [72, 35, -1]].slice(0, Math.max(0, fish - 2)).forEach(([x, y, d]) => {
+          for (let q = 0; q < 8; q++) rect(ctx, ink, x + Math.floor(q / 2), y + q * d, 1, 1);
+          rect(ctx, ink, x - 3, y, 4, 1);
+        });
+        // The root cause, circled; then what fixing it saved.
+        if (s.cause >= 1) {
+          for (let a = 0; a < Math.PI * 2; a += 0.15) rect(ctx, '#c0392b', Math.round(71 + Math.cos(a) * 6), Math.round(35 + Math.sin(a) * 3), 1, 1);
+          rect(ctx, c.light, 87, 25, 8, 7);
+          rect(ctx, '#3fa66b', 88, 26, 6, 5);
+        }
+        const saved = Math.round(Math.max(0, Math.min(1, s.saved)) * 11);
+        if (saved > 0) text(ctx, '$200K SAVED'.slice(0, saved), 55, 39, '#2f8a4f');
+      },
+      cues: {
+        plant: s => gsap.timeline()
+          .to(s, { train: 1, duration: 1.8, ease: 'steps(20)' }, 0)
+          .to(s, { fish: 1, duration: 0.9, ease: 'steps(6)' }, 1.1)
+          .set(s, { cause: 1 }, 2.1)
+          .to(s, { saved: 1, duration: 0.6, ease: 'steps(11)' }, 2.3),
+      },
+    },
+
+    // Act V, moment 1: the mountains, where a skier carves down the big peak. The cabin's door leads to the factory.
     mountains: {
       heroX: 66,
       door: { x: 72, y: 50 },
@@ -1094,13 +1254,13 @@
         rect(ctx, N.w, 0, GROUND - 4, W, H - GROUND + 4);
         rect(ctx, '#dfe7e2', 0, GROUND + 2, W, 1);
         [[128, 10], [140, 15], [151, 11]].forEach(([x, h]) => pine(ctx, c.base, c.shade, x, GROUND - 2, h));
-        // A cabin beside the building site, with the door the camera dives through.
+        // A cabin at the foot of the slope, with the door the camera dives through.
         rect(ctx, '#5b3a22', 57, 32, 30, 4);
         rect(ctx, '#8a5a36', 60, 36, 24, 28);
         doorway(ctx, 72, GROUND);
       },
-      init: () => ({ ski: -1, plane: -1, build: 0, line: 0, made: 0, mat: 0 }),
-      frame(ctx, c, s, t) {
+      init: () => ({ ski: -1 }),
+      frame(ctx, c, s) {
         // A skier carves down the big peak.
         if (s.ski >= 0) {
           const k = Math.min(1, s.ski);
@@ -1113,46 +1273,132 @@
           const [x, y] = pts[pts.length - 1];
           if (k < 1) sprite(ctx, ['.h.', 'jjj', '.j.', 'o.o'], x - 1, y - 4, { h: c.light, j: '#e0533d', o: N.o });
         }
-        // The plane heads for Vietnam, then a new plant rises.
-        if (s.plane >= 0) {
-          const k = Math.min(1, s.plane);
-          const x = Math.round(-12 + k * (W + 24));
-          for (let tx = Math.max(0, x - 40); tx < x - 2; tx += 3) rect(ctx, '#b9c8bf', tx, 13, 2, 1);
-          sprite(ctx, ['..n.....', '.nnn....', 'nnnnnnnw', '..nn....', '..n.....'], x, 10, { n: N.n, w: N.w });
-          if (k >= 1) { rect(ctx, c.shade, 128, 2, 31, 7); text(ctx, 'VIETNAM', 130, 3, N.w); }
-        }
-        if (s.build > 0) {
-          const h = Math.round(16 * Math.min(1, s.build));
-          rect(ctx, N.o, 88, GROUND - 2 - h, 26, h);
-          rect(ctx, c.light, 89, GROUND - 1 - h, 24, Math.max(0, h - 1));
-          for (let i = 0; i < 4; i++) if (h > 8) rect(ctx, N.w, 91 + i * 6, GROUND - h + 3, 3, 3);
-          rect(ctx, N.o, 108, GROUND - 2 - h - 6, 1, 6);
-          rect(ctx, N.o, 108, GROUND - 2 - h - 6, 9, 1);
-          rect(ctx, c.shade, 116, GROUND - 2 - h - 5, 1, 3);
-        }
-        // A production line: prototypes roll along and pass the check.
-        if (s.line > 0) {
-          const len = Math.round(56 * Math.min(1, s.line));
-          rect(ctx, N.o, 2, GROUND - 3, len, 1);
-          rect(ctx, N.n, 2, GROUND - 2, len, 2);
-          for (let x = 4; x < len; x += 4) rect(ctx, N.m, x + Math.floor(t * 8) % 4, GROUND - 2, 1, 1);
-          // Prototypes join the line one by one, pass the check, then all move to the new material.
-          const made = Math.round(4 * Math.min(1, s.made));
-          for (let i = 0; i < made; i++) {
-            const x = Math.round(((t * 9 + i * 14) % 52) + 2);
-            const fresh = s.mat > 0;
-            sprite(ctx, ['oooo', 'owwo', 'o2no', 'oooo'], x, GROUND - 7, { o: N.o, w: N.w, 2: fresh ? c.light : c.base, n: fresh ? c.shade : N.n });
-          }
-          if (s.made >= 1) sprite(ctx, ['....2', '...2.', '2.2..', '.2...'], 52, GROUND - 13, { 2: c.base });
-        }
       },
       cues: {
         ski: s => gsap.timeline().fromTo(s, { ski: 0 }, { ski: 1, duration: 1.8, ease: 'none' }),
-        plane: s => gsap.timeline().fromTo(s, { plane: 0 }, { plane: 1, duration: 1.8, ease: 'none' }).to(s, { build: 1, duration: 1, ease: 'steps(8)' }, 1.4),
+      },
+    },
+
+    // Act V, moments 2 and 3: the new factory in Vietnam. A plane lands the team there, the production lines are
+    // lowered into the empty hall and the budget fills to $7M on time. Then the design office lights up, a bridge
+    // reaches from it to the floor, ten engineers cross it, and products roll off the line in their new material.
+    factory: {
+      heroX: 40,
+      door: { x: 150, y: 50 },
+      draw(ctx, c) {
+        // A clean concrete hall: high windows with palms outside, and an epoxy floor with a safety line.
+        rect(ctx, '#e6e9e4', 0, 0, W, GROUND);
+        rect(ctx, '#d4d9d3', 0, 11, W, 1);
+        for (let i = 0; i < 9; i++) {
+          const x = 4 + i * 17;
+          rect(ctx, N.n, x - 1, 1, 13, 10);
+          rect(ctx, '#9fd3f5', x, 2, 11, 8);
+          if (i % 3 === 1) {
+            rect(ctx, '#8c5a32', x + 6, 6, 1, 4);
+            sprite(ctx, ['.ppp.p.', 'p..pp.p', '...p...'], x + 3, 4, { p: c.shade });
+          }
+        }
+        rect(ctx, '#b9c2bd', 0, GROUND, W, H - GROUND);
+        rect(ctx, '#f2c94c', 0, GROUND + 1, W, 1);
+        rect(ctx, '#a7b0ab', 0, GROUND + 4, W, 1);
+        // The gantry the lines are lowered from.
+        rect(ctx, N.n, 44, 13, 86, 2);
+        rect(ctx, N.o, 44, 15, 86, 1);
+        // The design office, up a level, on posts.
+        rect(ctx, N.o, 6, 11, 29, 9);
+        rect(ctx, N.w, 7, 12, 27, 7);
+        text(ctx, 'DESIGN', 9, 13, c.shade);
+        rect(ctx, N.o, 2, 19, 37, 21);
+        rect(ctx, '#cfe6f7', 3, 20, 35, 19);
+        rect(ctx, '#e3f1f9', 3, 20, 35, 2);
+        rect(ctx, N.n, 2, 39, 37, 2);
+        rect(ctx, N.n, 4, 41, 2, GROUND - 41);
+        rect(ctx, N.n, 30, 41, 2, GROUND - 41);
+        rect(ctx, N.o, 7, 24, 16, 10);
+        rect(ctx, '#8c5a32', 5, 34, 26, 2);
+        // The conveyor the new lines feed, from the hall to the shipping door.
+        rect(ctx, N.o, 48, 54, 92, 1);
+        rect(ctx, N.n, 48, 55, 92, 2);
+        for (let x = 52; x < 140; x += 22) rect(ctx, N.o, x, 57, 2, GROUND - 57);
+        // The sign and the budget board on the far wall.
+        rect(ctx, N.o, 129, 12, 31, 9);
+        rect(ctx, c.shade, 130, 13, 29, 7);
+        text(ctx, 'VIETNAM', 131, 14, N.w);
+        rect(ctx, N.o, 130, 22, 29, 12);
+        rect(ctx, '#2a3a4a', 131, 23, 27, 10);
+        rect(ctx, N.o, 132, 30, 25, 2);
+        doorway(ctx, 150, GROUND);
+      },
+      init: () => ({ plane: -1, build: 0, budget: 0, ontime: 0, cad: 0, bridge: 0, eng: 0, line: 0 }),
+      frame(ctx, c, s, t) {
+        // The plane crosses the high windows.
+        if (s.plane >= 0 && s.plane < 1) {
+          const x = Math.round(-10 + s.plane * (W + 20));
+          for (let tx = Math.max(0, x - 30); tx < x - 2; tx += 3) rect(ctx, N.w, tx, 5, 2, 1);
+          sprite(ctx, ['..n.....', '.nnn....', 'nnnnnnnw', '..nn....', '..n.....'], x, 3, { n: N.n, w: N.w });
+        }
+        // Three lines are lowered from the gantry one by one and set down on the floor.
+        const build = Math.max(0, Math.min(1, s.build));
+        [54, 80, 106].forEach((x, k) => {
+          const p = Math.max(0, Math.min(1, build * 3 - k));
+          if (p <= 0) return;
+          const y = Math.round(33 - (1 - p) * 30);
+          if (p < 1) rect(ctx, N.o, x + 9, 16, 1, y - 16);
+          rect(ctx, N.o, x, y, 20, 16);
+          rect(ctx, '#d9dcd6', x + 1, y + 1, 18, 14);
+          rect(ctx, c.base, x + 1, y + 11, 18, 2);
+          rect(ctx, N.o, x + 3, y + 3, 7, 5);
+          rect(ctx, k === 2 ? c.light : '#9fd8ff', x + 4, y + 4, 5, 3);
+          rect(ctx, k === 2 ? c.base : '#e0533d', x + 13, y + 4, 2, 2);
+          rect(ctx, N.o, x + 1, y + 16, 2, 5);
+          rect(ctx, N.o, x + 17, y + 16, 2, 5);
+        });
+        // The budget fills to $7M, and gets its check: on time and on budget.
+        const budget = Math.max(0, Math.min(1, s.budget));
+        rect(ctx, c.light, 132, 30, Math.round(25 * budget), 2);
+        text(ctx, '$' + Math.round(budget * 7) + 'M', 133, 24, N.w);
+        if (s.ontime >= 1) sprite(ctx, ['....2', '...2.', '2.2..', '.2...'], 150, 24, { 2: c.light });
+        // The design screen lights with the new product's drawing.
+        if (s.cad >= 1) {
+          rect(ctx, '#2a3a6a', 8, 25, 14, 8);
+          outline(ctx, 11, 26, 8, 6, N.w);
+          rect(ctx, c.light, 13, 28, 4, 2);
+        }
+        // Products roll down the line: the old material goes in gray and comes out of the last station new.
+        if (s.line >= 1) {
+          for (let x = 50; x < 138; x += 4) rect(ctx, N.m, x + (Math.floor(t * 8) % 4), 55, 1, 1);
+          for (let i = 0; i < 6; i++) {
+            const x = Math.round(48 + ((t * 9 + i * 15) % 88));
+            const fresh = x > 114;
+            sprite(ctx, ['oooo', 'owwo', 'o2no', 'oooo'], x, 50, { o: N.o, w: N.w, 2: fresh ? c.base : N.n, n: fresh ? c.light : N.m });
+          }
+        }
+        // A bridge reaches from the design office to the floor, and ten engineers cross it.
+        const bridge = Math.round(Math.max(0, Math.min(1, s.bridge)) * 90);
+        if (bridge > 0) {
+          rect(ctx, N.n, 39, 30, bridge, 2);
+          for (let x = 39; x < 39 + bridge; x += 6) rect(ctx, N.n, x, 26, 1, 4);
+        }
+        const eng = Math.max(0, Math.min(1, s.eng));
+        for (let i = 0; i < 10; i++) {
+          const p = Math.max(0, Math.min(1, eng * 1.9 - i * 0.1));
+          if (p <= 0) continue;
+          const x = Math.round(36 + (44 + i * 9 - 36) * p);
+          sprite(ctx, ['.y.', 'yyy', '.s.', 'jjj', 'jjj', 'k.k', 'k.k'], x, 23, { y: '#f2c94c', s: N.s, j: i % 2 ? c.base : '#4a73b0', k: N.k });
+        }
+        if (bridge > 0) rect(ctx, N.n, 39, 26, bridge, 1);
+      },
+      cues: {
+        plane: s => gsap.timeline()
+          .fromTo(s, { plane: 0 }, { plane: 1, duration: 1, ease: 'none' })
+          .to(s, { build: 1, duration: 1.5, ease: 'steps(15)' }, 0.6)
+          .to(s, { budget: 1, duration: 1.2, ease: 'steps(7)' }, 1.2)
+          .set(s, { ontime: 1 }, 2.5),
         line: s => gsap.timeline()
-          .to(s, { line: 1, duration: 0.8, ease: 'steps(10)' })
-          .to(s, { made: 1, duration: 0.8, ease: 'steps(4)' }, 0.8)
-          .to(s, { mat: 1, duration: 0.01 }, 2),
+          .set(s, { cad: 1 }, 0.1)
+          .to(s, { bridge: 1, duration: 0.7, ease: 'steps(9)' }, 0.2)
+          .to(s, { eng: 1, duration: 1.2, ease: 'steps(20)' }, 0.8)
+          .set(s, { line: 1 }, 2.1),
       },
     },
 

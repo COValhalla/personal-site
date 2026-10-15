@@ -10,7 +10,8 @@ Story.addAct({
   color: { name: 'Magenta', light: '#f29ad0', base: '#d6449a', shade: '#962d6b' },
   theme: 'light',
   scene: 'track',
-  stages: ['track', 'track', 'track', 'sheet'],
+  // Two moments at the track, the third in the office in Texas, then the character screen.
+  stages: ['track', 'track', 'texas-office', 'sheet'],
   // Bald with a goatee in college.
   hero: { gear: 'headband', title: 'Hammer thrower', hair: 'bald', beard: 'goatee' },
   beats: [
