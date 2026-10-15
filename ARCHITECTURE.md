@@ -33,7 +33,7 @@ The recipes are the only source of the story. The page modules read them through
 
 Each script attaches one object to `window`: `Dom`, `Pixel`, `Draw`, `Story`, `Scenes`, `Props`, `Sheet`, `WorldMap`, `Belt`, `Acts`, `Sound`, `Games`, `TypingRace` and `Visits`. A script can use another's global only if the page loads that one first. Scripts are not modules because a page opened from a file cannot load modules (see [ADR 0003](docs/decisions/0003-plain-scripts-share-globals.md)).
 
-Each script says what it needs in its opening comment ([ADR 0007](docs/decisions/0006-scripts-declare-what-they-need.md)):
+Each script says what it needs in its opening comment ([ADR 0006](docs/decisions/0006-scripts-declare-what-they-need.md)):
 
 ```
  * Needs: Dom, Pixel, Story
