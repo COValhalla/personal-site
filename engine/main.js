@@ -48,7 +48,7 @@
     Sheet.refresh();
   }
 
-  // The ways to reach Joe, from the contact links in recipes/site.js.
+  // The ways to reach Joe, from the contact links in story/recipes/site.js.
   function contactLinks() {
     const { linkedin, email, github } = Story.config.contact;
     return [
@@ -82,6 +82,7 @@
 
   function intro() {
     const { linkedin } = Story.config.contact;
+    const { shortcut } = Story.config;
     const press = el('button', { class: 'btn btn--start intro-start', onclick: start },
       el('span', { class: 'intro-start-arrow', 'aria-hidden': 'true', text: '▶' }), 'Press start');
     // Enter starts the story from the title screen, like a game.
@@ -97,8 +98,8 @@
         el('div', { class: 'intro-ground' }),
         press,
         el('p', { class: 'intro-hint', text: 'or scroll ▼' }),
-        linkedin ? el('p', { class: 'intro-note' },
-          el('a', { href: linkedin, text: 'Short on time? See my work history on LinkedIn.', ...linkAttrs(linkedin) })) : null));
+        linkedin && shortcut ? el('p', { class: 'intro-note' },
+          el('a', { href: linkedin, text: shortcut, ...linkAttrs(linkedin) })) : null));
   }
 
   // The end of the page: what Joe builds next, then Say hello with the links to reach him.

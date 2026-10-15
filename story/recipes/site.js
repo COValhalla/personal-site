@@ -10,10 +10,15 @@ Story.site({
   welcome: "I build products. I started as a chemical engineer in factories, taught myself to code, and now I'm a product manager who still builds. Press start to play my story. You may find a few levels you played too.",
   // The line above the Say hello links at the end of the page, which asks the reader to answer back.
   hello: "Building something like that? Let's talk. And tell me: what was your typing class?",
+  // The link under Press start to the LinkedIn address in contact, for a reader short on time.
+  // Leave it out, or leave the LinkedIn address blank, to show no link.
+  shortcut: 'Short on time? See my work history on LinkedIn.',
   // The end of the page: a kicker, a heading and the line about what comes next, then Say hello.
+  // next finishes the last act's Next tag, "Next: what I build next", which leads here; without it the tag uses the heading.
   ending: {
     kicker: 'Next level',
     heading: 'What I build next',
+    next: 'what I build next',
     line: "Every act added a color and new skills, and they all point one way. I'm happiest as a product engineer on a small team, building the tools a business runs on, end to end, for the people who use them every day.",
   },
   // Say hello links. A blank address leaves its link out.

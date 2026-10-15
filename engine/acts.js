@@ -170,7 +170,7 @@
 
     const hint = el('p', { class: 'act-hint', 'aria-hidden': 'true' }, 'Scroll to continue the story ', el('span', { class: 'act-hint-arrow', text: '▼' }));
     const after = Story.acts[i + 1];
-    const next = el('a', { class: 'act-next', href: after ? `#act-${after.id}` : '#facts' }, after ? `Next: ${Story.name(after)} ` : 'Next: what I build next ', el('span', { 'aria-hidden': 'true', text: '▼' }));
+    const next = el('a', { class: 'act-next', href: after ? `#act-${after.id}` : '#facts' }, after ? `Next: ${Story.name(after)} ` : `Next: ${Story.config.ending.next || Story.config.ending.heading} `, el('span', { 'aria-hidden': 'true', text: '▼' }));
     const screen = el('div', { class: `act-screen act--${act.theme || 'light'}`, style: colorVars(act) + (act.color.accent ? `;--ca:${act.color.accent}` : '') },
       head,
       el('div', { class: 'act-stage' },

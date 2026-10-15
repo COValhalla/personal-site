@@ -1,4 +1,4 @@
-// Unit tests for the recipe rules in js/story.js. Each test runs the registry in a
+// Unit tests for the recipe rules in engine/story.js. Each test runs the registry in a
 // fresh sandbox, so no test sees another test's recipes. Run with `npm test`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const read = file => readFileSync(path.join(root, file), 'utf8');
 const silent = { error() {} };
-const sceneFiles = [...read('index.html').matchAll(/<script src="(js\/scenes\/[^"]+)"><\/script>/g)].map(m => m[1]);
+const sceneFiles = [...read('index.html').matchAll(/<script src="((?:engine|story)\/scenes\/[^"]+)"><\/script>/g)].map(m => m[1]);
 
 // The page's own scripts run in one sandbox whose global object is `window`, as in the browser.
 function page(files) {
@@ -33,7 +33,7 @@ const known = {
 const site = { name: 'Joe', stats: [{ id: 'code' }] };
 
 function problemsFor(acts, { config = site, known: facts = known } = {}) {
-  const ctx = page(['js/story.js']);
+  const ctx = page(['engine/story.js']);
   const { Story } = ctx;
   Story.site(config);
   acts.forEach(a => Story.addAct(a));
@@ -65,7 +65,7 @@ test('a complete recipe has no problems', () => {
 
 test('without Story.site() the page reports it, and the stats cannot be checked', () => {
   assert.deepEqual(problemsFor([act()], { config: null }), [
-    'recipes/site.js did not call Story.site().',
+    'story/recipes/site.js did not call Story.site().',
     'Act 1: item "floppy" adds unknown stat "code".',
   ]);
 });
@@ -79,9 +79,9 @@ test('an act needs a light, base and shade color', () => {
     ['Act 1 needs color.light, color.base and color.shade.']);
 });
 
-test('an act must name a scene that a file in js/scenes/ draws', () => {
+test('an act must name a scene that a file in story/scenes/ draws', () => {
   assert.deepEqual(problemsFor([act({ scene: 'castle', beats: [{ tag: 'life', text: 'x', item: 'floppy' }] })]),
-    ['Act 1 uses scene "castle", which no file in js/scenes/ draws.']);
+    ['Act 1 uses scene "castle", which no file in story/scenes/ draws.']);
 });
 
 test('staged acts need one stage per moment plus the level-up', () => {
@@ -89,9 +89,9 @@ test('staged acts need one stage per moment plus the level-up', () => {
     ['Act 1 needs 2 stages: one for each moment, then one for the level-up.']);
 });
 
-test('each stage must name a scene that a file in js/scenes/ draws', () => {
+test('each stage must name a scene that a file in story/scenes/ draws', () => {
   assert.deepEqual(problemsFor([act({ stages: ['field', 'castle'], beats: [{ tag: 'life', text: 'x', item: 'floppy' }] })]),
-    ['Act 1 uses stage scene "castle", which no file in js/scenes/ draws.']);
+    ['Act 1 uses stage scene "castle", which no file in story/scenes/ draws.']);
 });
 
 test('moments in one stage scene must come one after another', () => {
@@ -119,9 +119,9 @@ test('an item id can be used by one act only', () => {
   assert.deepEqual(problemsFor([act(), second]), ['Act 2: item id "floppy" is used twice.']);
 });
 
-test('an item must name a sprite that pixel.js has', () => {
+test('an item must name a sprite that story/sprites.js has', () => {
   assert.deepEqual(problemsFor([act({ items: [{ ...floppy, sprite: 'castle' }] })]),
-    ['Act 1: item "floppy" uses sprite "castle", which pixel.js does not have.']);
+    ['Act 1: item "floppy" uses sprite "castle", which story/sprites.js does not have.']);
 });
 
 test('an item needs a life or work tag', () => {
@@ -193,13 +193,11 @@ test('a skill may grow from a skill in an earlier act', () => {
 });
 
 test('the shipped recipes pass every rule against the real scenes, art and games', () => {
-  const ctx = page([
-    'js/pixel.js', 'js/draw.js', 'js/story.js', ...sceneFiles,
-    'js/games/games.js', 'js/games/sound.js', 'js/games/hammer.js', 'js/games/bmx.js', 'js/games/typing.js',
-    'recipes/site.js',
-    'recipes/act-0-early-years.js', 'recipes/act-1-childhood.js', 'recipes/act-2-high-school.js', 'recipes/act-3-college.js',
-    'recipes/act-4-first-jobs.js', 'recipes/act-5-denver.js', 'recipes/act-6-year-off.js', 'recipes/act-7-now.js',
-  ]);
+  // Every recipe, sprite, scene and game the story page loads, so a fork's own story is checked too.
+  const scripts = [...read('index.html').matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1]);
+  const story = scripts.filter(file => file.startsWith('story/') && !sceneFiles.includes(file));
+  const games = scripts.filter(file => file.startsWith('engine/games/'));
+  const ctx = page(['engine/pixel.js', 'engine/draw.js', 'engine/story.js', ...story, ...sceneFiles, ...games]);
   const { Story, Scenes, Pixel, Games } = ctx;
   const problems = Array.from(Story.validate({
     scenes: Scenes.names,
@@ -210,6 +208,7 @@ test('the shipped recipes pass every rule against the real scenes, art and games
     sprites: Object.keys(Pixel.ITEMS),
     games: Games.names(),
   }));
-  assert.equal(Story.acts.length, 8);
+  assert.equal(Story.acts.length, story.filter(file => /^story\/recipes\/act-/.test(file)).length);
+  assert.ok(Story.acts.length > 0);
   assert.deepEqual(problems, []);
 });

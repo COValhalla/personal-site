@@ -1,4 +1,4 @@
-// The scene registry in js/scenes/index.js: each scene file registers one scene by
+// The scene registry in engine/scenes/index.js: each scene file registers one scene by
 // name, and the pages draw what was registered. Each test loads the real files in
 // a fresh sandbox, in the order index.html loads them. Run with `npm test`.
 import { test } from 'node:test';
@@ -10,13 +10,13 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const read = file => readFileSync(path.join(root, file), 'utf8');
-const sceneFiles = [...read('index.html').matchAll(/<script src="(js\/scenes\/[^"]+)"><\/script>/g)].map(m => m[1]);
+const sceneFiles = [...read('index.html').matchAll(/<script src="((?:engine|story)\/scenes\/[^"]+)"><\/script>/g)].map(m => m[1]);
 const [registry, props, ...scenes] = sceneFiles;
 
 function sandbox(files) {
   const ctx = vm.createContext({});
   ctx.window = ctx;
-  ['js/pixel.js', 'js/draw.js', ...files].forEach(file => vm.runInContext(read(file), ctx, { filename: file }));
+  ['engine/pixel.js', 'story/sprites.js', 'engine/draw.js', ...files].forEach(file => vm.runInContext(read(file), ctx, { filename: file }));
   return ctx;
 }
 

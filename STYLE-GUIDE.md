@@ -20,7 +20,7 @@ This guide keeps every act, sprite and animation looking like it came from the s
 
 ## Writing a sprite
 
-Sprites live in `js/pixel.js` as a grid of strings, one character per pixel:
+Item sprites live in `story/sprites.js`, and the hero and the people in `engine/pixel.js`, each as a grid of strings, one character per pixel:
 
 | Character | Color |
 | --- | --- |
@@ -45,12 +45,12 @@ The same sprite drawn in a different act takes that act's colors automatically.
 
 ## The hero
 
-The hero is `HERO_BASE` in `js/pixel.js` with one gear overlay per act in `HERO_GEAR`. An overlay row replaces the base pixel wherever it has a character other than `.`. The shirt uses the act's colors, so it changes color by itself.
+The hero is `HERO_BASE` in `engine/pixel.js` with one gear overlay per act in `HERO_GEAR`. An overlay row replaces the base pixel wherever it has a character other than `.`. The shirt uses the act's colors, so it changes color by itself.
 
 - The base is drawn from Joe's photos: blue eyes (`e`), a wide smile, and hair with lighter streaks (`H`). Keep the face rows (6 to 9) unchanged so the hero stays recognizable.
 - Gear so far: `backpack` (Tutorial), `helmet` (Act I), `cap` (II), `headband` (III), `hardhat` with a reflective vest stripe (IV), `beanie` (V), `headphones` around the bun (VI), `badge` on the shirt with no hat (VII).
 
-The colors come from `look` in `recipes/site.js`, and each act's `hero` in its recipe picks the hair and beard for that part of the story:
+The colors come from `look` in `story/recipes/site.js`, and each act's `hero` in its recipe picks the hair and beard for that part of the story:
 
 | Field | Values |
 | --- | --- |
@@ -83,7 +83,7 @@ Open world is bright on purpose: a Saturday at the track, then the white-tiled f
 
 ## Scenes
 
-A scene lives in its own file in `js/scenes/`, named after it, and registers itself with `Scenes.add('name', { ... })`; both `index.html` and `workshop.html` load the file after `js/scenes/index.js` and `js/scenes/props.js`. The file opens with a `Needs:` line naming the globals it uses, and takes the helpers and props it draws with by name, as in `const { rect, text } = Draw;` and `const { doorway } = Props;` (`npm test` checks both). A scene has four parts:
+A scene lives in its own file in `story/scenes/`, named after it, and registers itself with `Scenes.add('name', { ... })`; both `index.html` and `workshop.html` load the file after `engine/scenes/index.js` and `story/scenes/props.js`, and before `engine/scenes/character-sheet.js`. The file opens with a `Needs:` line naming the globals it uses, and takes the helpers and props it draws with by name, as in `const { rect, text } = Draw;` and `const { doorway } = Props;` (`npm test` checks both). A scene has four parts:
 
 | Part | What it does |
 | --- | --- |
@@ -93,7 +93,7 @@ A scene lives in its own file in `js/scenes/`, named after it, and registers its
 | `cues` | One function per animation: `name: state => gsap.timeline()` that tweens the state |
 
 - The ground is at y = 64. `heroX` says where the hero stands; keep the area around it clear.
-- Draw with the kit in `js/draw.js`: `rect`, `text`, `sprite`, `outline` and `puff` for shapes, `steps4` and `blink` for chunky timing.
+- Draw with the kit in `engine/draw.js`: `rect`, `text`, `sprite`, `outline` and `puff` for shapes, `steps4` and `blink` for chunky timing.
 - Use the act's three colors, the neutrals, and tints mixed from them with `mix`.
 - Use `rng(seed)` for crowds, stars and code lines, so a scene looks the same every time.
 - A moment in a recipe names a cue (`cue: 'plane'`). Played to its end, a cue must leave the scene in its final state: with motion turned off the page jumps every cue to its end.
@@ -126,7 +126,7 @@ Every act fills one screen. It tells its story in steps, and each step plays onc
 | Open sheet appears | after the last skill, plus 0.25 s | 0.3 s | `back.out(2)` |
 
 - Steps queue up. If you scroll past moments faster than they play, the waiting ones play at 1.5x (`CATCH_UP`), and leaving an act finishes it at 3x (`LEAVE_SPEED`).
-- The timings live in `BEATS`, `STEP_SCROLL`, `LEVEL_HOLD`, `CATCH_UP`, `LEAVE_SPEED`, `SETTLE_DELAY`, `SETTLE_BIAS` and `WALK` in `js/acts.js`. Change them there, not per act.
+- The timings live in `BEATS`, `STEP_SCROLL`, `LEVEL_HOLD`, `CATCH_UP`, `LEAVE_SPEED`, `SETTLE_DELAY`, `SETTLE_BIAS` and `WALK` in `engine/acts.js`. Change them there, not per act.
 - An item a moment does not give arrives with the level-up.
 - The hero idles with a 1-pixel bob, two frames, 1.4 s per cycle, and walks with the same bob, faster.
 - With motion turned off, every act shows already told and unlocked, and the games stay playable.
@@ -142,10 +142,10 @@ Along the bottom of a laptop screen sits the belt: one slot per item, grouped by
 - Drawn on a small canvas in the act's colors, scaled up with pixels kept sharp.
 - At most two controls, each with a button and a key. The hammer is one: hold to spin (Space). The BMX race is two: Pedal (hold, or the right arrow) and Jump (tap, or Space; hold to fly bigger).
 - A game should be able to go wrong. The hammer fouls after a fifth turn, and on a release in the wind or away from the glow; a BMX rider can case a jump, overshoot it or come up short and crash.
-- Show the timing a game judges. The BMX lit strip draws the real windows from `WINDOWS` in `js/games/bmx.js`: green for perfect, amber for good. The roller calls are Perfect pump, Good - a bit early, Good - a bit late, Too early and No pump. A tap on a jump wheelies over it, and a press pulls the front wheel up 22 degrees around the rear wheel (`LIFT`). The hold meter shows, before each jump, the charges that land clean.
+- Show the timing a game judges. The BMX lit strip draws the real windows from `WINDOWS` in `engine/games/bmx.js`: green for perfect, amber for good. The roller calls are Perfect pump, Good - a bit early, Good - a bit late, Too early and No pump. A tap on a jump wheelies over it, and a press pulls the front wheel up 22 degrees around the rear wheel (`LIFT`). The hold meter shows, before each jump, the charges that land clean.
 - The hammer's turns run at 4.4, 5.2, 7.2 and 9.2 radians a second (`turnSpeed`), and the glow widens on a fast turn so it never lasts under 0.1 s (`MIN_WINDOW`). A fair release on turn 3 or 4 freezes for 0.08 s (0.11 s for a perfect one), then shakes and flashes; a throw of 70 m or more plays the side-on throw camera at a dusk stadium.
 - Each game puts its live state on its stage element (`stage.bmx`, `stage.hammer`) for tests and playtesting, and the BMX physics is exported as `Games.get('bmx').sim` so it can be tuned without drawing.
-- Register with `Games.register(name, { title, help, mount })` in `js/games/`; `mount` returns a function that stops the game.
+- Register with `Games.register(name, { title, help, mount })` in `engine/games/`; `mount` returns a function that stops the game.
 
 ## Words
 

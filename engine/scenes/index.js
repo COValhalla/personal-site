@@ -1,5 +1,5 @@
 /*
- * The scene registry. Each file in js/scenes/ calls Scenes.add(name, scene) once,
+ * The scene registry. Each file in story/scenes/ calls Scenes.add(name, scene) once,
  * the way each recipe calls Story.addAct, and the pages load those files after this one.
  * Needs: gsap, Draw
  *
@@ -20,7 +20,8 @@
  * leaves the scene in its final state, so an act unlocked without motion looks the same.
  *
  * Colors come from the act's ramp plus the shared neutrals in pixel.js. Scenes
- * draw with the kit in js/draw.js and the props in js/scenes/props.js.
+ * draw with the kit in engine/draw.js and the props in story/scenes/props.js. The
+ * character screen in engine/scenes/character-sheet.js joins last, after the story's scenes.
  */
 (function () {
   'use strict';

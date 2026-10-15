@@ -1,6 +1,6 @@
 // Declared dependencies. Each page script opens with a "Needs:" line naming the
 // globals that must load before it, and a "Needs after start-up:" line for the ones
-// it reads only once the page is running. Each scene file in js/scenes/ also takes
+// it reads only once the page is running. Each scene file in engine/scenes/ and story/scenes/ also takes
 // the drawing kit helpers and props it draws with by name from Draw and Props.
 // These tests read both pages' script order and every script, and check that
 // each line and each of those names is true. Run with `npm test`.
@@ -17,7 +17,7 @@ const PAGES = ['index.html', 'workshop.html'];
 // The vendored scripts are minified; these are the globals they attach.
 const VENDOR = { 'vendor/gsap/gsap.min.js': ['gsap'], 'vendor/gsap/ScrollTrigger.min.js': ['ScrollTrigger'] };
 // The games wait for game work to resume, so their files keep no Needs lines yet.
-const exempt = file => file.startsWith('js/games/');
+const exempt = file => file.startsWith('engine/games/');
 
 const scriptsOf = page => [...read(page).matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1]);
 
@@ -105,17 +105,18 @@ test('each page script attaches the global ARCHITECTURE.md lists', () => {
 
 // ---------- Scenes ----------
 
-const sceneFiles = page => scriptsOf(page).filter(file => file.startsWith('js/scenes/'));
-const KIT = Object.keys(/\bwindow\.Draw = \{([^}]*)\}/.exec(read('js/draw.js'))[1].split(',').reduce((o, k) => ({ ...o, [k.trim()]: 1 }), {}));
-const PROPS = /\bwindow\.Props = \{([^}]*)\}/.exec(read('js/scenes/props.js'))[1].split(',').map(k => k.trim());
+const SCENE_DIRS = ['engine/scenes', 'story/scenes'];
+const sceneFiles = page => scriptsOf(page).filter(file => SCENE_DIRS.some(dir => file.startsWith(`${dir}/`)));
+const KIT = Object.keys(/\bwindow\.Draw = \{([^}]*)\}/.exec(read('engine/draw.js'))[1].split(',').reduce((o, k) => ({ ...o, [k.trim()]: 1 }), {}));
+const PROPS = /\bwindow\.Props = \{([^}]*)\}/.exec(read('story/scenes/props.js'))[1].split(',').map(k => k.trim());
 const SHARED = [...KIT, ...PROPS, 'W', 'H', 'GROUND'];
 
 test('both pages load every scene file, the registry first, in the same order', () => {
-  const onDisk = readdirSync(path.join(root, 'js/scenes')).filter(f => f.endsWith('.js')).map(f => `js/scenes/${f}`);
+  const onDisk = SCENE_DIRS.flatMap(dir => readdirSync(path.join(root, dir)).filter(f => f.endsWith('.js')).map(f => `${dir}/${f}`));
   const loaded = sceneFiles('index.html');
   assert.deepEqual(sceneFiles('workshop.html'), loaded);
   assert.deepEqual([...loaded].sort(), onDisk.sort());
-  assert.deepEqual(loaded.slice(0, 2), ['js/scenes/index.js', 'js/scenes/props.js']);
+  assert.deepEqual(loaded.slice(0, 2), ['engine/scenes/index.js', 'story/scenes/props.js']);
 });
 
 // What a scene file takes by name from Draw, Props and Scenes, and which shared names it uses.

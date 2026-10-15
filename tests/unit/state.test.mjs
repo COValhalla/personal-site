@@ -1,4 +1,4 @@
-// The story's state changes only through js/story.js: give, light, unlock, seeAll
+// The story's state changes only through engine/story.js: give, light, unlock, seeAll
 // and rewind. Each test runs the registry in a fresh sandbox. Run with `npm test`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -13,7 +13,7 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
 function story() {
   const ctx = vm.createContext({ console });
   ctx.window = ctx;
-  vm.runInContext(readFileSync(path.join(root, 'js/story.js'), 'utf8'), ctx, { filename: 'js/story.js' });
+  vm.runInContext(readFileSync(path.join(root, 'engine/story.js'), 'utf8'), ctx, { filename: 'engine/story.js' });
   const { Story } = ctx;
   Story.addAct({ items: [{ id: 'floppy' }, { id: 'bike' }], skills: [{ id: 'typing' }] });
   Story.addAct({ items: [{ id: 'hammer' }], skills: [{ id: 'throwing' }] });

@@ -34,58 +34,59 @@
   <script src="vendor/gsap/gsap.min.js"></script>
   <script src="vendor/gsap/ScrollTrigger.min.js"></script>
 
-  <!-- Shared helpers, art and the story registry. Each file's "Needs:" line names what must load before it. -->
-  <script src="js/dom.js"></script>
-  <script src="js/pixel.js"></script>
-  <script src="js/draw.js"></script>
-  <script src="js/story.js"></script>
+  <!-- The engine's shared helpers, the painter, the drawing kit and the story registry. Each file's "Needs:" line names what must load before it. -->
+  <script src="engine/dom.js"></script>
+  <script src="engine/pixel.js"></script>
+  <script src="engine/draw.js"></script>
+  <script src="engine/story.js"></script>
 
-  <!-- Recipes: one file per act. Edit these to change the story. -->
-  <script src="recipes/site.js"></script>
-  <script src="recipes/act-0-early-years.js"></script>
-  <script src="recipes/act-1-childhood.js"></script>
-  <script src="recipes/act-2-high-school.js"></script>
-  <script src="recipes/act-3-college.js"></script>
-  <script src="recipes/act-4-first-jobs.js"></script>
-  <script src="recipes/act-5-denver.js"></script>
-  <script src="recipes/act-6-year-off.js"></script>
-  <script src="recipes/act-7-now.js"></script>
+  <!-- The story: the recipes, site.js then one file per act, and the item sprites. Edit these to change the story. -->
+  <script src="story/recipes/site.js"></script>
+  <script src="story/recipes/act-0-early-years.js"></script>
+  <script src="story/recipes/act-1-childhood.js"></script>
+  <script src="story/recipes/act-2-high-school.js"></script>
+  <script src="story/recipes/act-3-college.js"></script>
+  <script src="story/recipes/act-4-first-jobs.js"></script>
+  <script src="story/recipes/act-5-denver.js"></script>
+  <script src="story/recipes/act-6-year-off.js"></script>
+  <script src="story/recipes/act-7-now.js"></script>
+  <script src="story/sprites.js"></script>
 
-  <!-- The scene registry, the props scenes share, then one file per scene. -->
-  <script src="js/scenes/index.js"></script>
-  <script src="js/scenes/props.js"></script>
-  <script src="js/scenes/early-night.js"></script>
-  <script src="js/scenes/computer-lab.js"></script>
-  <script src="js/scenes/early-shop.js"></script>
-  <script src="js/scenes/lab-board.js"></script>
-  <script src="js/scenes/bmx-track.js"></script>
-  <script src="js/scenes/bmx-shop.js"></script>
-  <script src="js/scenes/bmx-sheet.js"></script>
-  <script src="js/scenes/field.js"></script>
-  <script src="js/scenes/summer-jobs.js"></script>
-  <script src="js/scenes/track.js"></script>
-  <script src="js/scenes/texas-office.js"></script>
-  <script src="js/scenes/plant.js"></script>
-  <script src="js/scenes/sioux-city.js"></script>
-  <script src="js/scenes/mountains.js"></script>
-  <script src="js/scenes/factory.js"></script>
-  <script src="js/scenes/library.js"></script>
-  <script src="js/scenes/studio.js"></script>
-  <script src="js/scenes/character-sheet.js"></script>
+  <!-- The engine's scene registry, the story's props and one file per scene, then the engine's character screen. -->
+  <script src="engine/scenes/index.js"></script>
+  <script src="story/scenes/props.js"></script>
+  <script src="story/scenes/early-night.js"></script>
+  <script src="story/scenes/computer-lab.js"></script>
+  <script src="story/scenes/early-shop.js"></script>
+  <script src="story/scenes/lab-board.js"></script>
+  <script src="story/scenes/bmx-track.js"></script>
+  <script src="story/scenes/bmx-shop.js"></script>
+  <script src="story/scenes/bmx-sheet.js"></script>
+  <script src="story/scenes/field.js"></script>
+  <script src="story/scenes/summer-jobs.js"></script>
+  <script src="story/scenes/track.js"></script>
+  <script src="story/scenes/texas-office.js"></script>
+  <script src="story/scenes/plant.js"></script>
+  <script src="story/scenes/sioux-city.js"></script>
+  <script src="story/scenes/mountains.js"></script>
+  <script src="story/scenes/factory.js"></script>
+  <script src="story/scenes/library.js"></script>
+  <script src="story/scenes/studio.js"></script>
+  <script src="engine/scenes/character-sheet.js"></script>
 
-  <!-- The sheet, games, acts and boot. -->
-  <script src="js/sheet.js"></script>
-  <script src="js/map.js"></script>
-  <script src="js/games/sound.js"></script>
-  <script src="js/games/games.js"></script>
-  <script src="js/games/hammer.js"></script>
-  <script src="js/games/bmx.js"></script>
-  <script src="js/games/typing.js"></script>
-  <script src="js/belt.js"></script>
-  <script src="js/acts.js"></script>
-  <script src="js/main.js"></script>
+  <!-- The engine: the sheet, games, acts and boot. -->
+  <script src="engine/sheet.js"></script>
+  <script src="engine/map.js"></script>
+  <script src="engine/games/sound.js"></script>
+  <script src="engine/games/games.js"></script>
+  <script src="engine/games/hammer.js"></script>
+  <script src="engine/games/bmx.js"></script>
+  <script src="engine/games/typing.js"></script>
+  <script src="engine/belt.js"></script>
+  <script src="engine/acts.js"></script>
+  <script src="engine/main.js"></script>
 
   <!-- Add-ons: each listens to the story and can be removed without changing it. -->
-  <script src="js/addons/visits.js"></script>
+  <script src="engine/addons/visits.js"></script>
 </body>
 </html>
