@@ -11,3 +11,4 @@ Each file records one decision that is hard to reverse, why it was made and what
 | [0005 A workshop page shows each scene, cue, sprite and gear on its own](0005-workshop-page.md) | Accepted |
 | [0006 Each script declares what it needs](0006-scripts-declare-what-they-need.md) | Accepted |
 | [0007 Visit counts with GoatCounter, off unless a person visits the published site](0007-visit-counts.md) | Accepted |
+| [0008 One file per scene](0008-one-file-per-scene.md) | Accepted |

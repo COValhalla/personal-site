@@ -83,7 +83,7 @@ Open world is bright on purpose: a Saturday at the track, then the white-tiled f
 
 ## Scenes
 
-A scene lives in `js/scenes.js`. It opens with a `// Needs:` line naming the helpers, props and globals it uses (`npm test` checks it), and has four parts:
+A scene lives in its own file in `js/scenes/`, named after it, and registers itself with `Scenes.add('name', { ... })`; both `index.html` and `workshop.html` load the file after `js/scenes/index.js` and `js/scenes/props.js`. The file opens with a `Needs:` line naming the globals it uses, and takes the helpers and props it draws with by name, as in `const { rect, text } = Draw;` and `const { doorway } = Props;` (`npm test` checks both). A scene has four parts:
 
 | Part | What it does |
 | --- | --- |

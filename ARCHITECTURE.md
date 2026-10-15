@@ -11,7 +11,8 @@ js/pixel.js       sprites, the hero and his gear, colored by each act's color ra
 js/draw.js        the drawing kit: rect, text, sprite, mix, rng and the other pixel helpers
 js/story.js       the registry: collects recipes, checks them, holds the story's state and events
 recipes/          the words and facts: site.js and one file per act
-js/scenes.js      one pixel scene per act, with its cues (short animations)
+js/scenes/        the scenes: index.js is the registry, props.js the shared props,
+                  then one file per scene with its cues (short animations)
 js/acts.js        builds each act and tells its story one moment at a time as you scroll
 js/belt.js        the inventory belt and the experience bar along the bottom
 js/sheet.js       the character sheet and story cards
@@ -24,13 +25,13 @@ vendor/goatcounter/  GoatCounter's counting script, loaded only by the visits ad
 css/              the styles: base.css, then one sheet per part of the page
 ```
 
-The recipes are the only source of the story. The page modules read them through `Story` and draw with the art in `pixel.js` and `scenes.js`. Nothing is generated.
+The recipes are the only source of the story. The page modules read them through `Story` and draw with the art in `pixel.js` and `js/scenes/`. Nothing is generated.
 
 `workshop.html` is a second page. It loads the art, the scenes and the recipes, but not the story's motion, sheet, games or boot, and draws each scene, cue, sprite and gear piece alone ([ADR 0005](docs/decisions/0005-workshop-page.md)).
 
 ## Load order and globals
 
-Each script attaches one object to `window`: `Dom`, `Pixel`, `Draw`, `Story`, `Scenes`, `Sheet`, `WorldMap`, `Belt`, `Acts`, `Sound`, `Games`, `TypingRace` and `Visits`. A script can use another's global only if the page loads that one first. Scripts are not modules because a page opened from a file cannot load modules (see [ADR 0003](docs/decisions/0003-plain-scripts-share-globals.md)).
+Each script attaches one object to `window`: `Dom`, `Pixel`, `Draw`, `Story`, `Scenes`, `Props`, `Sheet`, `WorldMap`, `Belt`, `Acts`, `Sound`, `Games`, `TypingRace` and `Visits`. A script can use another's global only if the page loads that one first. Scripts are not modules because a page opened from a file cannot load modules (see [ADR 0003](docs/decisions/0003-plain-scripts-share-globals.md)).
 
 Each script says what it needs in its opening comment ([ADR 0007](docs/decisions/0006-scripts-declare-what-they-need.md)):
 
@@ -65,9 +66,11 @@ At start-up `Story.validate` in `js/story.js` checks that the recipes point at t
 
 ## Scenes and cues
 
-Every scene draws with the kit in `js/draw.js` and a few props at the top of `js/scenes.js` (peaks, pines, clouds, speech bubbles, doors, people and the BMX rider). Each scene opens with a `Needs:` line naming the kit helpers, props and globals it uses, and the same test checks those lines against the scene's code. The world map draws with the same kit.
+Each scene is one file in `js/scenes/` that calls `Scenes.add(name, scene)` once, the way each recipe calls `Story.addAct` ([ADR 0008](docs/decisions/0008-one-file-per-scene.md)). `js/scenes/index.js` is the registry: it holds the size of every scene, the plain floor drawn for a name with no scene, and `mount`, which puts a scene on a canvas. `js/scenes/props.js` attaches `Props`, the props several scenes share (peaks, pines, clouds, speech bubbles, doors, people and the BMX rider). Both pages load the registry, then the props, then each scene file; the order of those files is the order of `Scenes.names`, and the shared character sheet (`js/scenes/character-sheet.js`, named `sheet`) comes last. It is registered as a function of the act, so each act gets its own.
 
-A scene paints a still background once and draws its moving parts on every frame while its act is on screen. A cue is a GSAP timeline that tweens the scene's state, and the frame draws whatever the state says. A cue played to its end leaves the scene in its final state, so an act unlocked without motion looks the same. The scene names are the keys of `scenes.js`, with the shared character sheet as `sheet`.
+Every scene draws with the kit in `js/draw.js`. A scene file opens with a `Needs:` line naming the globals it uses, and takes each kit helper and prop it draws with by name, as in `const { rect, text } = Draw;`. `tests/unit/needs.test.mjs` checks that a scene file takes every helper and prop it uses and none it does not, and that both pages load every file in `js/scenes/` in the same order. The world map draws with the same kit.
+
+A scene paints a still background once and draws its moving parts on every frame while its act is on screen. A cue is a GSAP timeline that tweens the scene's state, and the frame draws whatever the state says. A cue played to its end leaves the scene in its final state, so an act unlocked without motion looks the same. The scene names are the names the files register.
 
 ## Styles
 
@@ -93,10 +96,10 @@ An add-on is a script in `js/addons/`, loaded after `main.js`, that listens to t
 
 ## Tests
 
-`npm run test:unit` runs `tests/unit/` with `node:test`. It checks each recipe rule in `js/story.js` and the shipped recipes against the real scenes, art and games, the five state calls, every Needs line against both pages, and the visit counter's rule for who is counted. `npm test` runs those first, then `tests/smoke.mjs`: it opens `index.html` from disk in an installed Chrome and does what a reader does, at several window and phone sizes. `tests/smoke.mjs` only launches Chrome and runs the surfaces in `tests/smoke/`, one file each: the page around the acts, the acts, the sheet, the games, the layout by window size and the visit counter. Each surface opens its own pages, so it can run alone, and `tests/smoke/helpers.mjs` holds what they share. Every page it opens blocks every outside address, and the run fails if the page asks for one; the visits surface serves the page as if from its published address to check what the visit counter sends. It runs on a developer's machine, not in CI ([ADR 0004](docs/decisions/0004-smoke-test-runs-locally.md)).
+`npm run test:unit` runs `tests/unit/` with `node:test`. It checks each recipe rule in `js/story.js` and the shipped recipes against the real scenes, art and games, the five state calls, the scene registry, every Needs line against both pages, and the visit counter's rule for who is counted. `npm test` runs those first, then `tests/smoke.mjs`: it opens `index.html` from disk in an installed Chrome and does what a reader does, at several window and phone sizes. `tests/smoke.mjs` only launches Chrome and runs the surfaces in `tests/smoke/`, one file each: the page around the acts, the acts, the sheet, the games, the layout by window size and the visit counter. Each surface opens its own pages, so it can run alone, and `tests/smoke/helpers.mjs` holds what they share. Every page it opens blocks every outside address, and the run fails if the page asks for one; the visits surface serves the page as if from its published address to check what the visit counter sends. It runs on a developer's machine, not in CI ([ADR 0004](docs/decisions/0004-smoke-test-runs-locally.md)).
 
 ## Known limits
 
-- The load order is still written by hand in each page; the Needs lines and their test only check it.
+- The load order is still written by hand in each page, scene files included, so a new scene is a new script tag in both pages; the Needs lines and their tests only check it.
 - The games still use `Sheet.el`, `Scenes.mix` and `Scenes.rng`, and have no Needs lines.
-- Some files hold several parts in one place: `js/scenes.js` (about 1,730 lines, 17 scenes) and `js/games/bmx.js` (about 1,335 lines).
+- One file still holds several parts in one place: `js/games/bmx.js` (about 1,335 lines).

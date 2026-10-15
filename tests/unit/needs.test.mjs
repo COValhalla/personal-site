@@ -1,14 +1,13 @@
 // Declared dependencies. Each page script opens with a "Needs:" line naming the
 // globals that must load before it, and a "Needs after start-up:" line for the ones
-// it reads only once the page is running. Each scene in js/scenes.js opens with a
-// "Needs:" line too, naming the drawing kit helpers and props it draws with.
+// it reads only once the page is running. Each scene file in js/scenes/ also takes
+// the drawing kit helpers and props it draws with by name from Draw and Props.
 // These tests read both pages' script order and every script, and check that
-// each line is true. Run with `npm test`.
+// each line and each of those names is true. Run with `npm test`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
-import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -106,47 +105,33 @@ test('each page script attaches the global ARCHITECTURE.md lists', () => {
 
 // ---------- Scenes ----------
 
+const sceneFiles = page => scriptsOf(page).filter(file => file.startsWith('js/scenes/'));
 const KIT = Object.keys(/\bwindow\.Draw = \{([^}]*)\}/.exec(read('js/draw.js'))[1].split(',').reduce((o, k) => ({ ...o, [k.trim()]: 1 }), {}));
-const PROPS = ['peak', 'pine', 'cloud', 'bubble', 'doorway', 'person', 'RIDER'];
-const SCENE_NAMES = [...KIT, ...PROPS, 'Pixel', 'gsap'];
+const PROPS = /\bwindow\.Props = \{([^}]*)\}/.exec(read('js/scenes/props.js'))[1].split(',').map(k => k.trim());
+const SHARED = [...KIT, ...PROPS, 'W', 'H', 'GROUND'];
 
-// Each scene in js/scenes.js: its "Needs:" line and its body, up to the brace that closes it.
-function scenes() {
-  const lines = read('js/scenes.js').split('\n');
-  const found = [];
-  lines.forEach((line, i) => {
-    const need = line.match(/^(\s*)\/\/ Needs:(.*)$/);
-    if (!need) return;
-    const indent = need[1];
-    const key = lines[i + 1].match(/^\s*(?:'([a-z-]+)'|([a-z]+)): \{$|^\s*function (\w+)\(|^\s*const (\w+) = \{$/);
-    assert.ok(key, `js/scenes.js line ${i + 1}: a "Needs:" line must sit just above a scene.`);
-    let end = i + 1;
-    while (!new RegExp(`^${indent}\\}[,;]?$`).test(lines[end])) end++;
-    const body = code(lines.slice(i + 1, end + 1).join('\n'));
-    const uses = SCENE_NAMES.filter(n => new RegExp(`(?<![\\w$.'])${n}\\b(?!\\s*:)`).test(body));
-    found.push({ name: key.slice(1).find(Boolean), needs: names(need[2]), uses });
-  });
-  return found;
-}
-
-test('every scene states what it needs', () => {
-  const declared = scenes().map(s => s.name);
-  const expected = [...Scenes().names.filter(n => n !== 'sheet'), 'characterSheet', 'blank'];
-  assert.deepEqual(expected.filter(n => !declared.includes(n)), []);
+test('both pages load every scene file, the registry first, in the same order', () => {
+  const onDisk = readdirSync(path.join(root, 'js/scenes')).filter(f => f.endsWith('.js')).map(f => `js/scenes/${f}`);
+  const loaded = sceneFiles('index.html');
+  assert.deepEqual(sceneFiles('workshop.html'), loaded);
+  assert.deepEqual([...loaded].sort(), onDisk.sort());
+  assert.deepEqual(loaded.slice(0, 2), ['js/scenes/index.js', 'js/scenes/props.js']);
 });
 
-test("each scene's Needs line names exactly the helpers and props it uses", () => {
-  const wrong = scenes().flatMap(s => [
-    ...s.uses.filter(n => !s.needs.includes(n)).map(n => `${s.name} uses ${n} but its Needs line does not name it.`),
-    ...s.needs.filter(n => !s.uses.includes(n)).map(n => `${s.name} names ${n} but does not use it.`),
+// What a scene file takes by name from Draw, Props and Scenes, and which shared names it uses.
+function sceneFile(file) {
+  const body = code(read(file));
+  const taken = [...body.matchAll(/const \{([^}]*)\} = (?:Draw|Props|Scenes);/g)].flatMap(m => names(m[1]));
+  const own = [...body.matchAll(/(?:function|const) (\w+)\b/g)].map(m => m[1]);
+  const rest = body.replace(/const \{[^}]*\} = (?:Draw|Props|Scenes);/g, '');
+  const uses = SHARED.filter(n => new RegExp(`(?<![\\w$.'])${n}\\b(?!\\s*:)`).test(rest));
+  return { file, taken, own, uses };
+}
+
+test('each scene file takes by name exactly the helpers and props it uses', () => {
+  const wrong = sceneFiles('index.html').map(sceneFile).flatMap(s => [
+    ...s.uses.filter(n => !s.taken.includes(n) && !s.own.includes(n)).map(n => `${s.file} uses ${n} but does not take it from Draw, Props or Scenes.`),
+    ...s.taken.filter(n => !s.uses.includes(n)).map(n => `${s.file} takes ${n} but does not use it.`),
   ]);
   assert.deepEqual(wrong, []);
 });
-
-// The scene names, from the real scenes.js run in a sandbox with the real art and kit.
-function Scenes() {
-  const ctx = vm.createContext({});
-  ctx.window = ctx;
-  ['js/pixel.js', 'js/draw.js', 'js/scenes.js'].forEach(file => vm.runInContext(read(file), ctx, { filename: file }));
-  return ctx.Scenes;
-}

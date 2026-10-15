@@ -1,6 +1,6 @@
 # 0006. Each script declares what it needs
 
-Status: Accepted, 2026-10-14. Replaces the first two consequences of [0003](0003-plain-scripts-share-globals.md).
+Status: Accepted, 2026-10-14. Replaces the first two consequences of [0003](0003-plain-scripts-share-globals.md). Its scene `Needs:` lines are replaced by [0008](0008-one-file-per-scene.md).
 
 ## Context
 
