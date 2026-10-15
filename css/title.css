@@ -1,0 +1,28 @@
+/* The title screen: the welcome card and Press start. */
+
+.intro {
+  min-height: 100vh;
+  display: grid; place-items: center;
+  padding: calc(var(--hud-h) + 6vh) 20px 10vh;
+  text-align: center;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: center;
+}
+.intro-inner { max-width: 640px; background: var(--paper); padding: 28px 24px; border: 2px solid var(--ink); box-shadow: 8px 8px 0 rgba(29, 27, 34, 0.12); }
+.intro-kicker { margin: 0; font: 600 13px/1 var(--mono); letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); }
+.intro-title { margin: 12px 0 6px; font: 800 clamp(40px, 8vw, 72px)/1 var(--mono); letter-spacing: -0.02em; }
+.intro-tag { margin: 0 auto; max-width: 30em; color: var(--ink-2); }
+.intro-hero { margin: 26px auto 8px; height: 144px; display: flex; justify-content: center; align-items: flex-end; gap: 12px; }
+.intro-hero img { width: 96px; height: 144px; }
+.intro-ground { height: 2px; width: 200px; margin: 0 auto; background: var(--ink); }
+.intro-start { margin: 24px auto 0; padding: 14px 22px; font-size: 15px; background: var(--ink); }
+.intro-start-arrow { animation: blink 1.2s steps(2, jump-none) infinite; }
+.intro-hint { margin: 12px 0 0; color: var(--ink-3); font: 600 12px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; }
+.intro-note { margin: 18px 0 0; font-size: 14px; color: var(--ink-3); }
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-start-arrow { animation: none; }
+}

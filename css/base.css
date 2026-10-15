@@ -1,0 +1,77 @@
+/* Page styles shared by every part: colors, type, the page itself and the buttons.
+   Sizes, colors and timing follow STYLE-GUIDE.md. Each part of the page has its own sheet, loaded after this one. */
+
+:root {
+  --paper: #efede8;
+  --paper-2: #f7f5f1;
+  --ink: #1d1b22;
+  --ink-2: #4a4652;
+  --ink-3: #7a7582;
+  --line: #d3cec6;
+  --night: #141318;
+  --night-2: #1d1b24;
+  --night-3: #2a2733;
+  --night-4: #3b3846;
+  --night-ink: #ece8f2;
+  --night-ink-2: #b4aec0;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --hud-h: 56px;
+  --belt-h: 78px;
+}
+/* On phones the top bar moves to the bottom and the belt is hidden. */
+@media (max-width: 759px) { :root { --belt-h: 0px; --hud-h: 60px; } }
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 17px/1.55 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+img.px, canvas.px { image-rendering: pixelated; image-rendering: crisp-edges; }
+
+button { font: inherit; color: inherit; }
+a { color: inherit; }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 16px;
+  border: 0;
+  background: var(--ink);
+  color: #fff;
+  font: 600 13px/1 var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.28);
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: 0 5px 0 rgba(0, 0, 0, 0.28); }
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.28); }
+.btn:focus-visible, .beat-item:focus-visible, .beat-skill:focus-visible, .skill-card:focus-visible, .pip:focus-visible, .tab:focus-visible { outline: 3px solid var(--c2, #8a63d2); outline-offset: 3px; }
+.btn--accent { background: var(--c3, var(--ink)); }
+.btn--ghost { background: transparent; color: inherit; box-shadow: inset 0 0 0 2px currentColor; }
+.btn--ghost:hover, .btn--ghost:active { box-shadow: inset 0 0 0 2px currentColor; }
+
+/* A blinking arrow, used by the title screen and the act hint. */
+@keyframes blink { 50% { opacity: 0.2; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn { transition: none; }
+}

@@ -65,6 +65,7 @@ On the published site, the page counts visits with [GoatCounter](https://www.goa
 | `js/story.js` | Collects the recipes, checks them for mistakes, and holds the story's state. |
 | `js/main.js` | The top bar, the intro, the ending with Say hello, and start-up. |
 | `js/addons/visits.js` | Visit counts with GoatCounter, on the published site only. |
+| `css/` | The page's styles: `base.css` for the colors, type and buttons, then one sheet per part of the page. |
 | `vendor/gsap/` | GSAP 3.15.0 and ScrollTrigger, kept here so the page works offline. |
 | `vendor/goatcounter/` | GoatCounter's counting script, loaded only by `js/addons/visits.js`. |
 | `tests/unit/` | Unit tests for the recipe rules, the story's state, each file's Needs line and the visit counter's rule. |

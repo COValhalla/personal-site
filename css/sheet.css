@@ -1,0 +1,92 @@
+/* The character sheet (its head, tabs, items, stats and map) and the story card an item or skill opens. */
+
+.sheet-head { display: flex; gap: 18px; align-items: center; padding-right: 48px; }
+.sheet-portrait {
+  flex: none; width: 92px; height: 118px;
+  display: grid; place-items: center;
+  background: var(--night-3); border: 3px solid var(--night-4);
+}
+.sheet-portrait img { width: 64px; height: 96px; }
+.sheet-kicker { margin: 0; font: 700 11px/1 var(--mono); letter-spacing: 0.2em; text-transform: uppercase; color: var(--night-ink-2); }
+.sheet-name { margin: 6px 0 2px; font: 800 26px/1.1 var(--mono); }
+.sheet-class { margin: 0; font: 500 14px/1.3 var(--mono); color: var(--night-ink-2); }
+.sheet-strip { display: flex; gap: 3px; margin-top: 10px; }
+.sheet-strip i { width: 28px; height: 8px; background: var(--night-4); }
+
+.tabs { display: flex; gap: 6px; margin: 18px 0 14px; border-bottom: 3px solid var(--night-4); }
+.tab {
+  border: 3px solid var(--night-4); border-bottom: 0;
+  background: var(--night-3); color: var(--night-ink-2);
+  padding: 9px 16px; margin-bottom: -3px;
+  font: 700 13px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer;
+}
+.tab[aria-selected="true"] { background: var(--night-2); color: var(--night-ink); border-bottom: 3px solid var(--night-2); }
+
+.items-panel { display: grid; grid-template-columns: 240px 1fr; gap: 22px; }
+@media (max-width: 699px) {
+  .items-panel { grid-template-columns: 1fr; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+}
+.panel-label { margin: 0 0 10px; font: 700 11px/1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--night-ink-2); }
+.stat { margin-bottom: 12px; }
+.stat-name { display: block; font: 600 13px/1 var(--mono); margin-bottom: 6px; }
+.bar { display: flex; height: 12px; background: #110f15; border: 2px solid var(--night-4); }
+.bar i { height: 100%; }
+
+.inv-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 699px) { .inv-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.inv-slot {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid; place-items: center;
+  padding: 0;
+  background: var(--night-3);
+  border: 2px dashed var(--night-4);
+  cursor: default;
+}
+.inv-slot img { width: 75%; height: auto; }
+.inv-slot.is-filled { border: 2px solid var(--c2); background: #34313d; cursor: pointer; box-shadow: inset 0 0 0 2px #16141b; }
+.inv-slot.is-filled:hover { background: #403c4b; }
+.inv-slot .new {
+  position: absolute; top: -6px; right: -6px;
+  font: 800 9px/1 var(--mono); letter-spacing: 0.06em;
+  padding: 3px 4px; background: #e0533d; color: #fff; border: 2px solid #0c0b0f;
+}
+.inv-slot.is-pulse { animation: pulse 0.9s 2; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 4px var(--c1); } }
+.inv-hint { margin: 10px 0 0; font-size: 14px; color: var(--night-ink-2); }
+
+.map { display: grid; gap: 10px; }
+.map-canvas { display: block; width: 100%; height: auto; aspect-ratio: 320 / 120; border: 3px solid var(--night-4); cursor: pointer; }
+.map-stops { display: flex; flex-wrap: wrap; gap: 6px; }
+.map-stop {
+  min-width: 46px; padding: 7px 10px;
+  font: 700 13px/1 var(--mono); color: var(--night-ink);
+  background: var(--night-3); border: 2px solid var(--night-4); cursor: pointer;
+}
+.map-stop[aria-pressed="true"] { background: var(--c2); color: #fff; border-color: #fff; }
+.map-stop:focus-visible { outline: 3px solid var(--c1); outline-offset: 2px; }
+.map-info { min-height: 3.2em; margin: 0; padding: 10px 12px; background: var(--night-3); border: 2px solid var(--night-4); font-size: 15px; }
+.map-info b { font-family: var(--mono); }
+.map-go { margin-left: 4px; font: 700 13px var(--mono); color: #ffb347; }
+
+/* Story card */
+.card-frame { display: grid; grid-template-columns: 150px 1fr; gap: 20px; border-color: var(--c2); }
+@media (max-width: 599px) { .card-frame { grid-template-columns: 1fr; } }
+.card-art { width: 150px; height: 150px; display: grid; place-items: center; background: #34313d; border: 3px solid var(--c2); }
+.card-art img { width: 128px; height: 128px; }
+.card-name { margin: 0; padding-right: 44px; font: 800 28px/1.1 var(--mono); color: var(--c1); }
+.card-meta { margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font: 600 12px/1.2 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--night-ink-2); }
+.card-meta .tag--life { color: #7fd09c; }
+.card-meta .tag--work { color: #7fb0ee; }
+.card-line { margin: 14px 0 0; padding: 0 0 0 14px; border-left: 4px solid var(--c2); font-size: 19px; line-height: 1.45; }
+.card-adds { margin: 6px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
+.card-adds li { font: 700 13px/1 var(--mono); padding: 6px 8px; background: color-mix(in srgb, var(--c2) 30%, var(--night-2)); border: 2px solid var(--c2); }
+.card-section { margin-top: 16px; }
+.card-photo { grid-column: 1 / -1; margin: 0; }
+.card-actions { grid-column: 1 / -1; display: flex; gap: 10px; flex-wrap: wrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  .inv-slot.is-pulse { animation: none; }
+}

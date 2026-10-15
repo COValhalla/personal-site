@@ -1,0 +1,68 @@
+/* The top bar: the hero, a pip per act, the sheet button and Say hello. On phones it moves to the bottom. */
+
+.hud {
+  position: fixed; z-index: 20; left: 0; right: 0; top: 0;
+  height: var(--hud-h);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 0 16px;
+  background: rgba(239, 237, 232, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 2px solid var(--ink);
+}
+.hud-me {
+  display: flex; align-items: center; gap: 10px;
+  border: 0; background: none; padding: 0; cursor: pointer;
+  font: 600 14px/1.1 var(--mono);
+  text-align: left;
+}
+.hud-me img { width: 24px; height: 36px; }
+.hud-level { display: block; font-weight: 500; color: var(--ink-3); font-size: 12px; }
+.hud-acts { display: flex; gap: 6px; }
+.pip {
+  min-width: 38px; height: 30px; padding: 0 6px;
+  display: grid; place-items: center;
+  font: 700 12px/1 var(--mono);
+  text-decoration: none;
+  color: var(--ink-3);
+  border: 2px dashed #b8b3ab;
+  background: transparent;
+  transition: background 0.3s, color 0.3s, border-color 0.3s;
+}
+.pip.is-on { color: #fff; background: var(--c2); border: 2px solid var(--ink); }
+.pip.is-here { box-shadow: 0 3px 0 var(--ink); }
+.hud-sheet { position: relative; }
+.hud-hello-wrap { position: relative; }
+.hello-menu {
+  position: absolute; right: 0; top: calc(100% + 10px); z-index: 30;
+  margin: 0; padding: 6px; list-style: none; min-width: 180px;
+  background: var(--paper-2); border: 2px solid var(--ink); box-shadow: 6px 6px 0 rgba(29, 27, 34, 0.14);
+}
+.hello-menu a { display: block; padding: 10px 12px; font: 600 13px/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; }
+.hello-menu a:hover, .hello-menu a:focus-visible { background: var(--ink); color: #fff; outline: none; }
+@media (max-width: 759px) { .hello-menu { top: auto; bottom: calc(100% + 12px); } }
+.hud-at { display: none; }
+.hud-count { opacity: 0.7; font-weight: 500; }
+.hud-new {
+  position: absolute; top: -6px; right: -6px;
+  width: 14px; height: 14px; background: #e0533d; border: 2px solid var(--ink);
+  display: none;
+}
+.hud-sheet.has-new .hud-new { display: block; }
+.hud-strip { position: absolute; left: 0; right: 0; bottom: -6px; height: 4px; display: flex; }
+.hud-strip i { flex: 1; background: transparent; transition: background 0.6s; }
+
+@media (max-width: 759px) {
+  .hud { top: auto; bottom: 0; border-bottom: 0; border-top: 2px solid var(--ink); padding: 0 10px; height: 60px; gap: 4px; }
+  .hud-strip { bottom: auto; top: -6px; }
+  .hud-name, .hud-class { display: none; }
+  .hud-acts { gap: 2px; }
+  .pip { min-width: 24px; height: 28px; padding: 0 1px; font-size: 11px; }
+  .hud-sheet .hud-label, .hud-hello .hud-label { display: none; }
+  .hud-at { display: inline; }
+  .hud .btn { padding: 9px 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pip, .hud-strip i { transition: none; }
+}
