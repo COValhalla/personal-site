@@ -137,7 +137,7 @@
     renderHead();
     renderStats();
     renderInventory(options.highlightAct);
-    if (!sheet.open) sheet.showModal();
+    if (!sheet.open) { sheet.showModal(); Story.emit('sheet'); }
     show(options.tab || state.tab);
   }
 

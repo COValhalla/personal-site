@@ -6,6 +6,7 @@ export default async function page(browser) {
   console.log('\nThe title screen, the words and the ending');
   const { context, page, errors } = await open(browser, { viewport: { width: 1440, height: 900 } });
   check(await page.textContent('.intro-title') === 'Joe Vellella' && await page.textContent('.hud-name') === 'Joe', 'the title screen says Joe Vellella and the bar says Joe');
+  check(await page.evaluate(() => Visits.why === 'not the published site' && !document.querySelector('script[data-goatcounter]')), 'opened from a file, the visit counter stays off');
   const welcome = await page.textContent('.intro-tag');
   check(welcome === await page.evaluate(() => Story.config.welcome) && welcome.startsWith('I build products.') && !welcome.includes('Joe') && welcome.includes('Press start'),
     'the title screen shows the welcome from the recipe, which starts with what Joe does, does not repeat his name and leads to Press start');

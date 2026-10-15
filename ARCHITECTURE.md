@@ -18,7 +18,9 @@ js/sheet.js       the character sheet and story cards
 js/map.js         the world map on the sheet
 js/games/         mini-games, registered in games.js
 js/main.js        the top bar, the intro, the ending and start-up
+js/addons/        add-ons: they listen to the story and can be removed without changing it
 vendor/gsap/      GSAP and ScrollTrigger, kept here so the page works offline
+vendor/goatcounter/  GoatCounter's counting script, loaded only by the visits add-on
 ```
 
 The recipes are the only source of the story. The page modules read them through `Story` and draw with the art in `pixel.js` and `scenes.js`. Nothing is generated.
@@ -27,9 +29,9 @@ The recipes are the only source of the story. The page modules read them through
 
 ## Load order and globals
 
-Each script attaches one object to `window`: `Dom`, `Pixel`, `Draw`, `Story`, `Scenes`, `Sheet`, `WorldMap`, `Belt`, `Acts`, `Sound`, `Games` and `TypingRace`. A script can use another's global only if the page loads that one first. Scripts are not modules because a page opened from a file cannot load modules (see [ADR 0003](docs/decisions/0003-plain-scripts-share-globals.md)).
+Each script attaches one object to `window`: `Dom`, `Pixel`, `Draw`, `Story`, `Scenes`, `Sheet`, `WorldMap`, `Belt`, `Acts`, `Sound`, `Games`, `TypingRace` and `Visits`. A script can use another's global only if the page loads that one first. Scripts are not modules because a page opened from a file cannot load modules (see [ADR 0003](docs/decisions/0003-plain-scripts-share-globals.md)).
 
-Each script says what it needs in its opening comment ([ADR 0006](docs/decisions/0006-scripts-declare-what-they-need.md)):
+Each script says what it needs in its opening comment ([ADR 0007](docs/decisions/0006-scripts-declare-what-they-need.md)):
 
 ```
  * Needs: Dom, Pixel, Story
@@ -58,7 +60,7 @@ At start-up `Story.validate` in `js/story.js` checks that the recipes point at t
 | `Story.seeAll()` | marks every owned item seen | `seen` |
 | `Story.rewind(i)` | takes back act `i`'s items, skills and level | `rewind` |
 
-`give`, `light` and `unlock` do nothing and send nothing when the change is already made. Everyone else reads `Story.state` through views that have `has`, `size` and iteration but no `add` or `delete`, so a stray write fails at once. `main.js` is the only listener today, and it refreshes the top bar on each event.
+`give`, `light` and `unlock` do nothing and send nothing when the change is already made. Everyone else reads `Story.state` through views that have `has`, `size` and iteration but no `add` or `delete`, so a stray write fails at once. One more event changes no state: `sheet.js` sends `sheet` when the sheet opens. `main.js` refreshes the top bar on the five state events, and the visits add-on listens to `sheet`.
 
 ## Scenes and cues
 
@@ -74,13 +76,19 @@ Sprites are grids of characters, one per pixel, with the rules in [`STYLE-GUIDE.
 
 GSAP 3.15.0 and ScrollTrigger drive the motion. `acts.js` pins each act while its moments play, then releases it. With reduced motion, or without GSAP, the steps settle at once instead.
 
+## Add-ons
+
+An add-on is a script in `js/addons/`, loaded after `main.js`, that listens to the story and the page and draws nothing of the story's own. Removing its script tag leaves the story unchanged.
+
+`js/addons/visits.js` counts visits with GoatCounter: the page view, each act reached, the sheet opened, the ending reached and each contact link clicked. It runs only for a person on `https://covalhalla.github.io`; opened from a file, on another address, in an automated browser or when the browser asks not to be tracked, it loads nothing and sends nothing. `Visits.why` says why it is off. The privacy rule is [ADR 0007](docs/decisions/0007-visit-counts.md).
+
 ## Hosting
 
 `.github/workflows/pages.yml` publishes the committed files to GitHub Pages on every merge to `main`. A pull request only packages the site as a check.
 
 ## Tests
 
-`npm run test:unit` runs `tests/unit/` with `node:test`. It checks each recipe rule in `js/story.js` and the shipped recipes against the real scenes, art and games, the five state calls, and every Needs line against both pages. `npm test` runs those first, then `tests/smoke.mjs`: it opens `index.html` from disk in an installed Chrome and does what a reader does, at several window and phone sizes. `tests/smoke.mjs` only launches Chrome and runs the surfaces in `tests/smoke/`, one file each: the page around the acts, the acts, the sheet, the games and the layout by window size. Each surface opens its own pages, so it can run alone, and `tests/smoke/helpers.mjs` holds what they share. It runs on a developer's machine, not in CI ([ADR 0004](docs/decisions/0004-smoke-test-runs-locally.md)).
+`npm run test:unit` runs `tests/unit/` with `node:test`. It checks each recipe rule in `js/story.js` and the shipped recipes against the real scenes, art and games, the five state calls, every Needs line against both pages, and the visit counter's rule for who is counted. `npm test` runs those first, then `tests/smoke.mjs`: it opens `index.html` from disk in an installed Chrome and does what a reader does, at several window and phone sizes. `tests/smoke.mjs` only launches Chrome and runs the surfaces in `tests/smoke/`, one file each: the page around the acts, the acts, the sheet, the games, the layout by window size and the visit counter. Each surface opens its own pages, so it can run alone, and `tests/smoke/helpers.mjs` holds what they share. Every page it opens blocks every outside address, and the run fails if the page asks for one; the visits surface serves the page as if from its published address to check what the visit counter sends. It runs on a developer's machine, not in CI ([ADR 0004](docs/decisions/0004-smoke-test-runs-locally.md)).
 
 ## Known limits
 
