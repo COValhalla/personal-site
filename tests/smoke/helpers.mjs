@@ -14,8 +14,15 @@ export function check(ok, what) {
 }
 export const failures = () => failed;
 
+// Every address a page opened from a file asked for that is not a file on this computer. Each is blocked.
+export const outside = [];
+
 export async function open(browser, options) {
   const context = await browser.newContext(options);
+  await context.route(url => !['file:', 'data:', 'blob:'].includes(url.protocol), route => {
+    outside.push(route.request().url());
+    return route.abort();
+  });
   const page = await context.newPage();
   const errors = [];
   page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') errors.push(m.text()); });
