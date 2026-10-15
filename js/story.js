@@ -76,11 +76,11 @@
         const where = `Act ${act.numeral || i + 1}`;
         need(act.title, `${where} has no title.`);
         need(act.color && act.color.light && act.color.base && act.color.shade, `${where} needs color.light, color.base and color.shade.`);
-        need(known.scenes.includes(act.scene), `${where} uses scene "${act.scene}", which scenes.js does not draw.`);
+        need(known.scenes.includes(act.scene), `${where} uses scene "${act.scene}", which no file in js/scenes/ draws.`);
         const stageNames = act.stages || [act.scene];
         if (act.stages) {
           need(act.stages.length === (act.beats || []).length + 1, `${where} needs ${(act.beats || []).length + 1} stages: one for each moment, then one for the level-up.`);
-          act.stages.forEach(name => need(known.scenes.includes(name), `${where} uses stage scene "${name}", which scenes.js does not draw.`));
+          act.stages.forEach(name => need(known.scenes.includes(name), `${where} uses stage scene "${name}", which no file in js/scenes/ draws.`));
           act.stages.forEach((name, k) => need(k === 0 || name === act.stages[k - 1] || !act.stages.slice(0, k).includes(name), `${where} goes back to stage scene "${name}": moments in the same scene must come one after another.`));
         }
         need(known.gear.includes(act.hero && act.hero.gear), `${where} uses hero gear "${act.hero && act.hero.gear}", which pixel.js does not have.`);

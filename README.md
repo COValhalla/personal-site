@@ -56,7 +56,7 @@ On the published site, the page counts visits with [GoatCounter](https://www.goa
 | `js/dom.js` | The shared helpers that build elements. |
 | `js/pixel.js` | Item sprites, the hero and his gear per act. |
 | `js/draw.js` | The drawing kit every scene and the world map draw with. |
-| `js/scenes.js` | One pixel scene per act, with its animations (cues). |
+| `js/scenes/` | The pixel scenes, one file each with its animations (cues), the props they share, and `index.js`, the registry they join. |
 | `js/acts.js` | Builds each act and tells its story in steps as you scroll. |
 | `js/belt.js` | The inventory belt and experience bar along the bottom. |
 | `js/sheet.js` | The character sheet and story cards. |
@@ -68,7 +68,7 @@ On the published site, the page counts visits with [GoatCounter](https://www.goa
 | `css/` | The page's styles: `base.css` for the colors, type and buttons, then one sheet per part of the page. |
 | `vendor/gsap/` | GSAP 3.15.0 and ScrollTrigger, kept here so the page works offline. |
 | `vendor/goatcounter/` | GoatCounter's counting script, loaded only by `js/addons/visits.js`. |
-| `tests/unit/` | Unit tests for the recipe rules, the story's state, each file's Needs line and the visit counter's rule. |
+| `tests/unit/` | Unit tests for the recipe rules, the story's state, the scene registry, each file's Needs line and the visit counter's rule. |
 | `tests/smoke.mjs` | An end-to-end check in Chrome. It runs each surface in `tests/smoke/`. |
 | `tests/smoke/` | The end-to-end checks, one file per surface: the page around the acts, the acts, the sheet, the games, the layout at each window size, and the visit counter. |
 
@@ -81,7 +81,7 @@ Each act is one file in `recipes/`. The fields:
 | `id`, `numeral`, `title`, `years` | The act's name and when it happened |
 | `color` | `name` plus `light`, `base` and `shade` colors, and an optional `accent` for the scene |
 | `theme` | `light`, or `dark` for a dark act screen |
-| `scene` | Which scene in `js/scenes.js` to draw |
+| `scene` | Which scene in `js/scenes/` to draw |
 | `stages` | Optional: one scene per moment, then one for the level-up (so `beats` plus one names), for an act whose background changes as the story goes on. The camera dives into each next scene. Moments in a row can name the same scene to share it, and the story carries on there without a dive. The level-up can be `sheet`, the shared character screen drawn from the act's class, items and skills |
 | `hero` | `gear` from `js/pixel.js`, the class `title` shown on level up, and the `hair` and `beard` the hero has in this act |
 | `beats` | The moments of the act, in order. Each has a `tag` (`life` or `work`) and `text`, and optionally the `item` it gives (an item id from this act), a scene `cue` to play and a `look` (`hair`, `beard`) that changes the hero at that moment |
@@ -101,7 +101,7 @@ If a recipe has a mistake, such as a skill growing from one that does not exist 
 
 Ask an AI coding agent for one act at a time. A prompt that works:
 
-> Read `STYLE-GUIDE.md` and `recipes/act-3-college.js`. Update `recipes/act-5-denver.js` with these words: … Add a 16 × 16 sprite for a new item called … to `js/pixel.js`, following the sprite rules, and give it to the moment it belongs to. Add a cue to the `mountains` scene in `js/scenes.js` that shows … when that moment plays. Then run `npm test` and fix anything that fails.
+> Read `STYLE-GUIDE.md` and `recipes/act-3-college.js`. Update `recipes/act-5-denver.js` with these words: … Add a 16 × 16 sprite for a new item called … to `js/pixel.js`, following the sprite rules, and give it to the moment it belongs to. Add a cue to the `mountains` scene in `js/scenes/mountains.js` that shows … when that moment plays. Then run `npm test` and fix anything that fails.
 
 ## Tests
 

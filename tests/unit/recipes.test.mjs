@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const read = file => readFileSync(path.join(root, file), 'utf8');
 const silent = { error() {} };
+const sceneFiles = [...read('index.html').matchAll(/<script src="(js\/scenes\/[^"]+)"><\/script>/g)].map(m => m[1]);
 
 // The page's own scripts run in one sandbox whose global object is `window`, as in the browser.
 function page(files) {
@@ -78,9 +79,9 @@ test('an act needs a light, base and shade color', () => {
     ['Act 1 needs color.light, color.base and color.shade.']);
 });
 
-test('an act must name a scene that scenes.js draws', () => {
+test('an act must name a scene that a file in js/scenes/ draws', () => {
   assert.deepEqual(problemsFor([act({ scene: 'castle', beats: [{ tag: 'life', text: 'x', item: 'floppy' }] })]),
-    ['Act 1 uses scene "castle", which scenes.js does not draw.']);
+    ['Act 1 uses scene "castle", which no file in js/scenes/ draws.']);
 });
 
 test('staged acts need one stage per moment plus the level-up', () => {
@@ -88,9 +89,9 @@ test('staged acts need one stage per moment plus the level-up', () => {
     ['Act 1 needs 2 stages: one for each moment, then one for the level-up.']);
 });
 
-test('each stage must name a scene that scenes.js draws', () => {
+test('each stage must name a scene that a file in js/scenes/ draws', () => {
   assert.deepEqual(problemsFor([act({ stages: ['field', 'castle'], beats: [{ tag: 'life', text: 'x', item: 'floppy' }] })]),
-    ['Act 1 uses stage scene "castle", which scenes.js does not draw.']);
+    ['Act 1 uses stage scene "castle", which no file in js/scenes/ draws.']);
 });
 
 test('moments in one stage scene must come one after another', () => {
@@ -193,7 +194,7 @@ test('a skill may grow from a skill in an earlier act', () => {
 
 test('the shipped recipes pass every rule against the real scenes, art and games', () => {
   const ctx = page([
-    'js/pixel.js', 'js/draw.js', 'js/story.js', 'js/scenes.js',
+    'js/pixel.js', 'js/draw.js', 'js/story.js', ...sceneFiles,
     'js/games/games.js', 'js/games/sound.js', 'js/games/hammer.js', 'js/games/bmx.js', 'js/games/typing.js',
     'recipes/site.js',
     'recipes/act-0-early-years.js', 'recipes/act-1-childhood.js', 'recipes/act-2-high-school.js', 'recipes/act-3-college.js',
