@@ -16,7 +16,7 @@ Every scene lived in `js/scenes.js`: 17 scenes, the shared props, the character 
 
 ## Consequences
 
-- A change to one scene touches one file of about 40 to 135 lines.
+- A change to one scene touches one file of about 35 to 135 lines.
 - A new scene is a new file and a new script tag in both pages, as a new recipe is. There is still no loader and no build step ([0001](0001-no-build-step.md)).
 - The order of the script tags is the order of `Scenes.names`, which is the order the workshop shows the scenes in.
 - `Props` is one more global. The games still read `Scenes.mix` and `Scenes.rng`.
