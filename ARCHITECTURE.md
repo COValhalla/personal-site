@@ -21,6 +21,7 @@ js/main.js        the top bar, the intro, the ending and start-up
 js/addons/        add-ons: they listen to the story and can be removed without changing it
 vendor/gsap/      GSAP and ScrollTrigger, kept here so the page works offline
 vendor/goatcounter/  GoatCounter's counting script, loaded only by the visits add-on
+css/              the styles: base.css, then one sheet per part of the page
 ```
 
 The recipes are the only source of the story. The page modules read them through `Story` and draw with the art in `pixel.js` and `scenes.js`. Nothing is generated.
@@ -68,6 +69,10 @@ Every scene draws with the kit in `js/draw.js` and a few props at the top of `js
 
 A scene paints a still background once and draws its moving parts on every frame while its act is on screen. A cue is a GSAP timeline that tweens the scene's state, and the frame draws whatever the state says. A cue played to its end leaves the scene in its final state, so an act unlocked without motion looks the same. The scene names are the keys of `scenes.js`, with the shared character sheet as `sheet`.
 
+## Styles
+
+`css/base.css` holds what every part shares: the colors and sizes as custom properties, the page itself, the buttons and the blink animation. Each part of the page then has its own sheet, loaded by `index.html` in the order the page reads from top to bottom: `hud.css` (the top bar), `title.css`, `act.css`, `belt.css`, `ending.css`, `dialog.css` (the dark frame the sheet, story cards and games open in), `sheet.css` (the sheet and story cards) and `games.css`. A sheet styles only its own part and keeps its reduced-motion rules at its end. The order still matters where a later sheet builds on an earlier one: the story card's colored frame in `sheet.css` overrides the dialog frame in `dialog.css`. `workshop.html` loads only `base.css`.
+
 ## Art
 
 Sprites are grids of characters, one per pixel, with the rules in [`STYLE-GUIDE.md`](STYLE-GUIDE.md). A color ramp has three shades (light, base and shade), and each act's `color` supplies one. The hero is a base grid with gear laid over it.
@@ -94,4 +99,4 @@ An add-on is a script in `js/addons/`, loaded after `main.js`, that listens to t
 
 - The load order is still written by hand in each page; the Needs lines and their test only check it.
 - The games still use `Sheet.el`, `Scenes.mix` and `Scenes.rng`, and have no Needs lines.
-- Some files hold several parts in one place: `js/scenes.js` (about 1,730 lines, 17 scenes), `css/site.css` (682 lines) and `js/games/bmx.js` (about 1,335 lines).
+- Some files hold several parts in one place: `js/scenes.js` (about 1,730 lines, 17 scenes) and `js/games/bmx.js` (about 1,335 lines).
