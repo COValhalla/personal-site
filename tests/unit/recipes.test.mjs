@@ -193,7 +193,7 @@ test('a skill may grow from a skill in an earlier act', () => {
 
 test('the shipped recipes pass every rule against the real scenes, art and games', () => {
   const ctx = page([
-    'js/pixel.js', 'js/story.js', 'js/scenes.js',
+    'js/pixel.js', 'js/draw.js', 'js/story.js', 'js/scenes.js',
     'js/games/games.js', 'js/games/sound.js', 'js/games/hammer.js', 'js/games/bmx.js', 'js/games/typing.js',
     'recipes/site.js',
     'recipes/act-0-early-years.js', 'recipes/act-1-childhood.js', 'recipes/act-2-high-school.js', 'recipes/act-3-college.js',

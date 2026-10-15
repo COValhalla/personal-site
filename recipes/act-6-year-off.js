@@ -1,6 +1,7 @@
 /*
  * Act VI recipe. See README.md, "Recipes", for every field.
  * The year off is its own act and the turning point of the story.
+ * Needs: Story
  */
 Story.addAct({
   id: 'year-off',

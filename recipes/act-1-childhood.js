@@ -1,5 +1,6 @@
 /*
  * Act I recipe. See README.md, "Recipes", for every field.
+ * Needs: Story
  */
 Story.addAct({
   id: 'childhood',

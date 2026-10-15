@@ -13,11 +13,12 @@
  * with the scroll. When the act is done a Next tag points on.
  *
  * Step timing lives in BEATS so every act keeps the same rhythm; see STYLE-GUIDE.md.
+ * Needs: gsap, ScrollTrigger, Dom, Pixel, Story, Scenes, Sheet, Games, Belt
  */
 (function () {
   'use strict';
 
-  const { el, colorVars } = Sheet;
+  const { el, colorVars } = Dom;
 
   // Seconds within each kind of step.
   const BEATS = {
@@ -318,16 +319,10 @@
       const from = img.getBoundingClientRect();
       gsap.set(p.pop, { opacity: 0 });
       if (window.Belt) Belt.fly(item.id, from);
-      own(item.id);
+      Story.give(item.id);
     });
     tl.to({}, { duration: 0.8 });
     return tl;
-  }
-
-  function own(id) {
-    if (Story.state.owned.has(id)) return;
-    Story.state.owned.add(id);
-    Story.emit('item', id);
   }
 
   function beat(p, step) {
@@ -401,10 +396,7 @@
     card.querySelector('.skill-name').textContent = skill.name;
     const tag = p.story.querySelector(`.beat-skill[data-skill="${skill.id}"]`);
     if (tag) tag.classList.add('is-on');
-    if (!Story.state.skills.has(skill.id)) {
-      Story.state.skills.add(skill.id);
-      Story.emit('skill', skill.id);
-    }
+    Story.light(skill.id);
   }
 
   function level(p) {
@@ -417,8 +409,7 @@
       hero.src = Pixel.heroURL(act.hero.gear, act.color, styleOf(act));
       p.section.classList.add('is-unlocked');
       pill.textContent = act.unlock.banner;
-      Story.state.unlocked.add(i);
-      Story.emit('unlock', i);
+      Story.unlock(i);
       if (window.Belt) Belt.levelUp(Story.level());
     }, null, BEATS.gearSwap);
     tl.add(burst(p), BEATS.gearSwap);
@@ -479,21 +470,18 @@
       if (chip) chip.classList.add('is-on');
       if (step.beat.cue) p.stages[target].stage.settle(step.beat.cue);
       restyle(p, step.beat);
-      if (step.beat.give) { own(step.beat.give.id); if (window.Belt) Belt.fill(step.beat.give.id); }
+      if (step.beat.give) { Story.give(step.beat.give.id); if (window.Belt) Belt.fill(step.beat.give.id); }
       act.skills.forEach((skill, n) => { if (skill.moment === step.k + 1) lightSkill(p, p.skillCards[n]); });
       return;
     }
     hero.src = Pixel.heroURL(act.hero.gear, act.color, styleOf(act));
     section.classList.add('is-unlocked');
     story.querySelector('.unlock-pill').textContent = act.unlock.banner;
-    Story.leftoverItems(act).forEach(item => { own(item.id); if (window.Belt) Belt.fill(item.id); });
+    Story.leftoverItems(act).forEach(item => { Story.give(item.id); if (window.Belt) Belt.fill(item.id); });
     p.stages[target].stage.settle('equip');
     p.skillCards.forEach(card => lightSkill(p, card));
     screen.classList.add('is-ready');
-    if (!Story.state.unlocked.has(i)) {
-      Story.state.unlocked.add(i);
-      Story.emit('unlock', i);
-    }
+    Story.unlock(i);
   }
 
   // ---------- The queue: steps play in order, faster when several are waiting ----------
@@ -591,11 +579,9 @@
     railNote(p);
     runStage(p, false);
     // The act's items, skills and level leave the sheet; what was read stays read.
-    act.items.forEach(item => { Story.state.owned.delete(item.id); if (window.Belt) Belt.empty(item.id); });
-    act.skills.forEach(skill => Story.state.skills.delete(skill.id));
-    Story.state.unlocked.delete(i);
+    if (window.Belt) act.items.forEach(item => Belt.empty(item.id));
     p.hint.classList.remove('is-done');
-    Story.emit('rewind', i);
+    Story.rewind(i);
     if (window.Belt) Belt.xp(Story.level(), 0);
   }
 

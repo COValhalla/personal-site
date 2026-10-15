@@ -1,6 +1,7 @@
 /*
  * Act scenes. Each scene paints a still 160 x 72 background once, then draws
  * its moving parts over it on every frame while the act is on screen.
+ * Needs: gsap, Pixel, Draw
  *
  * A moment (beat) in a recipe can name a cue. A cue is a short animation in
  * the scene's cues: it tweens the scene's state with GSAP, and frame() draws
@@ -9,6 +10,10 @@
  *
  * heroX is where the hero stands; the ground is at y = 64 in every scene.
  * Colors come from the act's ramp plus the shared neutrals in pixel.js.
+ *
+ * Every scene draws with the kit in js/draw.js and the props below, and opens
+ * with a "Needs:" line naming the ones it uses. W, H, GROUND and the
+ * neutrals N are left off those lines, because every scene uses them.
  */
 (function () {
   'use strict';
@@ -17,44 +22,11 @@
   const H = 72;
   const GROUND = 64;
   const N = Pixel.NEUTRALS;
+  const { rng, mix, rect, text, textWidth, sprite, outline, puff, steps4, blink } = Draw;
 
-  function rng(seed) {
-    let a = seed >>> 0;
-    return function () {
-      a = (a + 0x6d2b79f5) >>> 0;
-      let t = a;
-      t = Math.imul(t ^ (t >>> 15), t | 1);
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
+  // ---------- Props several scenes share ----------
 
-  function mix(a, b, t) {
-    const pa = parseInt(a.slice(1), 16);
-    const pb = parseInt(b.slice(1), 16);
-    const ch = s => [(s >> 16) & 255, (s >> 8) & 255, s & 255];
-    const ca = ch(pa);
-    const cb = ch(pb);
-    return '#' + ca.map((v, i) => Math.round(v + (cb[i] - v) * t).toString(16).padStart(2, '0')).join('');
-  }
-
-  function rect(ctx, color, x, y, w, h) { ctx.fillStyle = color; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }
-  const text = (ctx, str, x, y, color) => Pixel.text(ctx, str, Math.round(x), Math.round(y), color, 1);
-  const textWidth = str => String(str).length * 4 - 1;
-
-  // A small prop: rows of characters, each mapped to a color by map.
-  function sprite(ctx, rows, x, y, map, flip) {
-    const w = rows[0].length;
-    rows.forEach((row, j) => [...row].forEach((ch, i) => {
-      const color = map[ch];
-      if (color) rect(ctx, color, x + (flip ? w - 1 - i : i), y + j, 1, 1);
-    }));
-  }
-
-  // Night falls in four steps, like a palette fade in an old game.
-  const steps4 = v => Math.round(Math.max(0, Math.min(1, v)) * 4) / 4;
-  const blink = (t, rate) => Math.floor(t * rate) % 2 === 0;
-
+  // A mountain from top down to the ground, half wide at its foot, with an optional snow cap.
   function peak(ctx, color, cx, top, half, snow) {
     for (let y = top; y < GROUND; y++) {
       const w = Math.round(((y - top) / (GROUND - top)) * half * 2) + 1;
@@ -62,6 +34,7 @@
     }
   }
 
+  // A pine tree h tall on a short trunk, standing on base.
   function pine(ctx, color, shade, x, base, h) {
     rect(ctx, N.h, x, base - 2, 1, 2);
     for (let i = 0; i < h; i++) {
@@ -70,23 +43,14 @@
     }
   }
 
+  // A small cloud, 11 wide.
   function cloud(ctx, x, y, color) {
     rect(ctx, color, x + 2, y, 6, 1);
     rect(ctx, color, x, y + 1, 11, 2);
     rect(ctx, color, x + 4, y - 1, 3, 1);
   }
 
-  function outline(ctx, x, y, w, h, color) {
-    rect(ctx, color, x, y, w, 1);
-    rect(ctx, color, x, y + h - 1, w, 1);
-    rect(ctx, color, x, y, 1, h);
-    rect(ctx, color, x + w - 1, y, 1, h);
-  }
-
-  function puff(ctx, x, y, r, color) {
-    for (let j = -r; j <= r; j++) for (let i = -r; i <= r; i++) if (i * i + j * j <= r * r) rect(ctx, color, x + i, y + j, 1, 1);
-  }
-
+  // A speech bubble with a line of pixel text, its tail at the bottom left.
   function bubble(ctx, x, y, str, ink) {
     const w = textWidth(str) + 4;
     rect(ctx, N.o, x - 1, y - 1, w + 2, 9);
@@ -94,6 +58,16 @@
     rect(ctx, N.o, x + 2, y + 8, 2, 1);
     rect(ctx, N.o, x + 2, y + 9, 1, 1);
     text(ctx, str, x + 2, y + 1, ink || N.o);
+  }
+
+  // A door 14 wide and 28 tall, standing on the bottom line it is given.
+  function doorway(ctx, x, bottom) {
+    const left = x - 7;
+    const top = bottom - 28;
+    rect(ctx, N.o, left - 1, top - 1, 16, 29);
+    rect(ctx, '#5b4636', left, top, 14, 28);
+    outline(ctx, left + 2, top + 3, 10, 22, '#7a5e48');
+    rect(ctx, '#e8c77a', left + 10, top + 14, 1, 2);
   }
 
   // A person drawn from the hero's base, in someone else's shirt and hair.
@@ -122,6 +96,7 @@
 
   const scenes = {
     // Tutorial, moment 1: a bedroom at night. The lights drop in four steps, and the computer glows with an inventory.
+    // Needs: rng, mix, rect, outline, steps4, gsap
     'early-night': {
       heroX: 104,
       arrive: 50,
@@ -177,6 +152,7 @@
     },
 
     // Tutorial, moment 2: the school computer lab. Every screen runs the typing race.
+    // Needs: rect, text, blink, gsap
     'computer-lab': {
       heroX: 98,
       door: { x: 30, y: 20 },
@@ -241,6 +217,7 @@
 
     // Tutorial, moment 3: the family business's packing room in the holiday rush.
     // Flat boxes fold up, fill and get taped at the table, then stack by the door, each a little faster, while the ORDERS count climbs.
+    // Needs: mix, rect, text, textWidth, gsap
     'early-shop': {
       heroX: 92,
       door: { x: 146, y: 44 },
@@ -342,6 +319,7 @@
     },
 
     // Tutorial, completion: the high-score board, up close. Your name goes to the top.
+    // Needs: rect, text, blink, gsap
     'lab-board': {
       heroX: 22,
       draw(ctx, c) {
@@ -368,6 +346,7 @@
     },
 
     // Act I: a bright BMX track on a Saturday, the start hill on the left and the family shop on the right.
+    // Needs: rng, mix, rect, text, sprite, blink, cloud, RIDER, gsap
     'bmx-track': {
       heroX: 100,
       draw(ctx, c) {
@@ -466,6 +445,7 @@
 
     // Act I, moment 2: the family business, a wild game processing shop in deer season.
     // New hires walk in behind the table, get their aprons and a quick lesson, and the orders pile up.
+    // Needs: rng, rect, text, sprite, bubble, person, gsap
     'bmx-shop': {
       heroX: 104,
       door: { x: 139, y: 44 },
@@ -576,6 +556,7 @@
     },
 
     // Act I, level-up: the character screen, behind the cooler door. The bike and the apron drop into their slots.
+    // Needs: rect, text, sprite, outline, Pixel, gsap
     'bmx-sheet': {
       heroX: 26,
       draw(ctx, c) {
@@ -612,6 +593,7 @@
 
     // Act II, moments 1 and 2: the high school football field under the lights, with a discus cage on the left and the track in front.
     // Night falls, the lights come on and your people walk on; then the discus sets the record.
+    // Needs: rng, mix, rect, text, textWidth, steps4, person, gsap
     field: {
       heroX: 70,
       door: { x: 150, y: 30 },
@@ -732,6 +714,7 @@
 
     // Act II, moment 3 and the level-up: the summer jobs. On the left, forms go up board by board around a basement
     // and concrete pours in level. On the right, at the machine factory, a machine gets its paint and rolls onto a truck.
+    // Needs: rng, rect, text, cloud, gsap
     'summer-jobs': {
       heroX: 50,
       door: { x: 145, y: 44 },
@@ -829,6 +812,7 @@
     },
 
     // Act III: a track with the hammer cage, the stands and the scoreboard.
+    // Needs: rng, mix, rect, text, sprite, puff, steps4, doorway, Pixel, gsap
     track: {
       heroX: 52,
       door: { x: 40, y: 50 },
@@ -917,6 +901,7 @@
 
     // Act III, moment 3: the office in Texas where each internship summer ended. The sun sets over the oil field,
     // the executives take their seats, and the cost and ROI model builds on the screen until the room applauds.
+    // Needs: rng, mix, rect, text, sprite, puff, steps4, blink, doorway, gsap
     'texas-office': {
       heroX: 64,
       door: { x: 150, y: 50 },
@@ -1024,6 +1009,7 @@
     },
 
     // Act IV: a blueprint of a plant.
+    // Needs: mix, rect, text, sprite, outline, doorway, gsap
     plant: {
       heroX: 26,
       door: { x: 140, y: 50 },
@@ -1140,6 +1126,7 @@
 
     // Act IV, moment 3: the plant floor in Sioux City. Operators in hard hats come through in waves to be trained
     // while the count climbs to 250, and a root-cause fishbone draws itself on the whiteboard until the savings show.
+    // Needs: rng, rect, text, doorway, person, Pixel, gsap
     'sioux-city': {
       heroX: 42,
       door: { x: 151, y: 50 },
@@ -1236,6 +1223,7 @@
     },
 
     // Act V, moment 1: the mountains, where a skier carves down the big peak. The cabin's door leads to the factory.
+    // Needs: mix, rect, sprite, peak, pine, doorway, gsap
     mountains: {
       heroX: 66,
       door: { x: 72, y: 50 },
@@ -1282,6 +1270,7 @@
     // Act V, moments 2 and 3: the new factory in Vietnam. A plane lands the team there, the production lines are
     // lowered into the empty hall and the budget fills to $7M on time. Then the design office lights up, a bridge
     // reaches from it to the floor, ten engineers cross it, and products roll off the line in their new material.
+    // Needs: rect, text, sprite, outline, doorway, gsap
     factory: {
       heroX: 40,
       door: { x: 150, y: 50 },
@@ -1403,6 +1392,7 @@
     },
 
     // Act VI: the library, the year off and the self-taught year.
+    // Needs: rng, rect, sprite, puff, blink, bubble, doorway, gsap
     library: {
       heroX: 76,
       door: { x: 86, y: 36 },
@@ -1517,6 +1507,7 @@
     },
 
     // Act VII: a studio with a roadmap board, the business and the team.
+    // Needs: rng, mix, rect, text, sprite, puff, bubble, doorway, person, gsap
     studio: {
       heroX: 70,
       door: { x: 151, y: 50 },
@@ -1629,6 +1620,7 @@
   };
 
   // A plain floor, used when a recipe names a scene that is not drawn yet.
+  // Needs: mix, rect
   const blank = {
     heroX: 72,
     draw(ctx, c) {
@@ -1640,17 +1632,8 @@
     cues: {},
   };
 
-  // A door 14 wide and 28 tall, standing on the bottom line it is given.
-  function doorway(ctx, x, bottom) {
-    const left = x - 7;
-    const top = bottom - 28;
-    rect(ctx, N.o, left - 1, top - 1, 16, 29);
-    rect(ctx, '#5b4636', left, top, 14, 28);
-    outline(ctx, left + 2, top + 3, 10, 22, '#7a5e48');
-    rect(ctx, '#e8c77a', left + 10, top + 14, 1, 2);
-  }
-
   // The character screen each act levels up to: its class, the items it earned dropping into rows, and the skills it grew.
+  // Needs: rect, text, outline, Pixel, gsap
   function characterSheet(act) {
     const label = s => s.replace(/-/g, ' ');
     return {
@@ -1744,6 +1727,8 @@
     W, H, GROUND,
     names: [...Object.keys(scenes), 'sheet'],
     cuesOf: name => Object.keys(get(name).cues || {}),
-    get, mount, mix, rng,
+    get, mount,
+    // The games still color and scatter through Scenes; new code uses Draw.
+    mix, rng,
   };
 })();

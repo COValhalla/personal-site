@@ -2,11 +2,12 @@
  * The inventory belt along the bottom of the screen, with the experience bar
  * above it. Items fly into their slot as the story gives them. On a phone the
  * belt is hidden and items fly into the Sheet button in the bar instead.
+ * Needs: gsap, Dom, Pixel, Story, Sheet
  */
 (function () {
   'use strict';
 
-  const { el, colorVars } = Sheet;
+  const { el, colorVars } = Dom;
   let belt;
 
   const phone = () => window.innerWidth < 760;

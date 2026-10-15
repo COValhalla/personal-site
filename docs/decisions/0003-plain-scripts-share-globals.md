@@ -1,6 +1,6 @@
 # 0003. Plain scripts share globals
 
-Status: Accepted, 2026-10-14
+Status: Accepted, 2026-10-14. Its first two consequences are replaced by [0006](0006-scripts-declare-what-they-need.md).
 
 ## Context
 

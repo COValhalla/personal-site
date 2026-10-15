@@ -14,6 +14,7 @@
  *
  * The act colors come from the act's recipe, so the same sprite drawn in Act II
  * is varsity red and in Act III is magenta.
+ * Needs: nothing
  */
 (function () {
   'use strict';

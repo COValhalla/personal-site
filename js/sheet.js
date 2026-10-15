@@ -2,6 +2,8 @@
  * The character sheet: an Items tab (stats and inventory), a Map tab (the
  * world map of the Tutorial and seven acts, in js/map.js), and the story
  * card that opens when you select an item.
+ * Needs: Dom, Pixel, Story
+ * Needs after start-up: WorldMap, Games, Acts
  */
 (function () {
   'use strict';
@@ -12,22 +14,7 @@
   let sheet;
   let card;
 
-  function el(tag, attrs, ...kids) {
-    const node = document.createElement(tag);
-    Object.entries(attrs || {}).forEach(([k, v]) => {
-      if (k === 'class') node.className = v;
-      else if (k === 'text') node.textContent = v;
-      else if (k === 'style') node.style.cssText = v;
-      else if (k.startsWith('on')) node.addEventListener(k.slice(2), v);
-      else node.setAttribute(k, v);
-    });
-    kids.flat().forEach(kid => kid != null && node.append(kid));
-    return node;
-  }
-
-  function colorVars(act) {
-    return `--c1:${act.color.light};--c2:${act.color.base};--c3:${act.color.shade}`;
-  }
+  const { el, colorVars } = Dom;
 
   const unlocked = () => Story.state.unlocked;
   const level = () => Story.level();
@@ -61,8 +48,7 @@
     card = el('dialog', { id: 'card', 'aria-labelledby': 'card-name' });
     document.body.append(sheet, card);
     sheet.addEventListener('close', () => {
-      Story.state.owned.forEach(id => Story.state.seen.add(id));
-      Story.emit('seen');
+      Story.seeAll();
     });
     sheet.addEventListener('close', () => WorldMap.stop());
   }
@@ -207,5 +193,6 @@
     if (sheet && sheet.open) open({});
   }
 
+  // el and colorVars stay here for the games, which have not moved to Dom yet.
   window.Sheet = { open, openItem, openSkill, refresh, el, colorVars };
 })();

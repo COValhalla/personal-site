@@ -1,20 +1,52 @@
 /*
  * The story registry. Recipe files in recipes/ call Story.site(...) once and
  * Story.addAct(...) once per act. The page is built from what they register.
+ * Needs: nothing
+ *
+ * It also holds the story's state. Only the calls below change it, and each
+ * change is announced as an event, so any part of the page can listen.
  */
 (function () {
   'use strict';
+
+  // Which acts have levelled up (by index), which items and skills the story has
+  // given so far, and which items the visitor has already seen on the sheet.
+  const unlocked = new Set();
+  const owned = new Set();
+  const skills = new Set();
+  const seen = new Set();
+
+  // The rest of the page reads the state through views that cannot change it.
+  const view = set => Object.freeze({
+    has: value => set.has(value),
+    get size() { return set.size; },
+    forEach: fn => set.forEach(value => fn(value)),
+    values: () => set.values(),
+    [Symbol.iterator]: () => set.values(),
+  });
 
   const story = {
     config: null,
     acts: [],
     problems: [],
-    // Which acts have levelled up, which items and skills the story has given so far,
-    // and which items the visitor has already seen on the sheet.
-    state: { unlocked: new Set(), owned: new Set(), skills: new Set(), seen: new Set() },
+    state: Object.freeze({ unlocked: view(unlocked), owned: view(owned), skills: view(skills), seen: view(seen) }),
     listeners: {},
     on(event, fn) { (story.listeners[event] = story.listeners[event] || []).push(fn); },
     emit(event, data) { (story.listeners[event] || []).forEach(fn => fn(data)); },
+    // Each change returns true and sends its event only when it changed something.
+    give(itemId) { return add(owned, itemId, 'item'); },
+    light(skillId) { return add(skills, skillId, 'skill'); },
+    unlock(i) { return add(unlocked, i, 'unlock'); },
+    // The visitor has seen every item owned so far. Sent on every call: the sheet was closed.
+    seeAll() { owned.forEach(id => seen.add(id)); story.emit('seen'); },
+    // Act i goes back to locked: its items and skills are taken back. What was seen stays seen.
+    rewind(i) {
+      const act = story.acts[i];
+      act.items.forEach(item => owned.delete(item.id));
+      act.skills.forEach(skill => skills.delete(skill.id));
+      unlocked.delete(i);
+      story.emit('rewind', i);
+    },
     site(config) { story.config = config; },
     addAct(recipe) { story.acts.push(recipe); },
     items() { return story.acts.flatMap((act, i) => act.items.map(item => ({ ...item, act: i }))); },
@@ -90,6 +122,13 @@
       return problems;
     },
   };
+
+  function add(set, value, event) {
+    if (set.has(value)) return false;
+    set.add(value);
+    story.emit(event, value);
+    return true;
+  }
 
   window.Story = story;
 })();

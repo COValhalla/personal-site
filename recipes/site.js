@@ -1,5 +1,6 @@
 /*
  * Site-wide settings.
+ * Needs: Story
  */
 Story.site({
   name: 'Joe',
