@@ -123,6 +123,32 @@ async function desktop(browser) {
     'the Tutorial\'s third moment is holiday box work: it gives the Shipping box and lights Process, and Reading is gone');
   check(await page.evaluate(() => Story.skill('chemistry').parents.includes('process') && Story.skill('product').parents.includes('process') && Story.skill('planning').parents.includes('process')),
     'Chemistry, Product and Planning grow from Process');
+  // Every moment plays a scene animation for most of the time its words type out, as Act I's do, and it shows: half way, the scene has moved.
+  const cues = await page.evaluate(() => Story.acts.flatMap(act => {
+    const names = act.stages || [act.scene];
+    return act.beats.map((beat, k) => {
+      const name = names[act.stages ? k : 0];
+      const canvas = document.createElement('canvas');
+      canvas.width = Scenes.W;
+      canvas.height = Scenes.H;
+      // Read back often, so ask for a context made for it before the scene draws.
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      const stage = Scenes.mount(Scenes.get(name, act), canvas, act.color, Story.acts);
+      act.beats.slice(0, k).forEach((b, j) => { if (b.cue && names[act.stages ? j : 0] === name) stage.settle(b.cue); });
+      const pixels = () => ctx.getImageData(0, 0, Scenes.W, Scenes.H).data;
+      stage.render();
+      const before = pixels();
+      const tl = beat.cue && stage.cue(beat.cue);
+      const seconds = tl ? tl.duration() : 0;
+      if (tl) { tl.pause(seconds / 2); stage.render(); tl.kill(); }
+      const half = pixels();
+      const changed = half.some((v, i) => v !== before[i]);
+      const typing = Math.max(0.3, beat.text.length / Acts.BEATS.typeRate);
+      return { where: `${act.id} ${k + 1}`, seconds, typing, changed };
+    });
+  }));
+  const short = cues.filter(c => c.seconds < 0.8 || c.seconds < 0.8 * c.typing || !c.changed);
+  check(short.length === 0, `every moment's scene animation runs at least 0.8 s and 0.8 of its typing time, and moves the scene (${cues.length} moments${short.length ? `; short: ${short.map(c => `${c.where} ${c.seconds.toFixed(1)}/${c.typing.toFixed(1)} s${c.changed ? '' : ' still'}`).join(', ')}` : ''})`);
   const locked = await page.$eval('#act-high-school .skill-card[data-skill="teamwork"]', b => { b.click(); return b.disabled; });
   check(locked && await page.$('#card[open]') === null, 'a locked skill card opens nothing');
   check(await page.$$eval('.intro .intro-note a', a => a.map(x => `${x.textContent} ${x.getAttribute('href')} ${x.target}`).join()) === 'Short on time? See my work history on LinkedIn. https://www.linkedin.com/in/josephvellella/ _blank' && await page.$('.intro .intro-start') !== null,

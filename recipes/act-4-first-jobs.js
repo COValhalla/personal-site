@@ -13,7 +13,7 @@ Story.addAct({
   hero: { gear: 'hardhat', title: 'Process engineer', hair: 'bald', beard: 'goatee' },
   beats: [
     { tag: 'work', text: 'My first job out of school: materials engineer at the Kansas City National Security Campus, making sure parts were strong enough for the systems they went into.', item: 'calipers', cue: 'measure' },
-    { tag: 'work', text: "That's where I started coding: 3D models and analysis in MATLAB, and my first machine learning model." },
+    { tag: 'work', text: "That's where I started coding: 3D models and analysis in MATLAB, and my first machine learning model.", cue: 'model' },
     { tag: 'work', text: 'My clearance stalled, so rather than wait I moved to Sioux City as a process engineer at Gelita. It paid off: I trained over 250 operators, and my root-cause study saved a $200,000 equipment project.', item: 'hard-hat', cue: 'plant' },
   ],
   unlock: { banner: 'Level 4', say: 'New class: Process engineer' },
