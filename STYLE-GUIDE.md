@@ -79,7 +79,7 @@ Act VII's own items are purple; its scene and the end of the page use every act'
 
 An optional `accent` is a second color for the scene and the title underline: Act I's sky and Act II's school color. Sprites never use it. Act III has none, so its stands keep the navy.
 
-Open world is bright on purpose: a Saturday at the track, then the white-tiled family shop in deer season. The Diablo II nod opens the Tutorial, when night falls and an inventory glows on the computer, and comes back in Act I's dark character sheet. No game art, names or logos.
+Open world is bright on purpose: a Saturday at the track, then the white-tiled family shop in deer season. The Diablo II nod opens the Tutorial, when night falls and an inventory glows on the computer, and comes back in Act I's dark character sheet. The Tutorial's bedroom also hangs an Ocarina of Time nod (a green poster with a blue ocarina and a fairy) over the bed. Nods use only colors and shapes that suggest each game: no game art, names or logos.
 
 ## Scenes
 
