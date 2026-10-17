@@ -10,7 +10,7 @@ The site's owner wants to know how far visitors get: which acts they reach, whet
 
 `js/addons/visits.js` is the first add-on: a script loaded after the story that listens to it and can be removed without changing it. It counts with GoatCounter, which sets no cookies and keeps no personal data, so the page needs no banner. GoatCounter's own script is kept unchanged in `vendor/goatcounter/`, so the counter's server, `covalhalla.goatcounter.com`, is the only outside address the page reaches.
 
-It counts the page view, each act reached (half its screen in view), the sheet opened (the story's `sheet` event), the ending reached and each contact link clicked. Each is counted once per page view.
+It counts the page view, each act reached (half its screen in view), the sheet opened (the story's `sheet` event), the ending reached, each contact link clicked and the email address copied. Each is counted once per page view.
 
 It loads nothing and sends nothing unless all of these hold:
 

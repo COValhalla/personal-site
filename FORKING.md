@@ -20,7 +20,7 @@ Fork the repository on GitHub, clone your fork, and open `index.html` in a brows
 
 ## 2. Rewrite `site.js`
 
-`story/recipes/site.js` holds your name, the welcome on the title screen, the link under Press start for a reader short on time, the ending and the last act's Next tag, the Say hello line and your contact links, the stats your items add to, and your hero's `look`: skin, hair and eye colors, hair style and beard. The comments in the file explain each field.
+`story/recipes/site.js` holds your name, your role, the greeting and welcome on the title screen, the link under Press start for a reader short on time, the ending and the last act's Next tag, the Say hello line and your contact links, the stats your items add to, and your hero's `look`: skin, hair and eye colors, hair style and beard. The comments in the file explain each field.
 
 ## 3. Rewrite the acts
 

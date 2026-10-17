@@ -15,9 +15,7 @@
 .intro-kicker { margin: 0; font: 600 13px/1 var(--mono); letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); }
 .intro-title { margin: 12px 0 6px; font: 800 clamp(40px, 8vw, 72px)/1 var(--mono); letter-spacing: -0.02em; }
 .intro-tag { margin: 0 auto; max-width: 30em; color: var(--ink-2); }
-.intro-hero { margin: 26px auto 8px; height: 144px; display: flex; justify-content: center; align-items: flex-end; gap: 12px; }
-.intro-hero img { width: 96px; height: 144px; }
-.intro-ground { height: 2px; width: 200px; margin: 0 auto; background: var(--ink); }
+.intro-room { display: block; width: 100%; max-width: 480px; height: auto; margin: 22px auto 22px; border: 2px solid var(--ink); }
 .intro-start { margin: 24px auto 0; padding: 14px 22px; font-size: 15px; background: var(--ink); }
 .intro-start-arrow { animation: blink 1.2s steps(2, jump-none) infinite; }
 .intro-hint { margin: 12px 0 0; color: var(--ink-3); font: 600 12px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; }

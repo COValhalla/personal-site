@@ -58,13 +58,14 @@ export default async function visits(browser) {
     await page.click('#say-hello a[href*="linkedin"]');
     await page.click('#say-hello a[href*="linkedin"]');
     await page.click('#say-hello a[href^="mailto:"]');
+    await page.click('#say-hello .hello-copy');
     await page.waitForTimeout(500);
     const events = sent.filter(s => s.e === 'true').map(s => s.p);
     const acts = await page.evaluate(() => Story.acts.map(a => `act-${a.id}`));
-    const want = [...acts, 'sheet', 'ending', 'contact-linkedin', 'contact-email'];
+    const want = [...acts, 'sheet', 'ending', 'contact-linkedin', 'contact-email', 'contact-copy'];
     const missing = want.filter(p => !events.includes(p));
     check(missing.length === 0 && events.length === want.length && new Set(events).size === events.length,
-      `each act reached, the sheet opened, the ending reached and each contact link clicked is counted once (${events.join(', ')})`);
+      `each act reached, the sheet opened, the ending reached, each contact link clicked and the address copied is counted once (${events.join(', ')})`);
     check(sent.every(s => s.t), 'each count has a title the dashboard shows');
     check((await context.cookies()).length === 0 && await page.evaluate(() => document.cookie) === '', 'the counter sets no cookies');
     check(other.length === 0, `the page asks for no other outside address${other.length ? ` (asked: ${other.join(', ')})` : ''}`);

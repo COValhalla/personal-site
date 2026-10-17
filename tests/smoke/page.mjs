@@ -5,7 +5,10 @@ import { check, open } from './helpers.mjs';
 export default async function page(browser) {
   console.log('\nThe title screen, the words and the ending');
   const { context, page, errors } = await open(browser, { viewport: { width: 1440, height: 900 } });
-  check(await page.textContent('.intro-title') === 'Joe Vellella' && await page.textContent('.hud-name') === 'Joe', 'the title screen says Joe Vellella and the bar says Joe');
+  const titles = await page.evaluate(() => ({ greeting: Story.config.greeting, kicker: `${Story.config.fullName} · ${Story.config.role}` }));
+  check(await page.textContent('.intro-title') === titles.greeting && await page.textContent('.intro-kicker') === titles.kicker && await page.textContent('.hud-name') === 'Joe',
+    `the title screen says "${titles.greeting}" under ${titles.kicker}, and the bar says Joe`);
+  check(await page.$eval('.intro-room', c => c.tagName === 'CANVAS' && c.width === 160 && c.height === 72), 'the title screen draws Joe at his desk on a canvas');
   check(await page.evaluate(() => Visits.why === 'not the published site' && !document.querySelector('script[data-goatcounter]')), 'opened from a file, the visit counter stays off');
   const welcome = await page.textContent('.intro-tag');
   check(welcome === await page.evaluate(() => Story.config.welcome) && welcome.startsWith('I build products.') && !welcome.includes('Joe') && welcome.includes('Press start'),
@@ -28,7 +31,14 @@ export default async function page(browser) {
     'the welcome has a Press start button and only the LinkedIn work-history link');
 
   // The end of the page: What I build next with Say hello inside it, with no quest log.
-  check(await page.$eval('#say-hello .hello-links', ul => [...ul.querySelectorAll('a')].map(a => `${a.textContent} ${a.getAttribute('href')}`).join()) === 'LinkedIn https://www.linkedin.com/in/josephvellella/,Email mailto:connect-with-joe.next036@passmail.net,GitHub https://github.com/COValhalla', 'Say hello lists the links from the recipe');
+  const contact = await page.evaluate(() => Story.config.contact);
+  const hello = await page.$eval('#say-hello', s => ({
+    address: s.querySelector('.hello-address')?.textContent,
+    copy: s.querySelector('.hello-copy')?.textContent,
+    links: [...s.querySelectorAll('a')].map(a => a.getAttribute('href')),
+  }));
+  check(hello.address === contact.email && hello.copy === 'Copy' && hello.links.join() === [`mailto:${contact.email}`, contact.linkedin, contact.github].join(),
+    'Say hello shows the address from the recipe with a Copy button, a mail link, LinkedIn and GitHub');
   check(await page.textContent('#say-hello .hello-note') === await page.evaluate(() => Story.config.hello), 'Say hello shows the line from story/recipes/site.js');
   const ending = await page.evaluate(() => {
     const f = document.querySelector('#facts');
@@ -41,8 +51,9 @@ export default async function page(browser) {
   await page.waitForTimeout(900);
   const hereY = await page.evaluate(() => window.scrollY);
   await page.click('.hud-hello');
-  check(await page.$$eval('#hello-menu a', a => a.map(x => x.textContent).join()) === 'LinkedIn,Email,GitHub' && await page.isVisible('#hello-menu')
-    && await page.evaluate(() => window.scrollY) === hereY, 'the top bar opens a small menu of the three links without jumping');
+  check(await page.textContent('#hello-menu .hello-address') === contact.email && await page.$$eval('#hello-menu a', a => a.map(x => x.getAttribute('href')).join()) === `mailto:${contact.email},${contact.linkedin}`
+    && await page.isVisible('#hello-menu') && await page.evaluate(() => window.scrollY) === hereY,
+    'the top bar opens a small panel with the address, a mail link and LinkedIn, without jumping');
   await page.keyboard.press('Escape');
   check(!(await page.isVisible('#hello-menu')), 'Escape closes the Say hello menu');
   check(await page.$('#quest-log') === null && !(await page.evaluate(() => document.body.textContent.toLowerCase().includes('quest log'))), 'the page has no quest log');
@@ -50,8 +61,8 @@ export default async function page(browser) {
     const last = [...document.querySelectorAll('main > section')].at(-1);
     return { id: last.id, hello: !!last.querySelector('#say-hello .hello-label'), label: last.querySelector('.hello-label')?.textContent, buttons: last.querySelectorAll('button').length };
   });
-  check(end.id === 'facts' && end.hello && end.label === 'Say hello' && end.buttons === 0,
-    'the page ends on one section, What I build next, with a Say hello label, its question and links, and no sheet button');
+  check(end.id === 'facts' && end.hello && end.label === 'Say hello' && end.buttons === 1,
+    'the page ends on one section, What I build next, with a Say hello label, its question, the Copy button and links, and no sheet button');
   check(await page.title() === 'Joe Vellella · Product engineer', 'the tab says the full name and role');
   check(await page.textContent('.site-foot') === 'Joe Vellella', 'the footer says the full name');
   check(errors.length === 0, 'no console errors or warnings' + (errors.length ? ': ' + errors.join(' | ') : ''));
