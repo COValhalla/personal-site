@@ -7,6 +7,7 @@
 .hello-label { margin: 0; font: 700 13px/1 var(--mono); letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); }
 .hello-note { margin: 12px 0 0; }
 .hello-panel { text-align: left; }
+.hello-note + .hello-panel { margin-top: 18px; }
 .hello-kicker { margin: 0; font: 700 11px/1 var(--mono); letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); }
 .hello-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
 .hello-address { flex: 1; min-width: 0; padding: 9px 10px; background: #fff; border: 2px solid var(--ink); font: 13px/1.2 var(--mono); overflow-wrap: anywhere; }
