@@ -9,6 +9,41 @@ export default async function acts(browser) {
   await walk(browser);
   await pacing(browser);
   await reducedMotion(browser);
+  await typingKeepsRoom(browser);
+}
+
+// Intent: the captain's report on the act card shrinking as text types in (PES-76). While a moment types, its box and the panel hold their height.
+async function typingKeepsRoom(browser) {
+  for (const [label, viewport] of [['Laptop', { width: 1440, height: 900 }], ['Phone', { width: 390, height: 844 }]]) {
+    console.log(`\n${label}, the first moment types out`);
+    const { context, page } = await open(browser, { viewport });
+    const { start } = (await pins(page))[0];
+    await scrollTo(page, start - 450);
+    await page.waitForFunction(() => Acts.sections[0].played >= 1, null, { timeout: 5000 });
+    await page.evaluate(() => {
+      const section = document.querySelector('.act[data-act="0"]');
+      const beat = section.querySelector('.beat[data-beat="0"]');
+      const text = beat.querySelector('.beat-text');
+      const panel = section.querySelector('.story');
+      const typed = () => [...text.childNodes].filter(n => n.nodeType === 3).reduce((sum, n) => sum + n.data.length, 0);
+      window.__sizes = [];
+      const t0 = performance.now();
+      const tick = () => {
+        window.__sizes.push({ box: beat.getBoundingClientRect().height, panel: panel.getBoundingClientRect().height, typing: typed() < text.dataset.text.length });
+        if (performance.now() - t0 < 4500) requestAnimationFrame(tick);
+      };
+      tick();
+    });
+    await scrollTo(page, start + 2);
+    await page.waitForTimeout(4700);
+    const sizes = await page.evaluate(() => window.__sizes);
+    const [first] = sizes;
+    const typing = sizes.filter(s => s.typing);
+    const least = key => Math.min(...typing.map(s => s[key]));
+    check(!first.typing && typing.length > 0 && least('box') >= first.box - 1 && least('panel') >= first.panel - 1,
+      `${label}: while its words type out, the first moment's box and the story panel keep their height (box ${Math.round(first.box)} px, least ${Math.round(least('box'))}; panel ${Math.round(first.panel)} px, least ${Math.round(least('panel'))}; ${typing.length} frames)`);
+    await context.close();
+  }
 }
 
 async function walk(browser) {
@@ -64,7 +99,8 @@ async function walk(browser) {
       const li = Acts.sections[i].beats[k];
       const text = li.querySelector('.beat-text');
       const chip = li.querySelector('.beat-item');
-      window.__order.push({ what, act: i, k, whole: text.textContent === text.dataset.text, chip: !!chip && chip.classList.contains('is-on') });
+      const typed = [...text.childNodes].filter(n => n.nodeType === 3).map(n => n.data).join('');
+      window.__order.push({ what, act: i, k, whole: typed === text.dataset.text, chip: !!chip && chip.classList.contains('is-on') });
     };
     Story.acts.forEach((act, i) => {
       const beats = Story.beatsOf(act);

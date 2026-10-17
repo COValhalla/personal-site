@@ -128,6 +128,7 @@
 .beat.is-new { box-shadow: 0 0 0 3px var(--c1); }
 .beat.is-locked { border-style: dashed; border-color: #b8b3ab; background: transparent; }
 .beat.is-locked > * { visibility: hidden; }
+.beat-rest { visibility: hidden; }
 .beat.is-locked::after { content: ""; position: absolute; left: 12px; right: 30%; top: 50%; height: 8px; translate: 0 -50%; background: repeating-linear-gradient(90deg, #d3cec6 0 10px, transparent 10px 14px); }
 /* The last row of a moment: the item it gives and the skill it lights. Each tag stays hidden, keeping its room, until it appears. */
 .beat-tags { display: flex; flex-wrap: wrap; gap: 6px 8px; margin-top: 6px; }
