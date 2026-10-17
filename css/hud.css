@@ -35,11 +35,9 @@
 .hud-hello-wrap { position: relative; }
 .hello-menu {
   position: absolute; right: 0; top: calc(100% + 10px); z-index: 30;
-  margin: 0; padding: 6px; list-style: none; min-width: 180px;
+  box-sizing: border-box; width: min(320px, calc(100vw - 32px)); padding: 14px;
   background: var(--paper-2); border: 2px solid var(--ink); box-shadow: 6px 6px 0 rgba(29, 27, 34, 0.14);
 }
-.hello-menu a { display: block; padding: 10px 12px; font: 600 13px/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; }
-.hello-menu a:hover, .hello-menu a:focus-visible { background: var(--ink); color: #fff; outline: none; }
 @media (max-width: 759px) { .hello-menu { top: auto; bottom: calc(100% + 12px); } }
 .hud-at { display: none; }
 .hud-count { opacity: 0.7; font-weight: 500; }

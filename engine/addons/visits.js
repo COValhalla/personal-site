@@ -1,7 +1,7 @@
 /*
  * Visit counts, the first add-on. On the published site it counts the page view,
- * each act reached, the sheet opened, the ending reached and each contact link
- * clicked, with GoatCounter, which sets no cookies. Opened from a file, on any
+ * each act reached, the sheet opened, the ending reached, each contact link
+ * clicked and the email address copied, with GoatCounter, which sets no cookies. Opened from a file, on any
  * other address, in an automated browser, or when the browser asks not to be
  * tracked, it loads nothing and sends nothing. Why: docs/decisions/0007-visit-counts.md.
  * The story works the same without this file. It loads after main.js, which
@@ -77,6 +77,7 @@
   const contact = Object.entries((Story.config && Story.config.contact) || {})
     .map(([name, value]) => [name, name === 'email' ? `mailto:${value}` : value]);
   document.addEventListener('click', event => {
+    if (event.target.closest && event.target.closest('[data-contact="copy"]')) return count('contact-copy', 'Copied my email address');
     const link = event.target.closest && event.target.closest('a[href]');
     const hit = link && contact.find(([, href]) => link.getAttribute('href') === href);
     if (hit) count(`contact-${hit[0]}`, `Clicked the ${hit[0]} link`);

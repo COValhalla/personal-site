@@ -48,21 +48,41 @@
     Sheet.refresh();
   }
 
-  // The ways to reach Joe, from the contact links in story/recipes/site.js.
-  function contactLinks() {
-    const { linkedin, email, github } = Story.config.contact;
-    return [
-      linkedin && ['LinkedIn', linkedin],
-      email && ['Email', `mailto:${email}`],
-      github && ['GitHub', github],
-    ].filter(Boolean);
-  }
   const linkAttrs = href => (href.startsWith('http') ? { target: '_blank', rel: 'noopener' } : {});
 
-  // Say hello in the top bar opens a small menu of links, so reaching Joe never skips the story.
+  // Copies the address, or selects it where the browser will not copy, so the reader can copy it.
+  function copyAddress(button, address) {
+    const flash = text => {
+      button.textContent = text;
+      setTimeout(() => { button.textContent = 'Copy'; }, 1600);
+    };
+    const select = () => {
+      const range = document.createRange();
+      range.selectNodeContents(address);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      flash('Selected');
+    };
+    if (navigator.clipboard) navigator.clipboard.writeText(address.textContent).then(() => flash('Copied'), select);
+    else select();
+  }
+
+  // Say hello, in the top bar and at the end of the page: the address to copy, a mail link and LinkedIn.
+  function helloPanel() {
+    const { linkedin, email } = Story.config.contact;
+    const address = el('span', { class: 'hello-address', text: email || '' });
+    const copy = el('button', { class: 'btn hello-copy', type: 'button', 'data-contact': 'copy', text: 'Copy', onclick: () => copyAddress(copy, address) });
+    return el('div', { class: 'hello-panel' },
+      email ? el('p', { class: 'hello-kicker', text: 'Email me' }) : null,
+      email ? el('div', { class: 'hello-row' }, address, copy) : null,
+      email ? el('p', { class: 'hello-small' }, el('a', { href: `mailto:${email}`, text: 'or open it in your mail app' })) : null,
+      linkedin ? el('a', { class: 'btn hello-linkedin', href: linkedin, text: 'Message me on LinkedIn ↗', ...linkAttrs(linkedin) }) : null);
+  }
+
+  // Say hello in the top bar opens a small panel, so reaching Joe never skips the story.
   function helloMenu() {
-    const menu = el('ul', { class: 'hello-menu', id: 'hello-menu', hidden: '' },
-      contactLinks().map(([label, href]) => el('li', {}, el('a', { href, text: label, ...linkAttrs(href) }))));
+    const menu = el('div', { class: 'hello-menu', id: 'hello-menu', hidden: '' }, helloPanel());
     const button = el('button', { class: 'btn hud-hello', 'aria-expanded': 'false', 'aria-controls': 'hello-menu', 'aria-label': 'Say hello' },
       el('span', { class: 'hud-label', text: 'Say hello' }),
       el('span', { class: 'hud-at', 'aria-hidden': 'true', text: '@' }));
@@ -104,7 +124,7 @@
 
   // The end of the page: what Joe builds next, then Say hello with the links to reach him.
   function finale() {
-    const links = contactLinks();
+    const { github } = Story.config.contact;
     return el('section', { class: 'finale', id: 'facts', 'aria-labelledby': 'facts-title' },
       el('div', { class: 'finale-inner' },
         el('p', { class: 'act-num', style: 'color:var(--ink-3)', text: Story.config.ending.kicker }),
@@ -114,8 +134,8 @@
         el('div', { class: 'hello', id: 'say-hello' },
           el('h3', { class: 'hello-label', text: 'Say hello' }),
           el('p', { class: 'hello-note', text: Story.config.hello }),
-          el('ul', { class: 'hello-links' }, links.map(([label, href]) => el('li', {},
-            el('a', { class: 'btn', href, text: label, ...linkAttrs(href) })))))));
+          helloPanel(),
+          github ? el('a', { class: 'btn btn--ghost hello-github', href: github, text: 'See my code on GitHub ↗', ...linkAttrs(github) }) : null)));
   }
 
   function markHere() {

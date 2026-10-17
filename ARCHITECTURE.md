@@ -94,7 +94,7 @@ GSAP 3.15.0 and ScrollTrigger drive the motion. `acts.js` pins each act while it
 
 An add-on is a script in `engine/addons/`, loaded after `main.js`, that listens to the story and the page and draws nothing of the story's own. Removing its script tag leaves the story unchanged.
 
-`engine/addons/visits.js` counts visits with GoatCounter: the page view, each act reached, the sheet opened, the ending reached and each contact link clicked. It runs only for a person on `https://covalhalla.github.io`; opened from a file, on another address, in an automated browser or when the browser asks not to be tracked, it loads nothing and sends nothing. `Visits.why` says why it is off. The privacy rule is [ADR 0007](docs/decisions/0007-visit-counts.md).
+`engine/addons/visits.js` counts visits with GoatCounter: the page view, each act reached, the sheet opened, the ending reached, each contact link clicked and the email address copied. It runs only for a person on `https://covalhalla.github.io`; opened from a file, on another address, in an automated browser or when the browser asks not to be tracked, it loads nothing and sends nothing. `Visits.why` says why it is off. The privacy rule is [ADR 0007](docs/decisions/0007-visit-counts.md).
 
 ## Hosting
 
