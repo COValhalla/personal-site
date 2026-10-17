@@ -13,8 +13,8 @@ Story.addAct({
   color: { name: 'Crayon teal', light: '#7fe0d4', base: '#22b3a3', shade: '#157a70' },
   theme: 'light',
   scene: 'early-night',
-  // One scene per moment, then the level-up: a computer at night, the computer lab, the family business's packing room, the high-score board.
-  stages: ['early-night', 'computer-lab', 'early-shop', 'lab-board'],
+  // One scene per moment, then the level-up: a computer at night, the computer lab, the family business's packing room, the Tutorial's tally.
+  stages: ['early-night', 'computer-lab', 'early-shop', 'tutorial-tally'],
   hero: { gear: 'backpack', title: 'Keyboard kid', hair: 'short', beard: 'none' },
   beats: [
     { tag: 'life', text: 'My older cousins got me into online games. In their chats the fastest typist made the best trades, so I spent hours typing on our home computer.', item: 'floppy', cue: 'night' },

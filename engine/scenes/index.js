@@ -6,12 +6,16 @@
  * A scene paints a still 160 x 72 background once, then draws its moving parts
  * over it on every frame while the act is on screen. It has:
  *   heroX     where the hero stands; the ground is at y = 64 in every scene
- *   arrive    optional: where the hero walks in from
- *   door      optional: the point the hero walks through to the next scene
+ *   arrive    optional: where the hero walks in from once the camera has dived into this scene, such as -16, off the left edge
+ *   door      optional: the point the hero walks through to the next scene; with a zoom, the camera dives
+ *             that deep straight through it, ending centred on it, instead of zooming three times and fading
+ *   enter     optional: the point this scene opens out from when the camera dives into it, instead of the middle;
+ *             with a zoom, it starts that deep, centred on the point, as the lab opens out of the hero's screen
  *   draw      paints the still background
  *   init      returns the scene's state
  *   frame     draws the moving parts from the state
- *   cues      short animations, by name
+ *   cues      short animations, by name; equip plays at the level-up, and leave plays as the hero
+ *             heads for the door, before he walks (the lab's bell rings and its door opens)
  * A scene that depends on the act, such as the character sheet, is registered as
  * a function that takes the act and returns the scene.
  *

@@ -12,6 +12,9 @@
 
   Scenes.add('early-shop', {
     heroX: 92,
+    // Out of the snow, the room opens from its left side and the hero walks in there.
+    enter: { x: 0, y: 44 },
+    arrive: -16,
     door: { x: 146, y: 44 },
     draw(ctx, c) {
       // Plank walls with a teal stripe, and a wooden floor.

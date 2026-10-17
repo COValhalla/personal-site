@@ -1,6 +1,7 @@
 /*
  * Tutorial, moment 1: a bedroom that goes from day to night. The window darkens, the lamp pools warm light,
  * the fairy lights glow and the desk's screen switches from the teal desktop to the game, whose chat types itself.
+ * The camera then dives into that screen, and the lab opens out of the hero's screen there.
  * Needs: gsap, Pixel, Draw, Scenes
  */
 (function () {
@@ -36,7 +37,8 @@
   Scenes.add('early-night', {
     heroX: 104,
     arrive: 50,
-    door: { x: 133, y: 39 },
+    // The camera dives into the desk computer's screen, on to the lab.
+    door: { x: 133, y: 40, zoom: 11 },
     draw(ctx, c) {
       rect(ctx, '#f3e3c4', 0, 0, W, GROUND);
       for (let x = 0; x < W; x += 16) rect(ctx, '#ecd7b0', x, 0, 1, GROUND);

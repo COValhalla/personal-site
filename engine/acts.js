@@ -39,6 +39,8 @@
   const SETTLE_BIAS = 0.3;
   // How far the hero walks across the scene while the story is told, in scene pixels.
   const WALK = 34;
+  // Where the hero walks on from as an act opens: just off the scene's left edge.
+  const OFFSTAGE = -16;
 
   const sections = [];
   const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -89,7 +91,7 @@
       const mounted = Scenes.mount(drawn, canvas, act.color, Story.acts);
       mounted.render();
       if (s > 0) canvas.style.visibility = 'hidden';
-      return { canvas, stage: mounted, heroX: drawn.heroX, walkFrom: Math.max(2, drawn.heroX - WALK), door: drawn.door };
+      return { canvas, stage: mounted, heroX: drawn.heroX, walkFrom: Math.max(2, drawn.heroX - WALK), door: drawn.door, enter: drawn.enter, arrive: drawn.arrive };
     });
     const scene = stages[0];
     // Until the level-up the hero keeps the last act's gear, hair and beard.
@@ -188,17 +190,17 @@
     }
 
     const steps = [{ kind: 'intro' }, ...Story.beatsOf(act).map((beat, k) => ({ kind: 'beat', beat, k })), { kind: 'level' }];
-    const parts = { act, i, style, startStyle: style, section, screen, head, hero, heroLeft, walkFrom, heroX: scene.heroX, label, pop, flash, chapter, sceneEl, stages, stageAt, stageIdx: 0, beats, skillCards, story, actions, hint, rail, railFill, railNodes, railLabel, steps, played: 0, target: 0, running: null, walkOn: 1, fill: 1, local: 1, inView: false, heroAt: scene.heroX };
+    const parts = { act, i, style, startStyle: style, section, screen, head, hero, heroLeft, walkFrom, arrive: OFFSTAGE, heroX: scene.heroX, label, pop, flash, chapter, sceneEl, stages, stageAt, stageIdx: 0, beats, skillCards, story, actions, hint, rail, railFill, railNodes, railLabel, steps, played: 0, target: 0, running: null, walkOn: 1, fill: 1, local: 1, inView: false, heroAt: scene.heroX };
     sections.push(parts);
     return section;
   }
 
   // ---------- The hero's walk and the progress rail, in step with the scroll ----------
 
-  // Where the hero stands: walked on by the intro (walkOn), then across the scene by the scroll (fill).
+  // Where the hero stands: walked on from arrive by the intro or a dive (walkOn), then across the scene by the scroll (fill).
   function place(p) {
     const along = p.walkFrom + (p.heroX - p.walkFrom) * p.local;
-    const x = Math.round(-16 + (along + 16) * p.walkOn);
+    const x = Math.round(p.arrive + (along - p.arrive) * p.walkOn);
     if (x === p.heroAt) return;
     p.hero.classList.toggle('is-flipped', x < p.heroAt);
     p.heroAt = x;
@@ -246,22 +248,81 @@
     place(p);
   }
 
+  // A deep zoom of a stage's canvas by z about a spot, with the spot pulled toward the middle as the zoom grows,
+  // so the camera ends centred on it: z runs from 1 to deep going in, and from deep back to 1 coming out.
+  function aim(canvas, spot, z, deep) {
+    const pull = deep > 1 ? (z - 1) / (deep - 1) : 0;
+    const x = spot.x + (Scenes.W / 2 - spot.x) * pull - spot.x * z;
+    const y = spot.y + (Scenes.H / 2 - spot.y) * pull - spot.y * z;
+    gsap.set(canvas, { transformOrigin: '0 0', xPercent: (x / Scenes.W) * 100, yPercent: (y / Scenes.H) * 100, scale: z });
+  }
+
+  function zoom(canvas, spot, from, to, deep, duration, ease) {
+    const lens = { z: from };
+    return gsap.fromTo(lens, { z: from }, { z: to, duration, ease, onStart: () => aim(canvas, spot, from, deep), onUpdate: () => aim(canvas, spot, lens.z, deep) });
+  }
+
   // The camera dives through the door the hero walks to, and the next scene zooms in from the middle.
+  // A scene can ask for more: a leave cue plays before the hero walks (a bell rings, a door opens); a door with a
+  // zoom is dived straight through, the camera ending inside it; the next scene can open out of a spot of its own
+  // (enter, with a zoom when it opens out of something small, such as a screen); and the hero can walk in from arrive.
   function dive(p, s) {
     const from = p.stages[p.stageIdx];
     const to = p.stages[s];
     const door = from.door;
+    const enter = to.enter;
     const tl = gsap.timeline();
-    tl.to(p.hero, { left: (door.x / Scenes.W) * 100 + '%', duration: 0.4, ease: 'power1.in' }, 0);
-    tl.to(p.hero, { scale: 0, opacity: 0, duration: 0.25, ease: 'power2.in' }, 0.35);
-    tl.to(from.canvas, { scale: 3, opacity: 0, transformOrigin: `${(door.x / Scenes.W) * 100}% ${(door.y / Scenes.H) * 100}%`, duration: 0.6, ease: 'power2.in' }, 0.4);
+    const leave = from.stage.cue('leave');
+    if (leave) tl.add(leave, 0);
+    const go = leave ? leave.duration() : 0;
+    const swap = go + 1.0;
+    tl.to(p.hero, { left: (door.x / Scenes.W) * 100 + '%', duration: 0.4, ease: 'power1.in' }, go);
+    tl.to(p.hero, { scale: 0, opacity: 0, duration: 0.25, ease: 'power2.in' }, go + 0.35);
+    if (door.zoom) tl.add(zoom(from.canvas, door, 1, door.zoom, door.zoom, 0.6, 'power2.in'), go + 0.4);
+    else tl.to(from.canvas, { scale: 3, opacity: 0, transformOrigin: `${(door.x / Scenes.W) * 100}% ${(door.y / Scenes.H) * 100}%`, duration: 0.6, ease: 'power2.in' }, go + 0.4);
     tl.call(() => {
-      gsap.set(from.canvas, { clearProps: 'transform,opacity' });
       setStage(p, s, 0);
-      gsap.set(p.hero, { clearProps: 'scale,opacity' });
+      if (!enter) {
+        gsap.set(from.canvas, { clearProps: 'transform,opacity' });
+        gsap.set(p.hero, { clearProps: 'scale,opacity' });
+        runStage(p, p.inView);
+        return;
+      }
+      // The scene dived through stays behind the next one, and keeps moving, until that one has opened out.
+      from.canvas.style.visibility = 'visible';
       runStage(p, p.inView);
-    }, null, 1.0);
-    tl.fromTo(to.canvas, { scale: 0.35, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: 'power2.out' }, 1.0);
+      if (p.inView) from.stage.start();
+    }, null, swap);
+    if (!enter) {
+      tl.fromTo(to.canvas, { scale: 0.35, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: 'power2.out' }, swap);
+      return tl;
+    }
+    const opened = swap + 0.6;
+    tl.addLabel('opened', opened);
+    if (enter.zoom) {
+      tl.add(zoom(to.canvas, enter, enter.zoom, 1, enter.zoom, 0.6, 'power2.out'), swap);
+      tl.fromTo(p.flash, { opacity: 0.6 }, { opacity: 0, duration: 0.3, immediateRender: false }, swap);
+    } else {
+      tl.fromTo(to.canvas, { scale: 0.35, opacity: 0, transformOrigin: `${(enter.x / Scenes.W) * 100}% ${(enter.y / Scenes.H) * 100}%` },
+        { scale: 1, opacity: 1, duration: 0.6, ease: 'power2.out', immediateRender: false }, swap);
+    }
+    tl.call(() => {
+      from.stage.stop();
+      from.canvas.style.visibility = 'hidden';
+      gsap.set([from.canvas, to.canvas], { clearProps: 'transform,transformOrigin,opacity' });
+      gsap.set(p.hero, { clearProps: 'scale,opacity' });
+      if (to.arrive === undefined) return;
+      p.arrive = to.arrive;
+      p.walkOn = 0;
+      place(p);
+      p.hero.classList.add('is-walking');
+    }, null, opened);
+    if (to.arrive !== undefined) {
+      tl.fromTo(p, { walkOn: 0 }, { walkOn: 1, duration: 0.6, ease: 'steps(8)', immediateRender: false, onUpdate: () => place(p) }, opened);
+      tl.call(() => p.hero.classList.remove('is-walking'), null, opened + 0.6);
+    } else {
+      tl.fromTo(p.hero, { scale: 0 }, { scale: 1, duration: 0.3, ease: 'back.out(2.5)', immediateRender: false, onComplete: () => gsap.set(p.hero, { clearProps: 'scale' }) }, opened);
+    }
     return tl;
   }
 
@@ -447,8 +508,11 @@
     if (step.kind === 'intro') return intro(p);
     const target = stageOf(p, step);
     const tl = gsap.timeline();
-    if (target > p.stageIdx) tl.add(dive(p, target));
-    tl.add(step.kind === 'beat' ? beat(p, step) : level(p));
+    // A dive into a scene that opens out of a spot of its own lets the moment start as the scene opens.
+    const into = target > p.stageIdx ? dive(p, target) : null;
+    if (into) tl.add(into, 0);
+    const at = into ? (into.labels.opened !== undefined ? into.labels.opened : into.duration()) : 0;
+    tl.add(step.kind === 'beat' ? beat(p, step) : level(p), at);
     return tl;
   }
 
@@ -569,9 +633,10 @@
     p.stages.forEach(st => {
       gsap.killTweensOf(st.stage.state);
       Object.assign(st.stage.state, (st.stage.scene.init && st.stage.scene.init()) || {});
-      gsap.set(st.canvas, { clearProps: 'transform,opacity' });
+      gsap.set(st.canvas, { clearProps: 'transform,transformOrigin,opacity' });
     });
     p.style = p.startStyle;
+    p.arrive = OFFSTAGE;
     hero.src = heroBefore(p);
     gsap.set(hero, { clearProps: 'transform,opacity' });
     hero.className = 'px scene-hero';
