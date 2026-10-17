@@ -291,12 +291,14 @@
   function typeOut(node) {
     const full = node.dataset.text;
     const count = { n: 0 };
+    // The untyped rest stays in the layout, hidden, so the moment keeps its full height while it types.
+    const show = n => node.replaceChildren(full.slice(0, n), el('span', { class: 'beat-rest', text: full.slice(n) }));
     return gsap.to(count, {
       n: full.length,
       duration: Math.max(0.3, full.length / BEATS.typeRate),
       ease: 'none',
-      onStart: () => { node.textContent = ''; },
-      onUpdate: () => { node.textContent = full.slice(0, Math.round(count.n)); },
+      onStart: () => show(0),
+      onUpdate: () => show(Math.round(count.n)),
       onComplete: () => { node.textContent = full; },
     });
   }
