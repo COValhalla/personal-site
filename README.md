@@ -44,7 +44,7 @@ Fork the project to tell your own life in acts. The page's code is in `engine/` 
 6. Play the hammer throw in Act III: hold to spin (or hold Space). You get one wind and four turns, and the last two are fast; let go while the hammer glows. A good release on turn 3 or 4 hits with a freeze, a shake and a flash, and a throw of 70 m or more plays a slow-motion throw camera (tap to skip). Hold on past the fourth turn and it is a foul.
 7. Play the typing race in the Tutorial: type the three lines as fast as you can to beat KIM (20 words a minute) and MAX (35 words a minute). Typing is the Tutorial's game, the one you would play in typing class.
 8. Scroll back above an act and it rewinds, together with every act after it, then plays again as you scroll down. Scrolling inside an act never un-tells what you have already seen.
-9. Use the chapter buttons (0 to VII) to jump to an act. The page ends on what Joe builds next, with Say hello and the links to reach him under it; for real titles, employers and dates, "Short on time?" on the title screen goes to his work history on LinkedIn. Say hello in the top bar opens a small panel with the email address to copy, a mail link and LinkedIn; GitHub is under the ending.
+9. Use the chapter buttons (0 to VII) to jump to an act. The page ends on what Joe builds next, with Say hello and the links to reach him under it; for real titles, employers and dates, "Short on time?" on the title screen goes to his work history on LinkedIn. Say hello in the top bar opens a small panel with a Copy email button, a mail link and LinkedIn; GitHub is under the ending.
 
 ## Files
 
