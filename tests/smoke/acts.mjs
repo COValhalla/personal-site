@@ -7,6 +7,7 @@ const stageShown = (page, id) => page.$$eval(`#${id} .scene-canvas`, cs => cs.fi
 
 export default async function acts(browser) {
   await walk(browser);
+  await roomChanges(browser);
   await pacing(browser);
   await reducedMotion(browser);
   await typingKeepsRoom(browser);
@@ -136,7 +137,7 @@ async function walk(browser) {
   // Acts III and IV dive into a new place for their third moment (the office in Texas, the plant in Sioux City), and
   // Act V into the factory for its second and third. Each list is the scene after each moment.
   const scenes = { 0: [0, 1, 2], 1: [0, 1], 2: [0, 0, 1], 3: [0, 0, 1], 4: [0, 0, 1], 5: [0, 1, 1] };
-  const lastScene = { 0: [3, 'the high-score board'], 1: [2, 'the character screen'], 2: [2, 'the character screen'], 3: [2, 'the character screen'], 4: [2, 'the character screen'], 5: [2, 'the character screen'] };
+  const lastScene = { 0: [3, 'the Tutorial tally'], 1: [2, 'the character screen'], 2: [2, 'the character screen'], 3: [2, 'the character screen'], 4: [2, 'the character screen'], 5: [2, 'the character screen'] };
   // In the Tutorial and Acts I and II every moment lights one skill.
   const litEach = new Set([0, 1, 2]);
   // What each act's own moment shows once it has played: night falls in the Tutorial, the crew arrives in Act I,
@@ -258,6 +259,88 @@ async function walk(browser) {
   const after = await page.evaluate(() => [window.__unlocks, Story.state.unlocked.size]);
   const replay = [after[0] - before, after[1]];
   check(replay[0] === 8 && replay[1] === 8, `scrolling down again plays every act once more (${replay.join(', ')})`);
+  check(errors.length === 0, 'no console errors or warnings' + (errors.length ? ': ' + errors.join(' | ') : ''));
+  await context.close();
+}
+
+// Intent: the captain's answers on the Tutorial plan (PES-82, built in PES-85): direction A, "Follow the story". The camera
+// dives into the bedroom computer's screen and the lab opens out of the hero's own screen; the lab's bell rings and its door
+// opens onto the snow before the camera leaves through it; the packing room opens from its left side as the hero walks in;
+// and the level-up is a Tutorial tally (GAMES, TYPING 1ST, ORDERS 48, then KEYBOARD KID) instead of the high-score board.
+async function roomChanges(browser) {
+  console.log('\nLaptop, the Tutorial changes rooms');
+  const { context, page, errors } = await open(browser, { viewport: { width: 1440, height: 900 } });
+  const { start, end } = (await pins(page))[0];
+  // Every frame: where each stage's canvas sits and how far it is zoomed, the hero's left edge, all in scene pixels of
+  // the scene box (across and down apart, as the box's border can stretch it a little), and the lab's bell and door.
+  await page.evaluate(() => {
+    const p = Acts.sections[0];
+    window.__frames = [];
+    window.__watch = true;
+    const tick = () => {
+      const box = p.sceneEl.getBoundingClientRect();
+      const left = box.left + p.sceneEl.clientLeft;
+      const top = box.top + p.sceneEl.clientTop;
+      const unit = p.sceneEl.clientWidth / Scenes.W;
+      const unitY = p.sceneEl.clientHeight / Scenes.H;
+      const hero = p.hero.getBoundingClientRect();
+      window.__frames.push({
+        stages: p.stages.map(st => {
+          const r = st.canvas.getBoundingClientRect();
+          const css = getComputedStyle(st.canvas);
+          return { shown: css.visibility === 'visible' && Number(css.opacity) > 0, x: (r.left - left) / unit, y: (r.top - top) / unitY, zoom: r.width / p.sceneEl.clientWidth };
+        }),
+        hero: { x: (hero.left - left) / unit, shown: hero.width > 0.5 * unit * 16 && Number(getComputedStyle(p.hero).opacity) > 0.5 },
+        bell: p.stages[1].stage.state.bell,
+        door: p.stages[1].stage.state.door,
+      });
+      if (window.__watch) requestAnimationFrame(tick);
+    };
+    tick();
+  });
+  const room = 900 * 0.6;
+  await scrollTo(page, start - 450);
+  await page.waitForFunction(() => Acts.sections[0].played >= 1, null, { timeout: 5000 });
+  for (const [k, y] of [[2, start + 2], [3, start + room + 2], [4, start + room * 2 + 2]]) {
+    await scrollTo(page, y);
+    await page.waitForFunction(n => Acts.sections[0].played >= n, k, { timeout: 15000 });
+  }
+  await scrollTo(page, end - 4);
+  await page.waitForSelector('#act-early-years .act-screen.is-ready', { timeout: 15000 });
+  const frames = await page.evaluate(() => { window.__watch = false; return window.__frames; });
+  const spots = await page.evaluate(() => Acts.sections[0].stages.map(st => ({ door: st.door, enter: st.enter, heroX: st.heroX, walkFrom: st.walkFrom })));
+  const [bedroom, lab, shop] = spots;
+  // Where a scene point lands in the scene box, in scene pixels, on a frame where its stage is drawn.
+  const at = (f, s, pt) => ({ x: f.stages[s].x + pt.x * f.stages[s].zoom, y: f.stages[s].y + pt.y * f.stages[s].zoom });
+  const size = await page.evaluate(() => ({ w: Scenes.W, h: Scenes.H }));
+  const middle = pt => Math.abs(pt.x - size.w / 2) < 2 && Math.abs(pt.y - size.h / 2) < 2;
+  const deepest = (s, also = () => true) => frames.filter(f => f.stages[s].shown && also(f)).reduce((a, f) => (!a || f.stages[s].zoom > a.stages[s].zoom ? f : a), null);
+  const firstShown = s => frames.find(f => f.stages[s].shown);
+
+  const intoScreen = deepest(0);
+  check(!!bedroom.door.zoom && intoScreen.stages[0].zoom >= bedroom.door.zoom * 0.9 && middle(at(intoScreen, 0, bedroom.door)),
+    `the camera dives into the bedroom computer's screen (${intoScreen.stages[0].zoom.toFixed(1)}x, centred on it)`);
+  const outOfScreen = firstShown(1);
+  check(!!lab.enter && outOfScreen.stages[1].zoom >= lab.enter.zoom * 0.8 && middle(at(outOfScreen, 1, lab.enter)) && lab.enter.x === lab.heroX + 8,
+    `the lab opens out of the hero's own screen (${outOfScreen.stages[1].zoom.toFixed(1)}x, centred on it)`);
+  const ringing = frames.findIndex(f => f.bell > 0 && f.bell < 1);
+  const opens = frames.findIndex(f => f.door > 0);
+  const leaves = frames.findIndex(f => f.stages[1].shown && f.stages[1].zoom > 1.05 && f.door > 0);
+  check(ringing >= 0 && opens > ringing && leaves > opens, 'leaving the lab, the bell rings, then the door opens, then the camera moves');
+  const intoSnow = deepest(1, f => f.door > 0);
+  check(!!intoSnow && !!lab.door.zoom && intoSnow.stages[1].zoom >= lab.door.zoom * 0.9 && middle(at(intoSnow, 1, lab.door)) && intoSnow.door === 1,
+    `the camera leaves the lab through its open door, into the snow (${intoSnow ? intoSnow.stages[1].zoom.toFixed(1) : 1}x)`);
+  const opening = frames.find(f => f.stages[2].shown && f.stages[2].zoom < 0.9);
+  const edge = opening && shop.enter && at(opening, 2, shop.enter);
+  check(!!edge && Math.abs(edge.x - shop.enter.x) < 1 && Math.abs(edge.y - shop.enter.y) < 1 && opening.stages[1].shown,
+    'the packing room opens from its left side, over the snow');
+  const inShop = frames.filter(f => f.stages[2].shown && !f.stages[1].shown && f.hero.shown);
+  check(inShop.length > 0 && inShop[0].hero.x < 0 && inShop.some(f => Math.abs(f.hero.x - shop.walkFrom) < 1),
+    `the hero walks into the packing room from its left edge (from ${inShop.length ? inShop[0].hero.x.toFixed(0) : '?'} to ${shop.walkFrom})`);
+  const stops = frames.filter(f => f.stages.filter(st => st.shown).length === 1).map(f => f.stages.findIndex(st => st.shown));
+  check(stops.filter((s, i) => i === 0 || s !== stops[i - 1]).join() === '0,1,2,3', 'the rooms come in order: bedroom, lab, packing room, tally');
+  const tally = await page.waitForFunction(() => { const st = Acts.sections[0].stages[3].stage.state; return st.rows === 3 && st.orders === 48 && st.kid === 1; }, null, { timeout: 5000 }).then(() => true, () => false);
+  check(tally, 'the Tutorial levels up on its tally: GAMES, TYPING 1ST, ORDERS 48, then KEYBOARD KID');
   check(errors.length === 0, 'no console errors or warnings' + (errors.length ? ': ' + errors.join(' | ') : ''));
   await context.close();
 }
