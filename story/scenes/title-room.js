@@ -26,6 +26,18 @@
     return grid.map((row, y) => (y === CLOSED_ROW ? row.slice(0, 6) + 'o' + row.slice(7, 9) + 'o' + row.slice(10) : row));
   }
 
+  // The right hand sits under the cup, so it rises with the cup; its sleeve takes the hand's rest spot.
+  const HAND_REST_ROW = 15;
+  function holdCup(grid, lifted) {
+    const rows = grid.map(row => row.split(''));
+    rows[HAND_REST_ROW][12] = '3';
+    const y = HAND_REST_ROW + 5 - lifted;
+    rows[y][11] = 'o';
+    rows[y][12] = 's';
+    rows[y][13] = 'o';
+    return rows.map(row => row.join(''));
+  }
+
   Scenes.add('title-room', {
     heroX: HERO_X,
     draw(ctx, c) {
@@ -90,8 +102,10 @@
       for (let i = 0; i < 3; i++) rect(ctx, '#f6f4ef', 131, 37 + i * 2, 4 + ((i + Math.floor(t)) % 3) * 2, 1);
 
       const mugX = HERO_X + 11;
-      const mugY = HERO_TOP + 15 - Math.round(up * 8);
-      Pixel.paint(ctx, up > 0.6 ? s.shut : s.grid, c, HERO_X, HERO_TOP, 1, false);
+      const lifted = Math.round(up * 8);
+      const mugY = HERO_TOP + 15 - lifted;
+      const face = up > 0.6 ? s.shut : s.grid;
+      Pixel.paint(ctx, lifted ? holdCup(face, lifted) : face, c, HERO_X, HERO_TOP, 1, false);
       rect(ctx, '#f6f4ef', mugX, mugY, 5, 5);
       rect(ctx, '#8a4b25', mugX, mugY, 5, 1);
       outline(ctx, mugX, mugY, 5, 5, N.o);

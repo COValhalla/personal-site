@@ -10,8 +10,9 @@ import sheet from './smoke/sheet.mjs';
 import games from './smoke/games.mjs';
 import layout from './smoke/layout.mjs';
 import visits from './smoke/visits.mjs';
+import title from './smoke/title.mjs';
 
-const surfaces = { page, acts, sheet, games, layout, visits };
+const surfaces = { page, title, acts, sheet, games, layout, visits };
 const asked = process.argv.slice(2);
 const unknown = asked.filter(name => !surfaces[name]);
 if (unknown.length) {
