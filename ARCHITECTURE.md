@@ -52,7 +52,7 @@ Each script says what it needs in its opening comment ([ADR 0006](docs/decisions
 
 ## Recipes and the story registry
 
-`story/recipes/site.js` calls `Story.site(...)` once: the name, the title-screen welcome, the shortcut link under Press start, the ending and the last act's Next tag, the contact links, the stats and the hero's look. Each `story/recipes/act-*.js` calls `Story.addAct(...)` once. `story/sprites.js` calls `Pixel.addSprites(...)` once with every item sprite. The fields are listed in the README under "Recipes", and why they are JavaScript is in [ADR 0002](docs/decisions/0002-recipes-as-javascript.md).
+`story/recipes/site.js` calls `Story.site(...)` once: the name, the full name and role, the title-screen greeting and welcome, the shortcut link under Press start, the ending and the last act's Next tag, the contact links, the stats and the hero's look. Each `story/recipes/act-*.js` calls `Story.addAct(...)` once. `story/sprites.js` calls `Pixel.addSprites(...)` once with every item sprite. The fields are listed in the README under "Recipes", and why they are JavaScript is in [ADR 0002](docs/decisions/0002-recipes-as-javascript.md).
 
 At start-up `Story.validate` in `engine/story.js` checks that the recipes point at things that exist: scenes, stage scenes, cues, hair and beards, hero gear, sprites, games and stats. It also checks that moments give items from their own act, that each item is given once, that each skill's moment exists and that a skill grows only from an earlier act. Problems are shown on the page and logged to the console.
 

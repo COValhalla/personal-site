@@ -103,6 +103,13 @@
   function intro() {
     const { linkedin } = Story.config.contact;
     const { shortcut } = Story.config;
+    const canvas = el('canvas', { class: 'px intro-room', width: Scenes.W, height: Scenes.H, role: 'img',
+      'aria-label': `${Story.config.name} at his desk with a cup of tea, before the story starts.` });
+    const room = Scenes.mount(Scenes.get('title-room'), canvas, Pixel.GRAY, Story.acts);
+    room.render();
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      new IntersectionObserver(([entry]) => (entry.isIntersecting ? room.start() : room.stop())).observe(canvas);
+    }
     const press = el('button', { class: 'btn btn--start intro-start', onclick: start },
       el('span', { class: 'intro-start-arrow', 'aria-hidden': 'true', text: '▶' }), 'Press start');
     // Enter starts the story from the title screen, like a game.
@@ -112,10 +119,10 @@
     });
     return el('section', { class: 'intro', id: 'top' },
       el('div', { class: 'intro-inner' },
-        el('h1', { class: 'intro-title', text: Story.config.fullName || Story.config.name }),
+        el('p', { class: 'intro-kicker', text: `${Story.config.fullName} · ${Story.config.role}` }),
+        el('h1', { class: 'intro-title', text: Story.config.greeting }),
+        canvas,
         el('p', { class: 'intro-tag', text: Story.config.welcome }),
-        el('div', { class: 'intro-hero' }, Pixel.hero('none', Pixel.GRAY, 6, `${Story.config.name}, before the story starts`)),
-        el('div', { class: 'intro-ground' }),
         press,
         el('p', { class: 'intro-hint', text: 'or scroll ▼' }),
         linkedin && shortcut ? el('p', { class: 'intro-note' },

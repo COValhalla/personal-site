@@ -5,7 +5,10 @@ import { check, open } from './helpers.mjs';
 export default async function page(browser) {
   console.log('\nThe title screen, the words and the ending');
   const { context, page, errors } = await open(browser, { viewport: { width: 1440, height: 900 } });
-  check(await page.textContent('.intro-title') === 'Joe Vellella' && await page.textContent('.hud-name') === 'Joe', 'the title screen says Joe Vellella and the bar says Joe');
+  const titles = await page.evaluate(() => ({ greeting: Story.config.greeting, kicker: `${Story.config.fullName} · ${Story.config.role}` }));
+  check(await page.textContent('.intro-title') === titles.greeting && await page.textContent('.intro-kicker') === titles.kicker && await page.textContent('.hud-name') === 'Joe',
+    `the title screen says "${titles.greeting}" under ${titles.kicker}, and the bar says Joe`);
+  check(await page.$eval('.intro-room', c => c.tagName === 'CANVAS' && c.width === 160 && c.height === 72), 'the title screen draws Joe at his desk on a canvas');
   check(await page.evaluate(() => Visits.why === 'not the published site' && !document.querySelector('script[data-goatcounter]')), 'opened from a file, the visit counter stays off');
   const welcome = await page.textContent('.intro-tag');
   check(welcome === await page.evaluate(() => Story.config.welcome) && welcome.startsWith('I build products.') && !welcome.includes('Joe') && welcome.includes('Press start'),
