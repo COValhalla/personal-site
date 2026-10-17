@@ -79,7 +79,7 @@ Fork the project to tell your own life in acts. The page's code is in `engine/` 
 | `vendor/goatcounter/` | GoatCounter's counting script, loaded only by `engine/addons/visits.js`. |
 | `tests/unit/` | Unit tests for the recipe rules, the story's state, the scene registry, each file's Needs line and the visit counter's rule. |
 | `tests/smoke.mjs` | An end-to-end check in Chrome. It runs each surface in `tests/smoke/`. |
-| `tests/smoke/` | The end-to-end checks, one file per surface: the page around the acts, the acts, the sheet, the games, the layout at each window size, and the visit counter. |
+| `tests/smoke/` | The end-to-end checks, one file per surface: the page around the acts, the title screen's sip, the acts, the sheet, the games, the layout at each window size, and the visit counter. |
 
 ## Recipes
 
@@ -118,7 +118,7 @@ The smoke test opens the page in Google Chrome and does what a reader does: it s
 
 `npm test` runs two checks. First the unit tests in `tests/unit/`, which check every recipe rule in `engine/story.js` and that the shipped recipes pass them, the calls that change the story's state, that every script's and scene's Needs line is true, and who the visit counter counts. Then the smoke test above. `npm run test:unit` runs only the unit tests, in a second or so.
 
-The smoke test keeps each surface in its own file in `tests/smoke/`: `page.mjs` (the title screen, the words, the ending and the top bar), `acts.mjs`, `sheet.mjs`, `games.mjs`, `layout.mjs` (every window and phone size) and `visits.mjs` (the visit counter). To run only some of them, name them: `node tests/smoke.mjs sheet games`.
+The smoke test keeps each surface in its own file in `tests/smoke/`: `page.mjs` (the title screen, the words, the ending and the top bar), `title.mjs` (the hand holding the cup through a sip), `acts.mjs`, `sheet.mjs`, `games.mjs`, `layout.mjs` (every window and phone size) and `visits.mjs` (the visit counter). To run only some of them, name them: `node tests/smoke.mjs sheet games`.
 
 ```sh
 npm install
