@@ -51,9 +51,20 @@ export default async function page(browser) {
   await page.waitForTimeout(900);
   const hereY = await page.evaluate(() => window.scrollY);
   await page.click('.hud-hello');
-  check(await page.textContent('#hello-menu .hello-address') === contact.email && await page.$$eval('#hello-menu a', a => a.map(x => x.getAttribute('href')).join()) === `mailto:${contact.email},${contact.linkedin}`
+  check(await page.textContent('#hello-menu .hello-copy') === 'Copy email' && await page.$$eval('#hello-menu a', a => a.map(x => x.getAttribute('href')).join()) === `mailto:${contact.email},${contact.linkedin}`
     && await page.isVisible('#hello-menu') && await page.evaluate(() => window.scrollY) === hereY,
-    'the top bar opens a small panel with the address, a mail link and LinkedIn, without jumping');
+    'the top bar opens a small panel with Copy email, a mail link and LinkedIn, without jumping');
+  // Joe asked for a smaller panel on desktop: it shows Copy email instead of the address, which only screen readers read.
+  const menu = await page.$eval('#hello-menu', m => {
+    const address = m.querySelector('.hello-address').getBoundingClientRect();
+    return { text: m.querySelector('.hello-address').textContent, shown: address.width > 1 || address.height > 1, width: m.getBoundingClientRect().width };
+  });
+  check(menu.text === contact.email && !menu.shown && menu.width < 300, `the top bar's panel keeps the address for screen readers but does not show it, and is ${Math.round(menu.width)}px wide`);
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.click('#hello-menu .hello-copy');
+  await page.waitForFunction(() => document.querySelector('#hello-menu .hello-copy').textContent !== 'Copy email');
+  check(await page.textContent('#hello-menu .hello-copy') === 'Email copied' && await page.evaluate(() => navigator.clipboard.readText()) === contact.email,
+    'Copy email puts the address on the clipboard and says Email copied');
   await page.keyboard.press('Escape');
   check(!(await page.isVisible('#hello-menu')), 'Escape closes the Say hello menu');
   check(await page.$('#quest-log') === null && !(await page.evaluate(() => document.body.textContent.toLowerCase().includes('quest log'))), 'the page has no quest log');

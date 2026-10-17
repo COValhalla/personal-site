@@ -50,13 +50,15 @@
 
   const linkAttrs = href => (href.startsWith('http') ? { target: '_blank', rel: 'noopener' } : {});
 
-  // Copies the address, or selects it where the browser will not copy, so the reader can copy it.
-  function copyAddress(button, address) {
+  // Copies the address, or shows and selects it where the browser will not copy, so the reader can copy it.
+  function copyAddress(button, address, copied = 'Copied') {
+    const label = button.textContent;
     const flash = text => {
       button.textContent = text;
-      setTimeout(() => { button.textContent = 'Copy'; }, 1600);
+      setTimeout(() => { button.textContent = label; }, 1600);
     };
     const select = () => {
+      address.classList.remove('visually-hidden');
       const range = document.createRange();
       range.selectNodeContents(address);
       const selection = window.getSelection();
@@ -64,25 +66,26 @@
       selection.addRange(range);
       flash('Selected');
     };
-    if (navigator.clipboard) navigator.clipboard.writeText(address.textContent).then(() => flash('Copied'), select);
+    if (navigator.clipboard) navigator.clipboard.writeText(address.textContent).then(() => flash(copied), select);
     else select();
   }
 
   // Say hello, in the top bar and at the end of the page: the address to copy, a mail link and LinkedIn.
-  function helloPanel() {
+  // The top bar's panel is compact: it keeps the address for screen readers and shows only Copy email.
+  function helloPanel({ compact = false } = {}) {
     const { linkedin, email } = Story.config.contact;
-    const address = el('span', { class: 'hello-address', text: email || '' });
-    const copy = el('button', { class: 'btn hello-copy', type: 'button', 'data-contact': 'copy', text: 'Copy', onclick: () => copyAddress(copy, address) });
+    const address = el('span', { class: `hello-address${compact ? ' visually-hidden' : ''}`, text: email || '' });
+    const copy = el('button', { class: 'btn hello-copy', type: 'button', 'data-contact': 'copy', text: compact ? 'Copy email' : 'Copy', onclick: () => copyAddress(copy, address, compact ? 'Email copied' : 'Copied') });
     return el('div', { class: 'hello-panel' },
-      email ? el('p', { class: 'hello-kicker', text: 'Email me' }) : null,
+      email && !compact ? el('p', { class: 'hello-kicker', text: 'Email me' }) : null,
       email ? el('div', { class: 'hello-row' }, address, copy) : null,
-      email ? el('p', { class: 'hello-small' }, el('a', { href: `mailto:${email}`, text: 'or open it in your mail app' })) : null,
+      email ? el('p', { class: 'hello-small' }, el('a', { href: `mailto:${email}`, text: compact ? 'or open your mail app' : 'or open it in your mail app' })) : null,
       linkedin ? el('a', { class: 'btn hello-linkedin', href: linkedin, text: 'Message me on LinkedIn ↗', ...linkAttrs(linkedin) }) : null);
   }
 
   // Say hello in the top bar opens a small panel, so reaching Joe never skips the story.
   function helloMenu() {
-    const menu = el('div', { class: 'hello-menu', id: 'hello-menu', hidden: '' }, helloPanel());
+    const menu = el('div', { class: 'hello-menu', id: 'hello-menu', hidden: '' }, helloPanel({ compact: true }));
     const button = el('button', { class: 'btn hud-hello', 'aria-expanded': 'false', 'aria-controls': 'hello-menu', 'aria-label': 'Say hello' },
       el('span', { class: 'hud-label', text: 'Say hello' }),
       el('span', { class: 'hud-at', 'aria-hidden': 'true', text: '@' }));
