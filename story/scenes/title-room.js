@@ -53,14 +53,14 @@
       rect(ctx, N.o, 20, 18, 32, 1);
       rect(ctx, '#a96b3e', 17, 30, 38, 2);
 
-      rect(ctx, '#7a4a2a', 98, 26, 20, 38);
-      outline(ctx, 98, 26, 20, 38, N.o);
-      rect(ctx, N.o, 98, 37, 20, 1);
-      rect(ctx, N.o, 98, 48, 20, 1);
-      rect(ctx, N.o, 98, 59, 20, 1);
-      [['#c94f3a', 100, 27, 9], ['#3a7f8c', 104, 27, 9], ['#e0a46f', 109, 27, 9], ['#6b8f3a', 100, 38, 9], ['#f6f4ef', 105, 38, 9],
-        ['#c94f3a', 100, 49, 9], ['#e0a46f', 106, 49, 9], ['#3a7f8c', 111, 49, 9], ['#6b8f3a', 102, 60, 4], ['#f6f4ef', 109, 60, 4]]
-        .forEach(([color, x, y, h]) => rect(ctx, color, x, y, 3, h));
+      // The bookcase: three full shelves of the same height, each with its books standing on it.
+      rect(ctx, '#7a4a2a', 98, 27, 20, 37);
+      outline(ctx, 98, 27, 20, 37, N.o);
+      rect(ctx, N.o, 98, 39, 20, 1);
+      rect(ctx, N.o, 98, 51, 20, 1);
+      [['#c94f3a', 100, 30], ['#3a7f8c', 104, 30], ['#e0a46f', 109, 30], ['#6b8f3a', 100, 42], ['#f6f4ef', 105, 42],
+        ['#c94f3a', 100, 54], ['#e0a46f', 106, 54], ['#3a7f8c', 111, 54]]
+        .forEach(([color, x, y]) => rect(ctx, color, x, y, 3, 9));
 
       rect(ctx, '#8c4b2e', 2, 48, 30, 16);
       outline(ctx, 2, 48, 30, 16, N.o);
@@ -76,8 +76,9 @@
       rect(ctx, '#a96b3e', 122, 50, 28, 2);
       rect(ctx, '#7a4a2a', 124, 52, 2, 12);
       rect(ctx, '#7a4a2a', 146, 52, 2, 12);
-      rect(ctx, '#2a1f2b', 128, 34, 18, 13);
-      outline(ctx, 128, 34, 18, 13, N.o);
+      // The computer: the screen, its stand and its foot share one middle, the desk's.
+      rect(ctx, '#2a1f2b', 127, 34, 18, 13);
+      outline(ctx, 127, 34, 18, 13, N.o);
       rect(ctx, N.o, 135, 47, 2, 3);
       rect(ctx, N.o, 132, 50, 8, 1);
     },
@@ -90,7 +91,7 @@
       const lamp = 0.5 + 0.5 * Math.sin(t * 1.3);
 
       ctx.globalAlpha = 0.12 + 0.04 * lamp;
-      rect(ctx, '#ffd27a', 64, 18, 48, 46);
+      rect(ctx, '#ffd27a', 60, 18, 49, 46);
       ctx.globalAlpha = 1;
 
       STARS.forEach(([x, y], i) => {
@@ -98,8 +99,8 @@
       });
 
       const screen = mix('#2a1416', '#9fd8ff', 0.6 + 0.2 * Math.sin(t * 0.9));
-      rect(ctx, screen, 130, 36, 14, 9);
-      for (let i = 0; i < 3; i++) rect(ctx, '#f6f4ef', 131, 37 + i * 2, 4 + ((i + Math.floor(t)) % 3) * 2, 1);
+      rect(ctx, screen, 129, 36, 14, 9);
+      for (let i = 0; i < 3; i++) rect(ctx, '#f6f4ef', 130, 37 + i * 2, 4 + ((i + Math.floor(t)) % 3) * 2, 1);
 
       const mugX = HERO_X + 11;
       const lifted = Math.round(up * 8);
