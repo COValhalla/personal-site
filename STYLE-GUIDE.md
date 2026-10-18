@@ -79,7 +79,7 @@ Act VII's own items are purple; its scene and the end of the page use every act'
 
 An optional `accent` is a second color for the scene and the title underline: Act I's sky and Act II's school color. Sprites never use it. Act III has none, so its stands keep the navy.
 
-Open world is bright on purpose: a Saturday at the track, then the white-tiled family shop in deer season. The Diablo II nod opens the Tutorial, when night falls and an inventory glows on the computer, and comes back in Act I's dark character sheet. Over the Tutorial's bed hang two nod posters, drawn for this site at 14 × 18 pixels from pixel art Joe chose: a hooded demon with glowing eyes for Diablo II, and a blue ocarina with a fairy on green for Ocarina of Time. Nods are our own pixels: no game art, screenshots, names or logos are embedded.
+Open world is bright on purpose: a Saturday at the track, then the white-tiled family shop in deer season. The Diablo II nod opens the Tutorial, when night falls and an inventory glows on the computer, and comes back in Act I's dark character sheet. Over the Tutorial's bed hang two posters that are the exception: Joe chose two pieces of fan pixel art, Diablo II's hooded demon and the blue ocarina from Ocarina of Time, and the bedroom shows them reduced to poster size (18 × 21 and 22 × 19 pixels, each the most common of the picture's colors under it). Every other nod uses only colors and shapes that suggest its game: no game art, names or logos.
 
 ## Scenes
 
