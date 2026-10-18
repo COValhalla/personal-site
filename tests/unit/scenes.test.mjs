@@ -13,9 +13,18 @@ const read = file => readFileSync(path.join(root, file), 'utf8');
 const sceneFiles = [...read('index.html').matchAll(/<script src="((?:engine|story)\/scenes\/[^"]+)"><\/script>/g)].map(m => m[1]);
 const [registry, props, ...scenes] = sceneFiles;
 
+// The canvas's ImageData, enough for the scenes that read their background back to draw.
+class ImageDataStub {
+  constructor(a, w, h) {
+    if (typeof a === 'number') { this.width = a; this.height = w; this.data = new Uint8ClampedArray(a * w * 4); }
+    else { this.data = a; this.width = w; this.height = h; }
+  }
+}
+
 function sandbox(files) {
   const ctx = vm.createContext({});
   ctx.window = ctx;
+  ctx.ImageData = ImageDataStub;
   ['engine/pixel.js', 'story/sprites.js', 'engine/draw.js', ...files].forEach(file => vm.runInContext(read(file), ctx, { filename: file }));
   return ctx;
 }
@@ -61,7 +70,8 @@ test('the character sheet is made for the act it is asked for', () => {
 test('a scene drawn in the sandbox paints its background without errors', () => {
   const { Scenes } = sandbox(sceneFiles);
   const calls = [];
-  const ctx = new Proxy({}, { get: (t, k) => (k in t ? t[k] : () => calls.push(k)), set: (t, k, v) => { t[k] = v; return true; } });
+  const blank = { getImageData: (x, y, w, h) => new ImageDataStub(w, h), putImageData() {} };
+  const ctx = new Proxy(blank, { get: (t, k) => (k in t ? t[k] : () => calls.push(k)), set: (t, k, v) => { t[k] = v; return true; } });
   const ramp = { light: '#7fe0d4', base: '#22b3a3', shade: '#157a70' };
   Scenes.names.filter(n => n !== 'sheet').forEach(name => Scenes.get(name).draw(ctx, ramp, []));
   assert.ok(calls.length > 0);
