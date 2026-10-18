@@ -94,6 +94,19 @@
   // A soft pool of light: 1 at its centre, falling to 0 at its rim.
   const pool = (cx, cy, rx, ry) => (x, y) => 1 - Math.hypot((x - cx) / rx, (y - cy) / ry);
 
+  // Light laid over what is drawn: the shape's falloff is cut into bands, each dithered and a step stronger, up to strength.
+  function glow(ctx, color, shape, x, y, w, h, bands, strength) {
+    for (let Y = y; Y < y + h; Y++) for (let X = x; X < x + w; X++) {
+      const f = shape(X + 0.5, Y + 0.5);
+      if (f <= 0) continue;
+      const level = Math.min(bands, Math.floor(f * bands + BAYER[Y % 4][X % 4] / 16));
+      if (level <= 0) continue;
+      ctx.globalAlpha = strength * level / bands;
+      rect(ctx, color, X, Y, 1, 1);
+    }
+    ctx.globalAlpha = 1;
+  }
+
   // Night as a palette shift, not a dark sheet: colors move toward moonlit blue, and each light pulls the colors
   // under it back toward its own tint. The light is banded by ordered dither, as 16-bit games did.
   function nightPass(img, lights, skip) {
@@ -143,5 +156,5 @@
 
   window.Draw = {
     rng, mix, rect, text, textWidth, sprite, outline, puff, steps4, blink,
-    lighter, darker, vdither, bevel, shadow, disc, pool, nightPass, quantize, dissolve };
+    lighter, darker, vdither, bevel, shadow, disc, pool, glow, nightPass, quantize, dissolve };
 })();
