@@ -1,6 +1,6 @@
 /*
  * Tutorial, moment 2: the school computer lab. Kids type on five beige computers, and the race starts: the screens light up,
- * the bars run, the hero's screen shows 1ST and the kids beside him turn to look.
+ * the bars run and the hero's screen shows 1ST, while every kid keeps facing their own screen.
  * The lab opens out of the hero's screen. To leave, the bell over the door rings and the door opens onto the snow.
  * Needs: gsap, Pixel, Draw, Scenes, Props
  */
@@ -117,7 +117,7 @@
         rect(ctx, '#ddd2b4', left, 29, 18, 14);
         rect(ctx, '#b8ab88', left, 41, 18, 2);
         rect(ctx, '#26324a', left + 2, 31, 14, 9);
-        rect(ctx, N.o, cx - 1, 43, 3, 2);
+        rect(ctx, N.o, cx - 1, 43, 2, 2);
         rect(ctx, '#b8ab88', left + 3, 44, 12, 2);
       });
       KIDS.forEach(k => {
@@ -128,10 +128,8 @@
         rect(ctx, '#7a4a2a', cx + 4, 56, 1, 8);
       });
       person(ctx, 0, GROUND, c, 2);
-      puff(ctx, 16, 46, 2, N.o);
-      puff(ctx, 16, 46, 1, N.w);
     },
-    init: () => ({ screens: 0, race: 0, star: 0, look: 0, bell: 0, door: 0 }),
+    init: () => ({ screens: 0, race: 0, star: 0, bell: 0, door: 0 }),
     frame(ctx, c, s, t) {
       bell(ctx, s.bell);
       outside(ctx, s.door, t);
@@ -163,14 +161,6 @@
         rect(ctx, shirt, cx + 5, 48, 2, 4);
         rect(ctx, '#f0c29a', cx - 7, 47 + bob, 2, 2);
         rect(ctx, '#f0c29a', cx + 5, 47 - bob, 2, 2);
-        if (s.look > 0.5 && k === 2) {
-          rect(ctx, '#f0c29a', cx + 2, 41, 3, 5);
-          rect(ctx, N.o, cx + 3, 43, 1, 1);
-        }
-        if (s.look > 0.5 && k === 4) {
-          rect(ctx, '#f0c29a', cx - 4, 41, 3, 5);
-          rect(ctx, N.o, cx - 3, 43, 1, 1);
-        }
       });
 
       if (s.star > 0.5) text(ctx, 'JOE 1ST', 9, 22, c.light);
@@ -181,7 +171,7 @@
       type: s => gsap.timeline()
         .to(s, { screens: 1, duration: 0.5, ease: 'steps(4)' })
         .to(s, { race: 1, duration: 1.7, ease: 'none' }, 0.4)
-        .to(s, { star: 1, look: 1, duration: 0.01 }, 2.1),
+        .to(s, { star: 1, duration: 0.01 }, 2.1),
       // Played as the hero leaves: the bell rings, then the door swings open onto the snow.
       leave: s => gsap.timeline()
         .to(s, { bell: 1, duration: 0.45, ease: 'none' })
