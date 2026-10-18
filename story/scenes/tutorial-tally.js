@@ -8,7 +8,7 @@
 
   const { W, H } = Scenes;
   const N = Pixel.NEUTRALS;
-  const { rect, text, textWidth } = Draw;
+  const { rect, text, textWidth, bevel, shadow, vdither, darker, lighter } = Draw;
 
   // The packing room's ORDERS count once its eight boxes are out the door.
   const ORDERS = 48;
@@ -18,6 +18,7 @@
     { sprite: 'box', label: 'ORDERS', y: 46 },
   ];
   const RIGHT = 148;
+  const PANEL = '#2a3a6a';
 
   function star(ctx, x, y, color) {
     rect(ctx, color, x + 2, y, 1, 5);
@@ -28,11 +29,15 @@
   Scenes.add('tutorial-tally', {
     heroX: 22,
     draw(ctx, c) {
-      rect(ctx, '#1f2440', 0, 0, W, H);
-      for (let y = 0; y < H; y += 8) rect(ctx, '#252b4f', 0, y, W, 1);
+      vdither(ctx, '#2a3263', '#171b35', 0, 0, W, H, 4);
+      for (let y = 0; y < H; y += 8) rect(ctx, '#323a6a', 0, y, W, 1);
+      shadow(ctx, '#0d0f1f', 48, 4, 106, 60, 2);
       rect(ctx, N.o, 48, 4, 106, 60);
-      rect(ctx, '#2a3a6a', 50, 6, 102, 56);
+      vdither(ctx, '#34497e', '#222d58', 50, 6, 102, 56, 4);
+      bevel(ctx, lighter(PANEL, 0.4), '#131a33', 49, 5, 104, 58);
       rect(ctx, c.base, 50, 6, 102, 9);
+      rect(ctx, lighter(c.base, 0.35), 50, 6, 102, 1);
+      rect(ctx, darker(c.base, 0.3), 50, 14, 102, 1);
       text(ctx, 'TUTORIAL TALLY', 54, 8, N.o);
     },
     init: () => ({ rows: 0, orders: 0, kid: 0 }),

@@ -94,7 +94,8 @@ A scene lives in its own file in `story/scenes/`, named after it, and registers 
 
 - The ground is at y = 64. `heroX` says where the hero stands; keep the area around it clear.
 - Draw with the kit in `engine/draw.js`: `rect`, `text`, `sprite`, `outline` and `puff` for shapes, `steps4` and `blink` for chunky timing.
-- Use the act's three colors, the neutrals, and tints mixed from them with `mix`.
+- Use the act's three colors, the neutrals, and tints mixed from them with `mix`, `lighter` and `darker`.
+- The Tutorial's four rooms are drawn in 16-bit style on the same grid: four or five shades per surface, not three. `vdither(ctx, a, b, x, y, w, h, steps)` blends a surface from `a` to `b` in bands, with Bayer dither where two bands meet; `bevel` gives an edge a 1-pixel light top and left and a shade bottom and right; `shadow` drops a band of shade under and to the right of a box; `disc` and `pool` draw a round shape and a light's falloff. The night is a palette shift, not a dark sheet: `nightPass` moves the day pixels toward moonlit blue and tints them under each light, `dissolve` takes the night pixels through the Bayer matrix in four steps, and `quantize` keeps each channel to the SNES's 15-bit color. A scene reads its day pixels back once in `draw`, and the window and the screen, which the frame repaints, are skipped by the night pass.
 - Use `rng(seed)` for crowds, stars and code lines, so a scene looks the same every time.
 - A moment in a recipe names a cue (`cue: 'plane'`). Played to its end, a cue must leave the scene in its final state: with motion turned off the page jumps every cue to its end.
 - Move things in whole pixels or GSAP `steps()` eases, so motion stays chunky like the art.
