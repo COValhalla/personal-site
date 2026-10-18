@@ -18,6 +18,51 @@
   // A round full moon, five pixels across, with two darker craters.
   const MOON = ['.mmm.', 'mmmcm', 'mmmmm', 'mcmmm', '.mmm.'];
 
+  // The two nod posters over the bed, 14 x 18 inside their frames, drawn for this site from the pixel art Joe chose:
+  // a hooded demon with glowing eyes for Diablo II, and the blue ocarina for Ocarina of Time. No game art is embedded.
+  const DEMON = [
+    'kkkkkkkkkkkkkk',
+    'kkkkkkrrkkkkkk',
+    'kkkkkrrrrkkkkk',
+    'kkkkrrkkrrkkkk',
+    'kkkrrkkkkrrkkk',
+    'kkrrkddddkrrkk',
+    'krkddddddddkrk',
+    'krkykkddkkykrk',
+    'rkkdykyykydkkr',
+    'rkkyodyydoykkr',
+    'rkkdydoodydkkr',
+    'rkkddykkyddkkr',
+    'rkkkddyyddkkkr',
+    'rrkkkkddkkkkrr',
+    'kkrrkkyykkrrkk',
+    'kkkkkoyyokkkkk',
+    'kkkkkkookkkkkk',
+    'kkkkkkkkkkkkkk',
+  ];
+  const DEMON_COLORS = { k: '#140a0c', r: '#b3262a', d: '#6e1418', y: '#f5c518', o: '#e8701a' };
+  const OCARINA = [
+    'gggggggggggggg',
+    'gggggggggggggg',
+    'gggggggggggggg',
+    'gllggggggggggg',
+    'glbbgggggggggg',
+    'ggbbbbgggggggg',
+    'gggbbbbbbggggg',
+    'gggblbbhbbbggg',
+    'gggbblbbbbhbgg',
+    'ggggbblbhbbbBg',
+    'ggggbbblbbbbBg',
+    'gggggbbbbhbbBg',
+    'ggggghbbbbbBBg',
+    'ggggggbbbbBBgg',
+    'gggggggBBBBggg',
+    'gggggggggggggg',
+    'gggggggggggggg',
+    'gggggggggggggg',
+  ];
+  const OCARINA_COLORS = { g: '#2f7a4a', b: '#3b7fd0', B: '#2a4f9a', l: '#9cc8f0', h: '#1d1b22' };
+
   // The window's sky goes from day to dusk to night, with a round moon and twinkling stars once it is dark.
   function skyWindow(ctx, dark, t) {
     const dusk = Math.min(1, dark * 2);
@@ -72,22 +117,11 @@
       rect(ctx, c.base, 89, 6, 4, 27);
       rect(ctx, c.light, 52, 6, 1, 26);
 
-      // Two nod posters over the bed: a dark red one with horns, and a green one with an ocarina.
+      // Two nod posters over the bed: the hooded demon, and the ocarina on green.
       rect(ctx, N.o, 4, 12, 16, 20);
-      rect(ctx, '#5a1a1a', 5, 13, 14, 18);
-      rect(ctx, '#a8242a', 8, 16, 8, 8);
-      rect(ctx, '#e9c46a', 6, 14, 1, 3);
-      rect(ctx, '#e9c46a', 17, 14, 1, 3);
-      rect(ctx, N.o, 8, 13, 1, 3);
-      rect(ctx, N.o, 15, 13, 1, 3);
-      rect(ctx, N.o, 9, 24, 6, 1);
-      rect(ctx, '#e9c46a', 9, 19, 2, 1);
-      rect(ctx, '#e9c46a', 13, 19, 2, 1);
+      sprite(ctx, DEMON, 5, 13, DEMON_COLORS);
       rect(ctx, N.o, 24, 12, 16, 20);
-      rect(ctx, '#2f7a4a', 25, 13, 14, 18);
-      rect(ctx, '#3b5fb3', 29, 21, 6, 4);
-      rect(ctx, '#3b5fb3', 31, 19, 2, 2);
-      rect(ctx, '#2a4a8a', 29, 25, 6, 1);
+      sprite(ctx, OCARINA, 25, 13, OCARINA_COLORS);
 
       // The shelf with books in the title room's colors and a globe.
       rect(ctx, '#8c5a32', 96, 40, 26, 2);
@@ -156,7 +190,7 @@
       });
 
       // The ocarina nod's fairy bobs above the ocarina.
-      rect(ctx, '#ffe9b0', 31, 16 + Math.round(Math.sin(t * 2.4)), 2, 2);
+      rect(ctx, '#ffe9b0', 34, 16 + Math.round(Math.sin(t * 2.4)), 2, 2);
 
       // The desk's screen: the teal desktop by day, then the game with an inventory and a chat that types itself.
       const sx = 125;
